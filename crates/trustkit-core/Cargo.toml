@@ -1,0 +1,9 @@
+[package]
+name = "trustkit-core"
+version = "0.1.0"
+edition = "2024"
+authors = ["TRustKit Contributors"]
+description = "Zero-dependency pure domain crate for TRustKit SDD lifecycle and invariants"
+
+[dependencies]
+# CONSTITUTION PRINCIPLE I: Zero external dependencies (std only)

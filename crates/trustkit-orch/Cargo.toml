@@ -1,0 +1,9 @@
+[package]
+name = "trustkit-orch"
+version = "0.1.0"
+edition = "2024"
+authors = ["TRustKit Contributors"]
+description = "Concurrency orchestrator and process supervisor scaffolding for TRustKit"
+
+[dependencies]
+trustkit-core = { path = "../trustkit-core" }

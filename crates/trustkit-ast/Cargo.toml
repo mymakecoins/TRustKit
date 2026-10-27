@@ -1,0 +1,9 @@
+[package]
+name = "trustkit-ast"
+version = "0.1.0"
+edition = "2024"
+authors = ["TRustKit Contributors"]
+description = "AST inspection and dependency DAG scaffolding for TRustKit"
+
+[dependencies]
+trustkit-core = { path = "../trustkit-core" }
