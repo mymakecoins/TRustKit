@@ -2,7 +2,7 @@
 
 > **Camada:** API
 > **Estimativa:** P
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-011
@@ -32,7 +32,7 @@ O binário `trustkit` precisa expor os subcomandos fortemente tipados com suport
 - Parsing estrito sem panics em flags incorretas.
 
 ## Critério de Aceite
-- [ ] **Dado** invocação via linha de comando, **quando** os argumentos forem passados, **então** o `clap` faz o parse para os tipos correspondentes.
+- [x] **Dado** invocação via linha de comando, **quando** os argumentos forem passados, **então** o `clap` faz o parse para os tipos correspondentes.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-cli/src/cli_contract.rs`.

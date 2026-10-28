@@ -2,7 +2,7 @@
 
 > **Camada:** API
 > **Estimativa:** M
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-013
@@ -30,7 +30,7 @@ Os handlers da CLI conectam a entrada dos argumentos aos use cases correspondent
 - Toda saída em modo `--json` deve obedecer ao Princípio II (zero null).
 
 ## Critério de Aceite
-- [ ] **Dado** uma auditoria com sucesso em modo `--json`, **quando** o handler executa, **então** emite JSON válido com status `PASS` e `Exit Code: 0`.
+- [x] **Dado** uma auditoria com sucesso em modo `--json`, **quando** o handler executa, **então** emite JSON válido com status `PASS` e `Exit Code: 0`.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-cli/src/commands/gauntlet_ast_audit_cmd.rs`.

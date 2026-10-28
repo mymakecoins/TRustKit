@@ -2,7 +2,7 @@
 
 > **Camada:** Integração
 > **Estimativa:** P
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-004
@@ -34,7 +34,7 @@ A crate `trustkit-ast` precisa disponibilizar publicamente todos os adaptadores 
 - Limite de 250 LOC por arquivo respeitado.
 
 ## Critério de Aceite
-- [ ] **Dado** os consumidores da crate `trustkit-ast`, **quando** importarem o módulo raiz, **então** todos os adaptadores estão acessíveis via trait pública.
+- [x] **Dado** os consumidores da crate `trustkit-ast`, **quando** importarem o módulo raiz, **então** todos os adaptadores estão acessíveis via trait pública.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-ast/src/lib.rs`.

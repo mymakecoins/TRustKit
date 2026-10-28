@@ -2,7 +2,7 @@
 
 > **Camada:** Infra/Setup
 > **Estimativa:** M
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-015
@@ -32,7 +32,7 @@ O Gauntlet e a integridade de entrega exigem testes end-to-end reais executando 
 - Testes E2E devem rodar isoladamente sem interferir no repositório de trabalho.
 
 ## Critério de Aceite
-- [ ] **Dado** teste E2E executando o binário `trustkit`, **quando** submetido a arquivo com teste removido, **então** o processo encerra com código 4 e mensagem informativa.
+- [x] **Dado** teste E2E executando o binário `trustkit`, **quando** submetido a arquivo com teste removido, **então** o processo encerra com código 4 e mensagem informativa.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-cli/tests/e2e_gauntlet_ast_audit.rs`.

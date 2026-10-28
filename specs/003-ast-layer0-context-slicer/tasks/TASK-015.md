@@ -2,7 +2,7 @@
 
 > **Camada:** Infra/Setup
 > **Estimativa:** P
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-009
@@ -32,7 +32,7 @@ Toda a fiação de dependências do TRustKit ocorre exclusivamente no Compositio
 - Sem singletons globais ou mutabilidade compartilhada.
 
 ## Critério de Aceite
-- [ ] **Dado** invocação de `trustkit gauntlet ast-audit`, **quando** o bootstrap executa, **então** resolve as dependências e despacha para o handler.
+- [x] **Dado** invocação de `trustkit gauntlet ast-audit`, **quando** o bootstrap executa, **então** resolve as dependências e despacha para o handler.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-cli/src/bootstrap.rs`.
