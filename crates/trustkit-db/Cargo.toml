@@ -10,3 +10,6 @@ trustkit-core = { path = "../trustkit-core" }
 rusqlite = { version = "0.32", features = ["bundled"] }
 blake3 = "1.5"
 rayon = "1.10"
+
+[dev-dependencies]
+tempfile = "3.13"

@@ -1,5 +1,7 @@
 //! CLI Command modules
 
+pub mod context_slice_cmd;
+pub mod gauntlet_ast_audit_cmd;
 pub mod hook_cmd;
 pub mod init_cmd;
 pub mod spec_init_cmd;

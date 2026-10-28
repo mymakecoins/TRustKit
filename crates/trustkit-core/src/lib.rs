@@ -3,6 +3,7 @@
 //! Constitutional Principle I: Zero external dependencies (std only).
 //! Constitutional Principle II: Absolute Prohibition of NULL & Special Cases.
 
+pub mod ast_entities;
 pub mod entities;
 pub mod errors;
 pub mod gates_fsm;

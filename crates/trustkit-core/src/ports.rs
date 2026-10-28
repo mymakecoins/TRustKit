@@ -4,7 +4,8 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
 use crate::entities::{
-    ArtifactSeal, ExecutionEvidence, SddCycle, SpecificationV2, TaskNode, WaveSchedule,
+    ArtifactSeal, AstAuditVerdict, ContextSliceRequest, ContextSliceResult, ExecutionEvidence,
+    SddCycle, SpecificationV2, TaskNode, WaveSchedule,
 };
 use crate::errors::DomainViolation;
 use crate::special_cases::{
@@ -78,4 +79,19 @@ pub trait SpecValidatorPort: Send + Sync {
 
 pub trait WaveExecutionPlannerPort: Send + Sync {
     fn plan_waves(&self, tasks: &[TaskNode]) -> Result<WaveSchedule, DomainViolation>;
+}
+
+pub trait AstAuditorPort: Send + Sync {
+    fn audit_source_tree(
+        &self,
+        files: &[String],
+        reference_seals: &[ArtifactSeal],
+    ) -> Result<AstAuditVerdict, DomainViolation>;
+}
+
+pub trait ContextSlicerPort: Send + Sync {
+    fn slice_context(
+        &self,
+        request: &ContextSliceRequest,
+    ) -> Result<ContextSliceResult, DomainViolation>;
 }

@@ -3,10 +3,12 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
 use crate::cli_contract::{
-    Cli, Command, HookArgs, HookSubcommand, SpecArgs, SpecSubcommand, WaveArgs, WaveSubcommand,
+    Cli, Command, ContextArgs, ContextSubcommand, GauntletArgs, GauntletSubcommand, HookArgs,
+    HookSubcommand, SpecArgs, SpecSubcommand, WaveArgs, WaveSubcommand,
 };
 use crate::commands::{
-    hook_cmd, init_cmd, spec_init_cmd, spec_lock_cmd, status_cmd, wave_plan_cmd,
+    context_slice_cmd, gauntlet_ast_audit_cmd, hook_cmd, init_cmd, spec_init_cmd, spec_lock_cmd,
+    status_cmd, wave_plan_cmd,
 };
 use crate::error_handler::DomainOutcome;
 use trustkit_core::errors::DomainViolation;
@@ -27,6 +29,14 @@ impl FastSyncBootstrap {
             },
             Command::Wave(WaveArgs { action }) => match action {
                 WaveSubcommand::Plan(args) => wave_plan_cmd::execute(args, json_mode),
+            },
+            Command::Gauntlet(GauntletArgs { action }) => match action {
+                GauntletSubcommand::AstAudit(args) => {
+                    gauntlet_ast_audit_cmd::execute(args, json_mode)
+                }
+            },
+            Command::Context(ContextArgs { action }) => match action {
+                ContextSubcommand::Slice(args) => context_slice_cmd::execute(args, json_mode),
             },
             Command::Init(_) => Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "bootstrap".to_string(),
@@ -60,9 +70,12 @@ impl FullConcurrentBootstrap {
 
 pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
     match &cli.command {
-        Command::Hook(_) | Command::Status(_) | Command::Spec(_) | Command::Wave(_) => {
-            FastSyncBootstrap::dispatch(cli)
-        }
+        Command::Hook(_)
+        | Command::Status(_)
+        | Command::Spec(_)
+        | Command::Wave(_)
+        | Command::Gauntlet(_)
+        | Command::Context(_) => FastSyncBootstrap::dispatch(cli),
         Command::Init(_) => FullConcurrentBootstrap::dispatch(cli),
     }
 }

@@ -2,6 +2,7 @@
 // Constitutional Principle I: Strict Hexagonal Isolation (std only).
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
+pub use crate::ast_entities::*;
 pub use crate::special_cases::SpecLockState;
 use crate::special_cases::{
     ContractUnlockState, IssueLinkage, TddLifecycleState, TraceVerificationState,
