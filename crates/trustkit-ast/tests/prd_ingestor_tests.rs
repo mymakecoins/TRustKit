@@ -58,6 +58,36 @@ fn test_extract_rn_rf_and_slug_from_h1() {
 }
 
 #[test]
+fn test_extract_rn_rf_with_markdown_formatting_and_3_columns() {
+    let dir = tempdir().expect("create temp dir");
+    let prd_path = dir.path().join("PRD_Formatted.md");
+
+    let prd_content = r#"# TRustKit Spec Ingestion
+
+| ID | Titulo | Detalhamento |
+| :--- | :--- | :--- |
+| **RN-001** | **Sem Codigo Sem Spec** | Regra estrita de bloqueio |
+| **RF-001** | **Ingestao Upstream** | Ingestao de tabelas markdown |
+"#;
+
+    fs::write(&prd_path, prd_content).expect("write prd file");
+
+    let ingestor = PrdSpecificationIngestor;
+    let spec = ingestor
+        .ingest_from_prd(prd_path.to_str().expect("valid utf-8 path"), None)
+        .expect("ingestion should succeed with markdown bold");
+
+    assert_eq!(spec.business_rules.len(), 1);
+    assert_eq!(spec.business_rules[0].rule_id, "RN-001");
+    assert_eq!(
+        spec.business_rules[0].description,
+        "Sem Codigo Sem Spec: Regra estrita de bloqueio"
+    );
+    assert_eq!(spec.functional_requirements.len(), 1);
+    assert_eq!(spec.functional_requirements[0].req_id, "RF-001");
+}
+
+#[test]
 fn test_custom_slug_override() {
     let dir = tempdir().expect("create temp dir");
     let prd_path = dir.path().join("PRD_Sample.md");

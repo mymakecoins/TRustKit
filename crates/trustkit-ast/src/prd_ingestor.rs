@@ -15,6 +15,10 @@ use trustkit_core::special_cases::SpecLockState;
 #[derive(Debug, Default, Clone, Copy)]
 pub struct PrdSpecificationIngestor;
 
+fn sanitize_markdown_token(token: &str) -> &str {
+    token.trim_matches(|c: char| c == '*' || c == '`' || c == '_' || c.is_whitespace())
+}
+
 impl PrdSpecificationIngestor {
     pub fn slugify(title: &str) -> String {
         let mut slug = String::with_capacity(title.len());
@@ -120,17 +124,23 @@ impl PrdSpecificationIngestorPort for PrdSpecificationIngestor {
                     .collect();
 
                 if columns.len() >= 2 {
-                    let first = columns[0];
-                    let second = columns[1];
-                    if first.starts_with("RN-") {
+                    let clean_id = sanitize_markdown_token(columns[0]);
+                    let clean_col1 = sanitize_markdown_token(columns[1]);
+                    let description = if columns.len() >= 3 {
+                        format!("{}: {}", clean_col1, sanitize_markdown_token(columns[2]))
+                    } else {
+                        clean_col1.to_string()
+                    };
+
+                    if clean_id.starts_with("RN-") {
                         business_rules.push(BusinessRule {
-                            rule_id: first.to_string(),
-                            description: second.to_string(),
+                            rule_id: clean_id.to_string(),
+                            description,
                         });
-                    } else if first.starts_with("RF-") {
+                    } else if clean_id.starts_with("RF-") {
                         functional_requirements.push(FunctionalRequirement {
-                            req_id: first.to_string(),
-                            description: second.to_string(),
+                            req_id: clean_id.to_string(),
+                            description,
                         });
                     }
                 }

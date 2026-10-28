@@ -8,6 +8,10 @@ use std::collections::HashSet;
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{SpecValidationReport, SpecValidatorPort};
 
+fn sanitize_markdown_token(token: &str) -> &str {
+    token.trim_matches(|c: char| c == '*' || c == '`' || c == '_' || c.is_whitespace())
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct SpecValidator;
 
@@ -106,16 +110,30 @@ impl SpecValidator {
             }
 
             if let Some(ref mut sc) = current_scenario {
-                let lower = trimmed.to_lowercase();
-                if lower.contains("dado") || lower.contains("given") {
+                let clean_line = trimmed
+                    .trim_start_matches(|c: char| c == '-' || c == '*' || c == '`' || c.is_whitespace())
+                    .trim_start();
+                let lower = clean_line.to_lowercase();
+
+                if lower.starts_with("dado") || lower.starts_with("given") {
                     sc.push("GIVEN".to_string());
-                } else if lower.contains("quando") || lower.contains("when") {
+                } else if lower.starts_with("quando") || lower.starts_with("when") {
                     sc.push("WHEN".to_string());
-                } else if lower.contains("entao")
-                    || lower.contains("então")
-                    || lower.contains("then")
+                } else if lower.starts_with("entao")
+                    || lower.starts_with("então")
+                    || lower.starts_with("then")
                 {
                     sc.push("THEN".to_string());
+                } else {
+                    if lower.contains("dado") || lower.contains("given") {
+                        sc.push("GIVEN".to_string());
+                    }
+                    if lower.contains("quando") || lower.contains("when") {
+                        sc.push("WHEN".to_string());
+                    }
+                    if lower.contains("entao") || lower.contains("então") || lower.contains("then") {
+                        sc.push("THEN".to_string());
+                    }
                 }
             }
         }
@@ -170,16 +188,18 @@ impl SpecValidator {
                 }
 
                 if in_matrix_section {
-                    if cols[0] != "Regra Negocio" && cols[0].starts_with("RN-") {
+                    let clean_col0 = sanitize_markdown_token(cols[0]);
+                    if clean_col0 != "Regra Negocio" && clean_col0.starts_with("RN-") {
                         matrix_rows.push(cols);
                     }
                 } else {
                     for col in &cols {
-                        if col.starts_with("RN-") && !declared_rules.contains(&col.to_string()) {
-                            declared_rules.push(col.to_string());
+                        let clean = sanitize_markdown_token(col);
+                        if clean.starts_with("RN-") && !declared_rules.contains(&clean.to_string()) {
+                            declared_rules.push(clean.to_string());
                         }
-                        if col.starts_with("RF-") && !declared_reqs.contains(&col.to_string()) {
-                            declared_reqs.push(col.to_string());
+                        if clean.starts_with("RF-") && !declared_reqs.contains(&clean.to_string()) {
+                            declared_reqs.push(clean.to_string());
                         }
                     }
                 }
@@ -190,16 +210,16 @@ impl SpecValidator {
         let mut orphan_rules = Vec::new();
 
         for row in matrix_rows {
-            let rule_id = row[0].to_string();
+            let rule_id = sanitize_markdown_token(row[0]).to_string();
             if !declared_rules.contains(&rule_id) {
                 declared_rules.push(rule_id.clone());
             }
 
-            let rf = row.get(1).copied().unwrap_or("");
-            let task = row.get(2).copied().unwrap_or("");
-            let _mermaid = row.get(3).copied().unwrap_or("");
-            let test = row.get(4).copied().unwrap_or("");
-            let screenshot = row.get(5).copied().unwrap_or("");
+            let rf = sanitize_markdown_token(row.get(1).copied().unwrap_or(""));
+            let task = sanitize_markdown_token(row.get(2).copied().unwrap_or(""));
+            let _mermaid = sanitize_markdown_token(row.get(3).copied().unwrap_or(""));
+            let test = sanitize_markdown_token(row.get(4).copied().unwrap_or(""));
+            let screenshot = sanitize_markdown_token(row.get(5).copied().unwrap_or(""));
 
             if !rf.is_empty() && rf.starts_with("RF-") && !declared_reqs.contains(&rf.to_string()) {
                 declared_reqs.push(rf.to_string());

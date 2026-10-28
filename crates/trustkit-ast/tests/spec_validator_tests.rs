@@ -156,3 +156,30 @@ fn test_orphan_rule_fails_validation_with_exact_rule_id() {
         other => panic!("Expected TraceabilityGap with RN-002, got: {other:?}"),
     }
 }
+
+#[test]
+fn test_gherkin_with_nested_keywords_in_description_passes() {
+    let spec = r#"# Especificacao: Modulo Complexo
+
+## 2. Diagrama de Fluxo (Mermaid)
+```mermaid
+flowchart LR
+    A --> B
+```
+
+## 3. Criterios de Aceitacao (Gherkin)
+### Cenario 1: Sucesso
+- **Dado** requisito RF-001 habilitado
+- **Quando** o processamento com o dado anterior for acionado
+- **Entao** o dado deve ser gravado e validado
+
+## 4. Matriz de Rastreabilidade
+| Regra Negocio | Requisito Funcional | Tarefa | No Mermaid | Teste Playwright | Screenshot |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| RN-001 | RF-001 | TASK-001 | Node1 | tests/e2e/test.spec.ts | SC-001.png |
+"#;
+
+    let validator = SpecValidator;
+    let res = validator.validate_specification(spec);
+    assert!(res.is_ok(), "Expected valid spec, got: {res:?}");
+}
