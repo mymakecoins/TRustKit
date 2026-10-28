@@ -28,6 +28,10 @@ impl FastSyncBootstrap {
             Command::Wave(WaveArgs { action }) => match action {
                 WaveSubcommand::Plan(args) => wave_plan_cmd::execute(args, json_mode),
             },
+            Command::Gauntlet(_) | Command::Context(_) => Err(DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "bootstrap".to_string(),
+                details: "AST Gauntlet and Context Slicing execution pending bootstrap wire-up.".to_string(),
+            }),
             Command::Init(_) => Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "bootstrap".to_string(),
                 details: "Command 'init' requires FullConcurrentBootstrap path.".to_string(),
@@ -60,9 +64,12 @@ impl FullConcurrentBootstrap {
 
 pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
     match &cli.command {
-        Command::Hook(_) | Command::Status(_) | Command::Spec(_) | Command::Wave(_) => {
-            FastSyncBootstrap::dispatch(cli)
-        }
+        Command::Hook(_)
+        | Command::Status(_)
+        | Command::Spec(_)
+        | Command::Wave(_)
+        | Command::Gauntlet(_)
+        | Command::Context(_) => FastSyncBootstrap::dispatch(cli),
         Command::Init(_) => FullConcurrentBootstrap::dispatch(cli),
     }
 }

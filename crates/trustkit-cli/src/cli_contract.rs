@@ -39,6 +39,12 @@ impl Cli {
             Command::Wave(WaveArgs { action }) => match action {
                 WaveSubcommand::Plan(args) => args.json,
             },
+            Command::Gauntlet(GauntletArgs { action }) => match action {
+                GauntletSubcommand::AstAudit(args) => args.json,
+            },
+            Command::Context(ContextArgs { action }) => match action {
+                ContextSubcommand::Slice(args) => args.json,
+            },
         }
     }
 }
@@ -59,6 +65,12 @@ pub enum Command {
 
     #[command(about = "Plan and organize execution waves from atomic tasks (Gate 3)")]
     Wave(WaveArgs),
+
+    #[command(about = "Run Gauntlet verification layers (Gate 5)")]
+    Gauntlet(GauntletArgs),
+
+    #[command(about = "Context slicing utilities for builder agent prompts")]
+    Context(ContextArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]
@@ -87,10 +99,7 @@ pub struct HookArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum HookSubcommand {
-    #[command(
-        name = "pre-tool",
-        about = "Intercept and evaluate shell commands before execution"
-    )]
+    #[command(name = "pre-tool", about = "Intercept and evaluate shell commands before execution")]
     PreTool(PreToolArgs),
 }
 
@@ -98,7 +107,6 @@ pub enum HookSubcommand {
 pub struct PreToolArgs {
     #[arg(long, help = "Shell command string to evaluate")]
     pub command: String,
-
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }
@@ -111,27 +119,16 @@ pub struct SpecArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum SpecSubcommand {
-    #[command(
-        name = "init",
-        about = "Initialize a Spec V2 skeleton from upstream PRD or ADR"
-    )]
+    #[command(name = "init", about = "Initialize a Spec V2 skeleton from upstream PRD or ADR")]
     Init(SpecInitArgs),
-
-    #[command(
-        name = "lock",
-        about = "Validate and cryptographically seal specification at Gate 2"
-    )]
+    #[command(name = "lock", about = "Validate and cryptographically seal specification at Gate 2")]
     Lock(SpecLockArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct SpecLockArgs {
-    #[arg(
-        long,
-        help = "Path to the specification file (defaults to active cycle spec)"
-    )]
+    #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
     pub spec: Option<String>,
-
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }
@@ -140,13 +137,10 @@ pub struct SpecLockArgs {
 pub struct SpecInitArgs {
     #[arg(long, help = "Path to upstream PRD or ADR Markdown file")]
     pub from_prd: String,
-
     #[arg(long, help = "Custom name/slug for the feature specification")]
     pub name: Option<String>,
-
     #[arg(long, help = "Output directory for the generated specification file")]
     pub output_dir: Option<String>,
-
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }
@@ -173,6 +167,63 @@ pub struct WavePlanArgs {
         help = "Path to directory containing atomic task definitions (TASK-NNN.md)"
     )]
     pub tasks_dir: Option<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq)]
+pub struct GauntletArgs {
+    #[command(subcommand)]
+    pub action: GauntletSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum GauntletSubcommand {
+    #[command(
+        name = "ast-audit",
+        about = "Execute Layer 0 syntactic AST invariant and anti-cheat audit"
+    )]
+    AstAudit(GauntletAstAuditArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct GauntletAstAuditArgs {
+    #[arg(long, num_args = 1.., value_delimiter = ' ', help = "Explicit list of files to audit")]
+    pub files: Vec<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq)]
+pub struct ContextArgs {
+    #[command(subcommand)]
+    pub action: ContextSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum ContextSubcommand {
+    #[command(
+        name = "slice",
+        about = "Slice AST context within budget for builder agents"
+    )]
+    Slice(ContextSliceArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct ContextSliceArgs {
+    #[arg(long, help = "Target file path to slice")]
+    pub file: Option<String>,
+
+    #[arg(long, num_args = 1.., value_delimiter = ' ', help = "Multiple target file paths to slice")]
+    pub files: Vec<String>,
+
+    #[arg(long, help = "Line or token budget limit")]
+    pub budget: Option<usize>,
+
+    #[arg(long, num_args = 1.., value_delimiter = ',', help = "Symbol filters to preserve")]
+    pub symbols: Vec<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,

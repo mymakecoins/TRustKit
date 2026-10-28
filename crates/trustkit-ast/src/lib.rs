@@ -1,5 +1,6 @@
 //! TRustKit AST: Syntactic inspection and DAG wave topology.
 
+pub mod ast_adapter;
 pub mod context_slicer;
 pub mod lexical_scanner;
 pub mod prd_ingestor;
@@ -10,6 +11,7 @@ pub mod test_integrity_auditor;
 pub mod ts_assertion_counter;
 pub mod wave_planner;
 
+pub use ast_adapter::TreeSitterAstAuditorAdapter;
 pub use context_slicer::AstContextSlicer;
 pub use lexical_scanner::InvariantLexicalScanner;
 pub use prd_ingestor::PrdSpecificationIngestor;
