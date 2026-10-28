@@ -50,6 +50,18 @@ pub enum DomainViolation {
         consecutive_failures: u8,
         remediation: String,
     },
+    MissingBusinessRules {
+        file_path: String,
+        details: String,
+    },
+    TraceabilityGap {
+        orphan_rule: String,
+        message: String,
+    },
+    CycleDetected {
+        cycle_path: Vec<String>,
+        message: String,
+    },
 }
 
 impl DomainViolation {
@@ -58,21 +70,19 @@ impl DomainViolation {
             Self::InfrastructureBoundaryFault { .. } => {
                 ExitCodeCategory::InfrastructureBoundaryFault
             }
-            Self::SpecOrTraceabilityIncomplete { .. } => {
+            Self::SpecOrTraceabilityIncomplete { .. } | Self::MissingBusinessRules { .. } => {
                 ExitCodeCategory::SpecOrTraceabilityIncomplete
             }
-            Self::TddLifecycleViolation { .. } => {
+            Self::TddLifecycleViolation { .. } | Self::TraceabilityGap { .. } => {
                 ExitCodeCategory::TddLifecycleViolation
             }
-            Self::AstIntegrityOrInvariantViolation { .. } => {
+            Self::AstIntegrityOrInvariantViolation { .. } | Self::CycleDetected { .. } => {
                 ExitCodeCategory::AstIntegrityOrInvariantViolation
             }
             Self::CriticSwarmOrPlaywrightFailed { .. } => {
                 ExitCodeCategory::CriticSwarmOrPlaywrightFailed
             }
-            Self::CircuitBreakerTripped { .. } => {
-                ExitCodeCategory::CircuitBreakerTripped
-            }
+            Self::CircuitBreakerTripped { .. } => ExitCodeCategory::CircuitBreakerTripped,
         }
     }
 
@@ -87,8 +97,14 @@ impl fmt::Display for DomainViolation {
             Self::InfrastructureBoundaryFault { subsystem, details } => {
                 write!(f, "[FAULT:{subsystem}] {details}")
             }
-            Self::SpecOrTraceabilityIncomplete { reason, missing_artefact } => {
-                write!(f, "[SPEC_INCOMPLETE] {reason} (missing: {missing_artefact})")
+            Self::SpecOrTraceabilityIncomplete {
+                reason,
+                missing_artefact,
+            } => {
+                write!(
+                    f,
+                    "[SPEC_INCOMPLETE] {reason} (missing: {missing_artefact})"
+                )
             }
             Self::TddLifecycleViolation { task_id, reason } => {
                 write!(f, "[TDD_VIOLATION:{task_id}] {reason}")
@@ -104,17 +120,43 @@ impl fmt::Display for DomainViolation {
                     "[INVARIANT_BLOCKED:{invariant_id}] Command '{intercepted_command}' blocked: {reason}"
                 )
             }
-            Self::CriticSwarmOrPlaywrightFailed { layer, attempt, failure_summary } => {
+            Self::CriticSwarmOrPlaywrightFailed {
+                layer,
+                attempt,
+                failure_summary,
+            } => {
                 write!(
                     f,
                     "[GAUNTLET_FAILED:{layer}] Attempt {attempt}/5 failed: {failure_summary}"
                 )
             }
-            Self::CircuitBreakerTripped { cycle_id, consecutive_failures, remediation } => {
+            Self::CircuitBreakerTripped {
+                cycle_id,
+                consecutive_failures,
+                remediation,
+            } => {
                 write!(
                     f,
                     "[CIRCUIT_BREAKER:{cycle_id}] Locked after {consecutive_failures} failures. Remediation: {remediation}"
                 )
+            }
+            Self::MissingBusinessRules { file_path, details } => {
+                write!(
+                    f,
+                    "[SPEC_INGESTION_ERROR] Missing business rules in '{file_path}': {details}"
+                )
+            }
+            Self::TraceabilityGap {
+                orphan_rule,
+                message,
+            } => {
+                write!(f, "[TRACEABILITY_GAP] Rule '{orphan_rule}': {message}")
+            }
+            Self::CycleDetected {
+                cycle_path,
+                message,
+            } => {
+                write!(f, "[CYCLE_DETECTED] Path {:?}: {message}", cycle_path)
             }
         }
     }
@@ -140,11 +182,23 @@ mod tests {
         };
         assert_eq!(spec_inc.posix_exit_code(), 2);
 
+        let missing_rules = DomainViolation::MissingBusinessRules {
+            file_path: "prd.md".to_string(),
+            details: "No RN found".to_string(),
+        };
+        assert_eq!(missing_rules.posix_exit_code(), 2);
+
         let tdd = DomainViolation::TddLifecycleViolation {
             task_id: "TASK-001".to_string(),
             reason: "No red evidence".to_string(),
         };
         assert_eq!(tdd.posix_exit_code(), 3);
+
+        let gap = DomainViolation::TraceabilityGap {
+            orphan_rule: "RN-002".to_string(),
+            message: "Orphan rule without task".to_string(),
+        };
+        assert_eq!(gap.posix_exit_code(), 3);
 
         let invariant = DomainViolation::AstIntegrityOrInvariantViolation {
             invariant_id: "RN-006".to_string(),
@@ -153,6 +207,12 @@ mod tests {
             remediation: "Add explicit files".to_string(),
         };
         assert_eq!(invariant.posix_exit_code(), 4);
+
+        let cycle = DomainViolation::CycleDetected {
+            cycle_path: vec!["T1".into(), "T2".into(), "T1".into()],
+            message: "Cycle".to_string(),
+        };
+        assert_eq!(cycle.posix_exit_code(), 4);
 
         let critic = DomainViolation::CriticSwarmOrPlaywrightFailed {
             layer: "E2E".to_string(),

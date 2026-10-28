@@ -32,6 +32,13 @@ impl Cli {
             Command::Hook(HookArgs { action }) => match action {
                 HookSubcommand::PreTool(args) => args.json,
             },
+            Command::Spec(SpecArgs { action }) => match action {
+                SpecSubcommand::Init(args) => args.json,
+                SpecSubcommand::Lock(args) => args.json,
+            },
+            Command::Wave(WaveArgs { action }) => match action {
+                WaveSubcommand::Plan(args) => args.json,
+            },
         }
     }
 }
@@ -46,6 +53,12 @@ pub enum Command {
 
     #[command(about = "Hook lifecycle commands for pre/post tool execution")]
     Hook(HookArgs),
+
+    #[command(about = "Manage and govern Specification V2 lifecycle (Gates 1 & 2)")]
+    Spec(SpecArgs),
+
+    #[command(about = "Plan and organize execution waves from atomic tasks (Gate 3)")]
+    Wave(WaveArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]
@@ -74,7 +87,10 @@ pub struct HookArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum HookSubcommand {
-    #[command(name = "pre-tool", about = "Intercept and evaluate shell commands before execution")]
+    #[command(
+        name = "pre-tool",
+        about = "Intercept and evaluate shell commands before execution"
+    )]
     PreTool(PreToolArgs),
 }
 
@@ -87,53 +103,81 @@ pub struct PreToolArgs {
     pub json: bool,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_init_with_issue() {
-        let args = ["trustkit", "init", "--issue", "45", "--json"];
-        let cli = Cli::try_parse_from(args).expect("parse should succeed");
-        assert!(cli.is_json_mode());
-        assert_eq!(
-            cli.command,
-            Command::Init(InitArgs {
-                issue: Some("45".to_string()),
-                from_prd: None,
-                json: true,
-            })
-        );
-    }
-
-    #[test]
-    fn test_parse_status() {
-        let args = ["trustkit", "status"];
-        let cli = Cli::try_parse_from(args).expect("parse should succeed");
-        assert!(!cli.is_json_mode());
-        assert_eq!(cli.command, Command::Status(StatusArgs { json: false }));
-    }
-
-    #[test]
-    fn test_parse_hook_pre_tool() {
-        let args = [
-            "trustkit",
-            "hook",
-            "pre-tool",
-            "--command",
-            "git add .",
-            "--json",
-        ];
-        let cli = Cli::try_parse_from(args).expect("parse should succeed");
-        assert!(cli.is_json_mode());
-        match cli.command {
-            Command::Hook(HookArgs {
-                action: HookSubcommand::PreTool(pre_tool),
-            }) => {
-                assert_eq!(pre_tool.command, "git add .");
-                assert!(pre_tool.json);
-            }
-            _ => panic!("Expected hook pre-tool command"),
-        }
-    }
+#[derive(Args, Debug, PartialEq, Eq)]
+pub struct SpecArgs {
+    #[command(subcommand)]
+    pub action: SpecSubcommand,
 }
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum SpecSubcommand {
+    #[command(
+        name = "init",
+        about = "Initialize a Spec V2 skeleton from upstream PRD or ADR"
+    )]
+    Init(SpecInitArgs),
+
+    #[command(
+        name = "lock",
+        about = "Validate and cryptographically seal specification at Gate 2"
+    )]
+    Lock(SpecLockArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct SpecLockArgs {
+    #[arg(
+        long,
+        help = "Path to the specification file (defaults to active cycle spec)"
+    )]
+    pub spec: Option<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct SpecInitArgs {
+    #[arg(long, help = "Path to upstream PRD or ADR Markdown file")]
+    pub from_prd: String,
+
+    #[arg(long, help = "Custom name/slug for the feature specification")]
+    pub name: Option<String>,
+
+    #[arg(long, help = "Output directory for the generated specification file")]
+    pub output_dir: Option<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq)]
+pub struct WaveArgs {
+    #[command(subcommand)]
+    pub action: WaveSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum WaveSubcommand {
+    #[command(
+        name = "plan",
+        about = "Construct DAG and plan topological execution waves"
+    )]
+    Plan(WavePlanArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct WavePlanArgs {
+    #[arg(
+        long,
+        help = "Path to directory containing atomic task definitions (TASK-NNN.md)"
+    )]
+    pub tasks_dir: Option<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[cfg(test)]
+#[path = "cli_contract_tests.rs"]
+mod tests;

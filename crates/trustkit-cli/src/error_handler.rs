@@ -28,16 +28,25 @@ struct JsonViolationDetails {
 struct JsonErrorEnvelope {
     verdict: String,
     exit_code: i32,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    status: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    error_kind: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    cycle_path: Vec<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    rejection_kind: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    orphan_rule: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    message: String,
     violation: JsonViolationDetails,
 }
 
 pub struct CliBoundaryErrorHandler;
 
 impl CliBoundaryErrorHandler {
-    pub fn handle_result(
-        result: Result<DomainOutcome, DomainViolation>,
-        json_mode: bool,
-    ) -> i32 {
+    pub fn handle_result(result: Result<DomainOutcome, DomainViolation>, json_mode: bool) -> i32 {
         Self::handle_result_with_writer(result, json_mode, &mut io::stderr())
     }
 
@@ -56,10 +65,7 @@ impl CliBoundaryErrorHandler {
                         let _ = writeln!(writer, "{json_str}");
                     }
                 } else {
-                    let _ = writeln!(
-                        writer,
-                        "[FAIL] [EXIT-{exit_code}] {violation}"
-                    );
+                    let _ = writeln!(writer, "[FAIL] [EXIT-{exit_code}] {violation}");
                 }
                 exit_code
             }
@@ -126,6 +132,27 @@ impl CliBoundaryErrorHandler {
                 format!("Cycle {cycle_id} failed {consecutive_failures} consecutive times."),
                 remediation.clone(),
             ),
+            DomainViolation::MissingBusinessRules { file_path, details } => (
+                "SPEC_INGESTION_ERROR".to_string(),
+                String::new(),
+                String::new(),
+                format!("Missing business rules in {file_path}: {details}"),
+                "Ensure upstream PRD contains required Business Rules (RN) and Functional Requirements (RF) tables.".to_string(),
+            ),
+            DomainViolation::TraceabilityGap { orphan_rule, message } => (
+                "TraceabilityGap".to_string(),
+                orphan_rule.clone(),
+                String::new(),
+                message.clone(),
+                "Map all business rules to tasks and E2E test scenarios in the traceability matrix.".to_string(),
+            ),
+            DomainViolation::CycleDetected { cycle_path, message } => (
+                "DagValidationError::CycleDetected".to_string(),
+                String::new(),
+                String::new(),
+                format!("{message} Cycle: {}", cycle_path.join(" -> ")),
+                "Break circular dependencies in task definitions.".to_string(),
+            ),
         };
 
         let verdict = if exit_code == 4 {
@@ -134,9 +161,49 @@ impl CliBoundaryErrorHandler {
             "FAIL".to_string()
         };
 
+        let (status, error_kind, cycle_path, rejection_kind, orphan_rule, message) = match violation
+        {
+            DomainViolation::TraceabilityGap {
+                orphan_rule,
+                message,
+            } => (
+                "SPEC_LOCK_REJECTED".to_string(),
+                String::new(),
+                vec![],
+                "TraceabilityGap".to_string(),
+                orphan_rule.clone(),
+                message.clone(),
+            ),
+            DomainViolation::CycleDetected {
+                cycle_path,
+                message,
+            } => (
+                "CYCLE_DETECTED".to_string(),
+                "DagValidationError::CycleDetected".to_string(),
+                cycle_path.clone(),
+                String::new(),
+                String::new(),
+                message.clone(),
+            ),
+            _ => (
+                String::new(),
+                String::new(),
+                vec![],
+                String::new(),
+                String::new(),
+                String::new(),
+            ),
+        };
+
         JsonErrorEnvelope {
             verdict,
             exit_code,
+            status,
+            error_kind,
+            cycle_path,
+            rejection_kind,
+            orphan_rule,
+            message,
             violation: JsonViolationDetails {
                 kind,
                 invariant_id,
@@ -149,58 +216,5 @@ impl CliBoundaryErrorHandler {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_handle_result_success_returns_zero() {
-        let mut buf = Vec::new();
-        let code = CliBoundaryErrorHandler::handle_result_with_writer(
-            Ok(DomainOutcome::Success),
-            false,
-            &mut buf,
-        );
-        assert_eq!(code, 0);
-        assert!(buf.is_empty());
-    }
-
-    #[test]
-    fn test_handle_result_invariant_violation_json() {
-        let mut buf = Vec::new();
-        let violation = DomainViolation::AstIntegrityOrInvariantViolation {
-            invariant_id: "RN-006".to_string(),
-            intercepted_command: "git add .".to_string(),
-            reason: "Sweeping add forbidden".to_string(),
-            remediation: "Stage explicit files".to_string(),
-        };
-        let code = CliBoundaryErrorHandler::handle_result_with_writer(
-            Err(violation),
-            true,
-            &mut buf,
-        );
-        assert_eq!(code, 4);
-        let output = String::from_utf8(buf).expect("valid utf8");
-        assert!(output.contains("\"verdict\": \"BLOCKED\""));
-        assert!(output.contains("\"exit_code\": 4"));
-        assert!(output.contains("\"invariant_id\": \"RN-006\""));
-        assert!(!output.contains(": null"));
-    }
-
-    #[test]
-    fn test_handle_result_human_mode() {
-        let mut buf = Vec::new();
-        let violation = DomainViolation::TddLifecycleViolation {
-            task_id: "TASK-001".to_string(),
-            reason: "Missing red evidence".to_string(),
-        };
-        let code = CliBoundaryErrorHandler::handle_result_with_writer(
-            Err(violation),
-            false,
-            &mut buf,
-        );
-        assert_eq!(code, 3);
-        let output = String::from_utf8(buf).expect("valid utf8");
-        assert!(output.contains("[FAIL] [EXIT-3]"));
-        assert!(output.contains("TASK-001"));
-    }
-}
+#[path = "error_handler_tests.rs"]
+mod tests;

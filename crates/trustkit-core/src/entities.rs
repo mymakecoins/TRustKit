@@ -2,9 +2,10 @@
 // Constitutional Principle I: Strict Hexagonal Isolation (std only).
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
+pub use crate::special_cases::SpecLockState;
 use crate::special_cases::{
-    ContractUnlockState, IssueLinkage, SpecLockState, TddLifecycleState,
-    TraceVerificationState, WorktreeAllocation,
+    ContractUnlockState, IssueLinkage, TddLifecycleState, TraceVerificationState,
+    WorktreeAllocation,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -149,6 +150,81 @@ pub struct AtomicTask {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BusinessRule {
+    pub rule_id: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FunctionalRequirement {
+    pub req_id: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UpstreamDocument {
+    pub path: String,
+    pub title: String,
+    pub topic_slug: String,
+    pub business_rules: Vec<BusinessRule>,
+    pub functional_requirements: Vec<FunctionalRequirement>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GherkinScenario {
+    pub name: String,
+    pub given: Vec<String>,
+    pub when: Vec<String>,
+    pub then: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TraceabilityRow {
+    pub business_rule_id: String,
+    pub functional_req_id: String,
+    pub task_id: String,
+    pub mermaid_node: String,
+    pub playwright_spec_path: String,
+    pub evidence_screenshot: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SpecificationV2 {
+    pub cycle_id: String,
+    pub feature_slug: String,
+    pub spec_file_path: String,
+    pub business_rules: Vec<BusinessRule>,
+    pub functional_requirements: Vec<FunctionalRequirement>,
+    pub mermaid_content: String,
+    pub gherkin_scenarios: Vec<GherkinScenario>,
+    pub traceability_matrix: Vec<TraceabilityRow>,
+    pub lock_state: SpecLockState,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskNode {
+    pub task_id: String,
+    pub title: String,
+    pub architectural_layer: String,
+    pub depends_on: Vec<String>,
+    pub expected_files: Vec<String>,
+    pub target_test_file: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExecutionWave {
+    pub wave_index: usize,
+    pub tasks: Vec<TaskNode>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WaveSchedule {
+    pub cycle_id: String,
+    pub total_tasks: usize,
+    pub waves: Vec<ExecutionWave>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExecutionEvidence {
     pub evidence_id: u64,
     pub cycle_id: String,
@@ -167,37 +243,5 @@ pub struct ExecutionEvidence {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_gate_stage_conversions() {
-        assert_eq!(GateStage::from_u8(0), Some(GateStage::Gate0Discovery));
-        assert_eq!(GateStage::from_u8(6), Some(GateStage::Gate6Certified));
-        assert_eq!(GateStage::from_u8(7), None);
-        assert_eq!(GateStage::Gate0Discovery.label(), "GATE_0_DISCOVERY");
-    }
-
-    #[test]
-    fn test_sdd_cycle_construction() {
-        let cycle = SddCycle {
-            cycle_id: "issue-45-202610271400".to_string(),
-            issue_linkage: IssueLinkage::UnlinkedLocalCycle {
-                directory_slug: "issue-45-202610271400".to_string(),
-            },
-            methodology_profile: MethodologyProfile::StandardGauntletV2,
-            current_gate: GateStage::Gate0Discovery,
-            lifecycle_status: CycleStatus::Active,
-            gauntlet_attempt: 0,
-            spec_dir: "specs/001".to_string(),
-            spec_file_path: "specs/001/spec.md".to_string(),
-            spec_seal_state: SpecLockState::DraftUnverified,
-            work_branch: "feat/45-core".to_string(),
-            base_commit_sha: "0123456789012345678901234567890123456789".to_string(),
-            pre_existing_dirty_files: vec![],
-            created_at: "2026-10-27T14:00:00Z".to_string(),
-            updated_at: "2026-10-27T14:00:00Z".to_string(),
-        };
-        assert_eq!(cycle.gauntlet_attempt, 0);
-    }
-}
+#[path = "entities_tests.rs"]
+mod tests;

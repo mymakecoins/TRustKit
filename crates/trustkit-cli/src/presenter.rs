@@ -77,7 +77,10 @@ pub enum JsonSpecLockState {
     #[serde(rename = "DRAFT_UNVERIFIED")]
     DraftUnverified,
     #[serde(rename = "FROZEN")]
-    Frozen { spec_path: String, blake3_digest: String },
+    Frozen {
+        spec_path: String,
+        blake3_digest: String,
+    },
 }
 
 pub struct Presenter;
@@ -97,7 +100,10 @@ impl Presenter {
 
             let linkage = match &outcome.cycle.issue_linkage {
                 IssueLinkage::LinkedIssue {
-                    issue_number, issue_url, board_column, ..
+                    issue_number,
+                    issue_url,
+                    board_column,
+                    ..
                 } => JsonIssueLinkage::LinkedIssue {
                     issue_number: *issue_number,
                     issue_url: issue_url.clone(),
@@ -128,14 +134,29 @@ impl Presenter {
                 .unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
             let mut out = String::new();
-            out.push_str(&format!("[PASS] [GATE-0] SDD Cycle Initialized: {}\n", outcome.cycle.cycle_id));
+            out.push_str(&format!(
+                "[PASS] [GATE-0] SDD Cycle Initialized: {}\n",
+                outcome.cycle.cycle_id
+            ));
             out.push_str("------------------------------------------------------------\n");
             out.push_str(&format!("Cycle ID          : {}\n", outcome.cycle.cycle_id));
-            out.push_str(&format!("Gate Stage        : {}\n", outcome.cycle.current_gate.label()));
+            out.push_str(&format!(
+                "Gate Stage        : {}\n",
+                outcome.cycle.current_gate.label()
+            ));
             out.push_str(&format!("Spec Directory    : {}\n", outcome.cycle.spec_dir));
-            out.push_str(&format!("Spec File         : {}\n", outcome.cycle.spec_file_path));
-            out.push_str(&format!("Work Branch       : {}\n", outcome.cycle.work_branch));
-            out.push_str(&format!("Dirty Baseline    : {} files\n", outcome.cycle.pre_existing_dirty_files.len()));
+            out.push_str(&format!(
+                "Spec File         : {}\n",
+                outcome.cycle.spec_file_path
+            ));
+            out.push_str(&format!(
+                "Work Branch       : {}\n",
+                outcome.cycle.work_branch
+            ));
+            out.push_str(&format!(
+                "Dirty Baseline    : {} files\n",
+                outcome.cycle.pre_existing_dirty_files.len()
+            ));
             out
         }
     }
@@ -143,7 +164,8 @@ impl Presenter {
     pub fn render_hook_pre_tool(evaluated_command: &str, json_mode: bool) -> String {
         if Self::is_json_mode(json_mode) {
             let payload = JsonHookApprovalResponse {
-                verdict: "PASS".to_string(), exit_code: 0,
+                verdict: "PASS".to_string(),
+                exit_code: 0,
                 evaluated_command: evaluated_command.to_string(),
             };
             serde_json::to_string_pretty(&payload)
@@ -159,14 +181,20 @@ impl Presenter {
                 ActiveCycleLookup::Found(cycle) => {
                     let spec_lock_state = match &cycle.spec_seal_state {
                         SpecLockState::DraftUnverified => JsonSpecLockState::DraftUnverified,
-                        SpecLockState::Frozen { spec_path, blake3_digest } => JsonSpecLockState::Frozen {
-                            spec_path: spec_path.clone(), blake3_digest: blake3_digest.clone(),
+                        SpecLockState::Frozen {
+                            spec_path,
+                            blake3_digest,
+                        } => JsonSpecLockState::Frozen {
+                            spec_path: spec_path.clone(),
+                            blake3_digest: blake3_digest.clone(),
                         },
                     };
                     let lifecycle_str = match cycle.lifecycle_status {
-                        CycleStatus::Active => "ACTIVE", CycleStatus::Paused => "PAUSED",
+                        CycleStatus::Active => "ACTIVE",
+                        CycleStatus::Paused => "PAUSED",
                         CycleStatus::CircuitBreakerTripped => "CIRCUIT_BREAKER_TRIPPED",
-                        CycleStatus::Certified => "CERTIFIED", CycleStatus::Merged => "MERGED",
+                        CycleStatus::Certified => "CERTIFIED",
+                        CycleStatus::Merged => "MERGED",
                     };
                     JsonCycleState::ActiveCycle {
                         cycle_id: cycle.cycle_id.clone(),
@@ -180,12 +208,17 @@ impl Presenter {
                     }
                 }
                 ActiveCycleLookup::NoActiveCycle => JsonCycleState::NoActiveCycle {
-                    remediation: "Run 'trustkit init [--issue <ID>]' to initialize a new SDD cycle.".to_string(),
+                    remediation:
+                        "Run 'trustkit init [--issue <ID>]' to initialize a new SDD cycle."
+                            .to_string(),
                 },
             };
 
-            serde_json::to_string_pretty(&JsonStatusResponse { verdict: "PASS".to_string(), cycle_state })
-                .unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
+            serde_json::to_string_pretty(&JsonStatusResponse {
+                verdict: "PASS".to_string(),
+                cycle_state,
+            })
+            .unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
             match lookup {
                 ActiveCycleLookup::Found(cycle) => {

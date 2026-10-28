@@ -4,9 +4,7 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
 use super::*;
-use trustkit_core::entities::{
-    CycleStatus, GateStage, MethodologyProfile, SddCycle,
-};
+use trustkit_core::entities::{CycleStatus, GateStage, MethodologyProfile, SddCycle};
 use trustkit_core::special_cases::{
     ActiveCycleLookup, BoardColumn, BoardSyncOutcome, IssueLinkage, SpecLockState,
 };
@@ -69,7 +67,9 @@ fn test_render_init_ascii_has_no_emojis() {
 #[test]
 fn test_render_hook_pre_tool_json_and_ascii() {
     let json_out = Presenter::render_hook_pre_tool("cargo test", true);
-    assert!(json_out.contains("\"verdict\": \"PASS\"") || json_out.contains("\"verdict\":\"PASS\""));
+    assert!(
+        json_out.contains("\"verdict\": \"PASS\"") || json_out.contains("\"verdict\":\"PASS\"")
+    );
     assert!(!json_out.contains(": null"));
 
     let ascii_out = Presenter::render_hook_pre_tool("cargo test", false);

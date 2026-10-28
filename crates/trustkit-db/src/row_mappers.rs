@@ -5,11 +5,12 @@
 
 use rusqlite::Row;
 use trustkit_core::entities::{
-    ArtifactCategory, ArtifactSeal, CycleStatus, EvidenceKind, ExecutionEvidence,
+    ArtifactCategory, ArtifactSeal, AtomicTask, CycleStatus, EvidenceKind, ExecutionEvidence,
     GateStage, GateVerdict, MethodologyProfile, SddCycle,
 };
 use trustkit_core::special_cases::{
-    BoardColumn, ContractUnlockState, IssueLinkage, SpecLockState,
+    BoardColumn, ContractUnlockState, IssueLinkage, SpecLockState, TddLifecycleState,
+    WorktreeAllocation,
 };
 
 pub fn parse_board_column(col: &str) -> BoardColumn {
@@ -27,7 +28,10 @@ pub fn parse_board_column(col: &str) -> BoardColumn {
 }
 
 pub fn string_list_to_json(items: &[String]) -> String {
-    let escaped: Vec<String> = items.iter().map(|s| format!("\"{}\"", s.replace('"', "\\\""))).collect();
+    let escaped: Vec<String> = items
+        .iter()
+        .map(|s| format!("\"{}\"", s.replace('"', "\\\"")))
+        .collect();
     format!("[{}]", escaped.join(","))
 }
 
@@ -70,7 +74,9 @@ pub fn map_row_to_cycle(row: &Row) -> rusqlite::Result<SddCycle> {
             board_column: parse_board_column(&board_column),
         }
     } else {
-        IssueLinkage::UnlinkedLocalCycle { directory_slug: cycle_id.clone() }
+        IssueLinkage::UnlinkedLocalCycle {
+            directory_slug: cycle_id.clone(),
+        }
     };
 
     let spec_seal_state = if spec_lock_raw == "FROZEN" {
@@ -83,12 +89,15 @@ pub fn map_row_to_cycle(row: &Row) -> rusqlite::Result<SddCycle> {
     };
 
     let methodology_profile = if methodology == "SPECKIT_INTEGRATED" {
-        MethodologyProfile::SpecKitIntegrated { feature_dir: spec_dir.clone() }
+        MethodologyProfile::SpecKitIntegrated {
+            feature_dir: spec_dir.clone(),
+        }
     } else {
         MethodologyProfile::StandardGauntletV2
     };
 
-    let current_gate = GateStage::from_u8(current_gate_raw as u8).unwrap_or(GateStage::Gate0Discovery);
+    let current_gate =
+        GateStage::from_u8(current_gate_raw as u8).unwrap_or(GateStage::Gate0Discovery);
     let lifecycle_status = match lifecycle_raw.as_str() {
         "ACTIVE" => CycleStatus::Active,
         "PAUSED" => CycleStatus::Paused,
@@ -133,7 +142,9 @@ pub fn map_row_to_artifact_seal(row: &Row) -> rusqlite::Result<ArtifactSeal> {
     };
 
     let contract_unlock_state = if unlock_state_raw == "UNLOCKED_BY_HUMAN" {
-        ContractUnlockState::UnlockedByHuman { justification: unlock_justification }
+        ContractUnlockState::UnlockedByHuman {
+            justification: unlock_justification,
+        }
     } else {
         ContractUnlockState::Sealed
     };
@@ -146,6 +157,62 @@ pub fn map_row_to_artifact_seal(row: &Row) -> rusqlite::Result<ArtifactSeal> {
         blake3_digest,
         ast_assertion_count: ast_assertion_count as u32,
         contract_unlock_state,
+    })
+}
+
+pub fn map_row_to_atomic_task(row: &Row) -> rusqlite::Result<AtomicTask> {
+    let cycle_id: String = row.get(0)?;
+    let task_id: String = row.get(1)?;
+    let title: String = row.get(2)?;
+    let architectural_layer: String = row.get(3)?;
+    let wave_index: i64 = row.get(4)?;
+    let depends_on_json: String = row.get(5)?;
+    let expected_files_json: String = row.get(6)?;
+    let target_test_file: String = row.get(7)?;
+    let tdd_raw: String = row.get(8)?;
+    let red_evidence_id: i64 = row.get(9)?;
+    let green_evidence_id: i64 = row.get(10)?;
+    let worktree_raw: String = row.get(11)?;
+    let commit_sha: String = row.get(12)?;
+
+    let tdd_lifecycle_state = match tdd_raw.as_str() {
+        "RED_VERIFIED" => TddLifecycleState::RedVerified {
+            failing_evidence_id: red_evidence_id as u64,
+        },
+        "GREEN_VERIFIED" => TddLifecycleState::GreenVerified {
+            red_evidence_id: red_evidence_id as u64,
+            green_evidence_id: green_evidence_id as u64,
+        },
+        "COMMITTED" => TddLifecycleState::Committed {
+            commit_sha: commit_sha.clone(),
+        },
+        _ => TddLifecycleState::AwaitingRedPhase,
+    };
+
+    let worktree_allocation = match worktree_raw.as_str() {
+        s if s.starts_with("PROVISIONED:") => WorktreeAllocation::Provisioned {
+            path: s.trim_start_matches("PROVISIONED:").to_string(),
+        },
+        s if s.starts_with("MERGED:") => WorktreeAllocation::MergedAndPruned {
+            sha: s.trim_start_matches("MERGED:").to_string(),
+        },
+        _ => WorktreeAllocation::NotProvisioned,
+    };
+
+    Ok(AtomicTask {
+        cycle_id,
+        task_id,
+        title,
+        architectural_layer,
+        wave_index: wave_index as u32,
+        depends_on: json_to_string_list(&depends_on_json),
+        expected_files: json_to_string_list(&expected_files_json),
+        target_test_file,
+        tdd_lifecycle_state,
+        red_evidence_id: red_evidence_id as u64,
+        green_evidence_id: green_evidence_id as u64,
+        worktree_allocation,
+        commit_sha,
     })
 }
 

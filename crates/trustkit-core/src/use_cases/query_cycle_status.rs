@@ -20,22 +20,22 @@ mod tests {
         ArtifactSeal, CycleStatus, ExecutionEvidence, GateStage, MethodologyProfile, SddCycle,
     };
     use crate::special_cases::{ActiveCycleLookup, IssueLinkage, SpecLockState};
-    use std::cell::RefCell;
+    use std::sync::Mutex;
 
     struct StubCycleRepository {
-        active_cycle: RefCell<ActiveCycleLookup>,
+        active_cycle: Mutex<ActiveCycleLookup>,
     }
 
     impl StubCycleRepository {
         fn with_active(cycle: SddCycle) -> Self {
             Self {
-                active_cycle: RefCell::new(ActiveCycleLookup::Found(Box::new(cycle))),
+                active_cycle: Mutex::new(ActiveCycleLookup::Found(Box::new(cycle))),
             }
         }
 
         fn without_active() -> Self {
             Self {
-                active_cycle: RefCell::new(ActiveCycleLookup::NoActiveCycle),
+                active_cycle: Mutex::new(ActiveCycleLookup::NoActiveCycle),
             }
         }
     }
@@ -46,14 +46,17 @@ mod tests {
         }
 
         fn find_active_cycle(&self) -> Result<ActiveCycleLookup, DomainViolation> {
-            Ok(self.active_cycle.borrow().clone())
+            Ok(self.active_cycle.lock().unwrap().clone())
         }
 
         fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> {
             Ok(1)
         }
 
-        fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+        fn list_artifact_seals(
+            &self,
+            _cycle_id: &str,
+        ) -> Result<Vec<ArtifactSeal>, DomainViolation> {
             Ok(vec![])
         }
 
@@ -66,6 +69,24 @@ mod tests {
             _cycle_id: &str,
         ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
             Ok(vec![])
+        }
+
+        fn update_cycle_spec_lock(
+            &self,
+            _cycle_id: &str,
+            _blake3_digest: &str,
+            _locked_state: &str,
+        ) -> Result<(), DomainViolation> {
+            Ok(())
+        }
+
+        fn save_atomic_tasks(
+            &self,
+            _cycle_id: &str,
+            _tasks: &[crate::entities::TaskNode],
+            _wave_schedule: &crate::entities::WaveSchedule,
+        ) -> Result<(), DomainViolation> {
+            Ok(())
         }
     }
 
@@ -99,7 +120,10 @@ mod tests {
                 assert_eq!(active.current_gate, GateStage::Gate0Discovery);
                 assert_eq!(active.lifecycle_status, CycleStatus::Active);
                 assert_eq!(active.work_branch, "feat/45-core");
-                assert_eq!(active.pre_existing_dirty_files, vec!["dirty.txt".to_string()]);
+                assert_eq!(
+                    active.pre_existing_dirty_files,
+                    vec!["dirty.txt".to_string()]
+                );
             }
             ActiveCycleLookup::NoActiveCycle => panic!("Expected Found variant"),
         }

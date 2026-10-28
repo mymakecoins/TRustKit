@@ -40,7 +40,10 @@ pub fn execute(args: &InitArgs, json_mode: bool) -> Result<DomainOutcome, Domain
     let spec_dir = Path::new(&outcome.cycle.spec_dir);
     fs::create_dir_all(spec_dir).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
         subsystem: "filesystem".to_string(),
-        details: format!("Failed creating spec directory '{}': {e}", outcome.cycle.spec_dir),
+        details: format!(
+            "Failed creating spec directory '{}': {e}",
+            outcome.cycle.spec_dir
+        ),
     })?;
 
     let rendered = Presenter::render_init(&outcome, json_mode);

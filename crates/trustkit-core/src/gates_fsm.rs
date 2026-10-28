@@ -4,6 +4,8 @@
 
 use crate::entities::GateStage;
 use crate::errors::DomainViolation;
+use crate::ports::SpecValidationReport;
+use crate::special_cases::SpecLockState;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Gate0Discovery;
@@ -55,6 +57,33 @@ impl GateFsm<Gate1SpecDrafting> {
             state: Gate2SpecSealed,
         }
     }
+
+    pub fn validate_and_seal(
+        self,
+        report: &SpecValidationReport,
+    ) -> Result<GateFsm<Gate2SpecSealed>, DomainViolation> {
+        if !report.mermaid_valid {
+            return Err(DomainViolation::SpecOrTraceabilityIncomplete {
+                reason: "Invalid Mermaid syntax".to_string(),
+                missing_artefact: "flowchart LR/TD".to_string(),
+            });
+        }
+        if !report.gherkin_valid {
+            return Err(DomainViolation::SpecOrTraceabilityIncomplete {
+                reason: "Invalid Gherkin syntax".to_string(),
+                missing_artefact: "Scenario / Given / When / Then".to_string(),
+            });
+        }
+        if let Some(orphan) = report.orphan_rules.first() {
+            return Err(DomainViolation::TraceabilityGap {
+                orphan_rule: orphan.clone(),
+                message: format!(
+                    "Regra de negocio {orphan} nao possui TASK ou Screenshot correspondente na Matriz de Rastreabilidade"
+                ),
+            });
+        }
+        Ok(self.advance_to_spec_sealed())
+    }
 }
 
 impl GateFsm<Gate2SpecSealed> {
@@ -63,6 +92,19 @@ impl GateFsm<Gate2SpecSealed> {
             cycle_id: self.cycle_id,
             gauntlet_attempt: self.gauntlet_attempt,
             state: Gate3WavePlanned,
+        }
+    }
+
+    pub fn validate_and_plan_waves(
+        self,
+        lock_state: &SpecLockState,
+    ) -> Result<GateFsm<Gate3WavePlanned>, DomainViolation> {
+        match lock_state {
+            SpecLockState::Frozen { .. } => Ok(self.advance_to_wave_planned()),
+            SpecLockState::DraftUnverified => Err(DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "wave_planner".to_string(),
+                details: "Cannot plan execution waves for cycle with DRAFT_UNVERIFIED specification lock state. Run 'trustkit spec lock' first.".to_string(),
+            }),
         }
     }
 }
@@ -125,7 +167,9 @@ pub fn transition_gate(
         return Err(DomainViolation::CircuitBreakerTripped {
             cycle_id: cycle_id.to_string(),
             consecutive_failures: attempt,
-            remediation: "Circuit breaker tripped at 5 attempts. Human operator must inspect and unlock.".to_string(),
+            remediation:
+                "Circuit breaker tripped at 5 attempts. Human operator must inspect and unlock."
+                    .to_string(),
         });
     }
 
@@ -141,62 +185,5 @@ pub fn transition_gate(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_typestate_happy_path() {
-        let fsm = GateFsm::new("cycle-101".to_string());
-        let g1 = fsm.advance_to_spec_drafting();
-        let g2 = g1.advance_to_spec_sealed();
-        let g3 = g2.advance_to_wave_planned();
-        let g4 = g3.advance_to_tasks_implemented();
-
-        match g4.evaluate_gauntlet(true) {
-            GauntletResult::Pass(g5) => {
-                let g6 = g5.advance_to_certified();
-                assert_eq!(g6.state, Gate6Certified);
-            }
-            _ => panic!("Expected pass"),
-        }
-    }
-
-    #[test]
-    fn test_typestate_circuit_breaker_after_5_failures() {
-        let fsm = GateFsm::new("cycle-102".to_string());
-        let mut g4 = fsm
-            .advance_to_spec_drafting()
-            .advance_to_spec_sealed()
-            .advance_to_wave_planned()
-            .advance_to_tasks_implemented();
-
-        for i in 1..=4 {
-            match g4.evaluate_gauntlet(false) {
-                GauntletResult::Retry(next) => {
-                    assert_eq!(next.gauntlet_attempt, i);
-                    g4 = next;
-                }
-                _ => panic!("Expected retry at attempt {i}"),
-            }
-        }
-
-        match g4.evaluate_gauntlet(false) {
-            GauntletResult::BreakerTripped(breaker) => {
-                assert_eq!(breaker.gauntlet_attempt, 5);
-                assert_eq!(breaker.state, CircuitBreakerTripped);
-            }
-            _ => panic!("Expected breaker tripped at attempt 5"),
-        }
-    }
-
-    #[test]
-    fn test_transition_gate_function() {
-        assert_eq!(
-            transition_gate(GateStage::Gate0Discovery, 0, "c1").unwrap(),
-            GateStage::Gate1SpecDrafting
-        );
-        let err = transition_gate(GateStage::Gate4TasksImplemented, 5, "c1");
-        assert!(err.is_err());
-        assert_eq!(err.unwrap_err().posix_exit_code(), 6);
-    }
-}
+#[path = "gates_fsm_tests.rs"]
+mod tests;

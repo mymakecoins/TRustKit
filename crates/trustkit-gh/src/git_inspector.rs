@@ -59,7 +59,9 @@ impl GitInspector {
             })?;
 
         if sym_output.status.success() {
-            let branch = String::from_utf8_lossy(&sym_output.stdout).trim().to_string();
+            let branch = String::from_utf8_lossy(&sym_output.stdout)
+                .trim()
+                .to_string();
             if !branch.is_empty() {
                 return Ok(branch);
             }
@@ -75,11 +77,14 @@ impl GitInspector {
                 details: format!("Git rev-parse HEAD failed: {e}"),
             })?;
 
-        let ref_name = String::from_utf8_lossy(&rev_output.stdout).trim().to_string();
+        let ref_name = String::from_utf8_lossy(&rev_output.stdout)
+            .trim()
+            .to_string();
         if ref_name == "HEAD" || !rev_output.status.success() {
             return Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "git".to_string(),
-                details: "Repository is in detached HEAD state; branch checkout required".to_string(),
+                details: "Repository is in detached HEAD state; branch checkout required"
+                    .to_string(),
             });
         }
 
@@ -152,7 +157,11 @@ mod tests {
 
     fn init_repo(p: &Path) {
         let run = |args: &[&str]| {
-            let status = Command::new("git").args(args).current_dir(p).status().unwrap();
+            let status = Command::new("git")
+                .args(args)
+                .current_dir(p)
+                .status()
+                .unwrap();
             assert!(status.success());
         };
         run(&["init", "-b", "feat/45-core"]);
@@ -180,7 +189,10 @@ mod tests {
         fs::write(dir.path().join("dirty.txt"), "content").unwrap();
         let ctx = GitInspector::inspect(dir.path()).unwrap();
         assert_eq!(ctx.pre_existing_dirty_files, vec!["dirty.txt"]);
-        assert_eq!(fs::read_to_string(dir.path().join("dirty.txt")).unwrap(), "content");
+        assert_eq!(
+            fs::read_to_string(dir.path().join("dirty.txt")).unwrap(),
+            "content"
+        );
     }
 
     #[test]

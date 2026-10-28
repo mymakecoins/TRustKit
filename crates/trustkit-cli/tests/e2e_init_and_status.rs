@@ -103,9 +103,9 @@ fn test_init_linked_cycle_with_issue_flag() {
 
     // Verify cycle directory exists
     let entries = fs::read_dir(dir.path().join("docs").join("specs")).expect("read specs dir");
-    let has_issue_dir = entries.filter_map(|e| e.ok()).any(|e| {
-        e.file_name().to_string_lossy().starts_with("issue-45-")
-    });
+    let has_issue_dir = entries
+        .filter_map(|e| e.ok())
+        .any(|e| e.file_name().to_string_lossy().starts_with("issue-45-"));
     assert!(has_issue_dir, "cycle directory issue-45-* must be created");
 }
 
@@ -124,9 +124,16 @@ fn test_status_uninitialized_repository_graceful_exit_code_zero() {
         .success()
         .code(0);
 
-    let stdout_json = String::from_utf8(assert_json.get_output().stdout.clone()).expect("valid utf8");
-    assert!(!stdout_json.contains(": null"), "JSON must not contain ': null'");
-    assert!(stdout_json.contains("\"verdict\": \"PASS\"") || stdout_json.contains("\"verdict\":\"PASS\""));
+    let stdout_json =
+        String::from_utf8(assert_json.get_output().stdout.clone()).expect("valid utf8");
+    assert!(
+        !stdout_json.contains(": null"),
+        "JSON must not contain ': null'"
+    );
+    assert!(
+        stdout_json.contains("\"verdict\": \"PASS\"")
+            || stdout_json.contains("\"verdict\":\"PASS\"")
+    );
     assert!(stdout_json.contains("NO_ACTIVE_CYCLE"));
     assert!(stdout_json.contains("Run 'trustkit init"));
 
@@ -139,10 +146,15 @@ fn test_status_uninitialized_repository_graceful_exit_code_zero() {
         .success()
         .code(0);
 
-    let stdout_human = String::from_utf8(assert_human.get_output().stdout.clone()).expect("valid utf8");
+    let stdout_human =
+        String::from_utf8(assert_human.get_output().stdout.clone()).expect("valid utf8");
     assert!(stdout_human.contains("[PASS]"));
     assert!(stdout_human.contains("No active cycle found"));
-    assert!(stdout_human.chars().all(|c| c.is_ascii() || c.is_whitespace()));
+    assert!(
+        stdout_human
+            .chars()
+            .all(|c| c.is_ascii() || c.is_whitespace())
+    );
 }
 
 #[test]
@@ -172,10 +184,21 @@ fn test_status_active_gate_0_cycle_json_and_ascii() {
         .success()
         .code(0);
 
-    let stdout_json = String::from_utf8(assert_json.get_output().stdout.clone()).expect("valid utf8");
-    assert!(!stdout_json.contains(": null"), "JSON must not contain ': null'");
-    assert!(stdout_json.contains("\"verdict\": \"PASS\"") || stdout_json.contains("\"verdict\":\"PASS\""));
-    assert!(stdout_json.contains("ACTIVE_CYCLE") || stdout_json.contains("\"cycle_id\": \"issue-45-") || stdout_json.contains("\"cycle_id\":\"issue-45-"));
+    let stdout_json =
+        String::from_utf8(assert_json.get_output().stdout.clone()).expect("valid utf8");
+    assert!(
+        !stdout_json.contains(": null"),
+        "JSON must not contain ': null'"
+    );
+    assert!(
+        stdout_json.contains("\"verdict\": \"PASS\"")
+            || stdout_json.contains("\"verdict\":\"PASS\"")
+    );
+    assert!(
+        stdout_json.contains("ACTIVE_CYCLE")
+            || stdout_json.contains("\"cycle_id\": \"issue-45-")
+            || stdout_json.contains("\"cycle_id\":\"issue-45-")
+    );
     assert!(stdout_json.contains("GATE_0_DISCOVERY"));
     assert!(stdout_json.contains("ACTIVE"));
 
@@ -188,10 +211,15 @@ fn test_status_active_gate_0_cycle_json_and_ascii() {
         .success()
         .code(0);
 
-    let stdout_human = String::from_utf8(assert_human.get_output().stdout.clone()).expect("valid utf8");
+    let stdout_human =
+        String::from_utf8(assert_human.get_output().stdout.clone()).expect("valid utf8");
     assert!(stdout_human.contains("[PASS] [GATE-0] Active Cycle Status"));
     assert!(stdout_human.contains("Cycle ID          : issue-45-"));
     assert!(stdout_human.contains("Current Gate      : 0 (GATE_0_DISCOVERY)"));
     assert!(stdout_human.contains("Lifecycle Status  : ACTIVE"));
-    assert!(stdout_human.chars().all(|c| c.is_ascii() || c.is_whitespace()));
+    assert!(
+        stdout_human
+            .chars()
+            .all(|c| c.is_ascii() || c.is_whitespace())
+    );
 }

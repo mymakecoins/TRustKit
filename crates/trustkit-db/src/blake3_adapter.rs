@@ -35,12 +35,11 @@ impl Blake3ParallelSealerAdapter {
 impl ArtifactHasherPort for Blake3ParallelSealerAdapter {
     fn compute_file_blake3(&self, path: &str) -> Result<String, DomainViolation> {
         let file_path = Path::new(path);
-        let mut file = File::open(file_path).map_err(|err| {
-            DomainViolation::InfrastructureBoundaryFault {
+        let mut file =
+            File::open(file_path).map_err(|err| DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "blake3_hasher".to_string(),
                 details: format!("Failed to open file '{path}': {err}"),
-            }
-        })?;
+            })?;
 
         let mut hasher = blake3::Hasher::new();
         let mut buffer = [0u8; 16384];

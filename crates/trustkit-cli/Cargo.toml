@@ -15,6 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 trustkit-core = { path = "../trustkit-core" }
+trustkit-ast = { path = "../trustkit-ast" }
 trustkit-db = { path = "../trustkit-db" }
 trustkit-gh = { path = "../trustkit-gh" }
 clap = { version = "4.5", features = ["derive"] }

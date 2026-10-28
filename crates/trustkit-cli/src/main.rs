@@ -10,8 +10,8 @@ use trustkit_cli::error_handler::CliBoundaryErrorHandler;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
-    let json_mode = args.iter().any(|arg| arg == "--json")
-        || std::env::var("TRUSTKIT_AGENT_MODE").is_ok();
+    let json_mode =
+        args.iter().any(|arg| arg == "--json") || std::env::var("TRUSTKIT_AGENT_MODE").is_ok();
 
     match Cli::try_parse() {
         Ok(cli) => {

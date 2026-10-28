@@ -4,8 +4,8 @@
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
 use crate::entities::{
-    CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
-    MethodologyProfile, SddCycle,
+    CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict, MethodologyProfile,
+    SddCycle,
 };
 use crate::errors::DomainViolation;
 use crate::ports::{CycleEvidenceRepositoryPort, ProjectBoardGatewayPort};
@@ -40,10 +40,15 @@ pub fn execute(
         IssueLinkage::LinkedIssue { issue_number, .. } => {
             match board.verify_active_identity("marcos-rodoind")? {
                 IdentityVerification::Verified { .. } => {}
-                IdentityVerification::Rejected { detected_handle, expected_handle } => {
+                IdentityVerification::Rejected {
+                    detected_handle,
+                    expected_handle,
+                } => {
                     return Err(DomainViolation::InfrastructureBoundaryFault {
                         subsystem: "identity_guard".to_string(),
-                        details: format!("Operator mismatch: '{detected_handle}', expected '{expected_handle}'"),
+                        details: format!(
+                            "Operator mismatch: '{detected_handle}', expected '{expected_handle}'"
+                        ),
                     });
                 }
                 IdentityVerification::GhUnavailable { details } => {
@@ -63,11 +68,15 @@ pub fn execute(
     };
 
     let spec_dir = format!("docs/specs/{cycle_id}");
-    let spec_file_path = req.from_prd.unwrap_or_else(|| format!("{spec_dir}/spec.md"));
+    let spec_file_path = req
+        .from_prd
+        .unwrap_or_else(|| format!("{spec_dir}/spec.md"));
     let cycle = SddCycle {
         cycle_id: cycle_id.clone(),
         issue_linkage: linkage,
-        methodology_profile: MethodologyProfile::SpecKitIntegrated { feature_dir: spec_dir.clone() },
+        methodology_profile: MethodologyProfile::SpecKitIntegrated {
+            feature_dir: spec_dir.clone(),
+        },
         current_gate: GateStage::Gate0Discovery,
         lifecycle_status: CycleStatus::Active,
         gauntlet_attempt: 0,
@@ -89,7 +98,9 @@ pub fn execute(
         gauntlet_attempt: 0,
         actor_role: "ORCHESTRATOR".to_string(),
         evidence_kind: match &sync_outcome {
-            BoardSyncOutcome::Synchronized { .. } | BoardSyncOutcome::DeferredOffline { .. } => EvidenceKind::BoardSync,
+            BoardSyncOutcome::Synchronized { .. } | BoardSyncOutcome::DeferredOffline { .. } => {
+                EvidenceKind::BoardSync
+            }
             _ => EvidenceKind::CmdExec,
         },
         executed_command: "trustkit init".to_string(),
@@ -102,30 +113,51 @@ pub fn execute(
         recorded_at: req.now_iso,
     };
     repo.append_evidence(&evidence)?;
-    Ok(InitializeCycleOutcome { cycle, sync_outcome })
+    Ok(InitializeCycleOutcome {
+        cycle,
+        sync_outcome,
+    })
 }
 
 fn resolve_linkage(param: &Option<String>, branch: &str, ts: &str) -> IssueLinkage {
-    if let Some((p, num)) = param.as_ref().and_then(|p| parse_num(p).map(|num| (p, num))) {
-        let url = if p.starts_with("http") { p.clone() } else { format!("https://github.com/TibaldiHolding/TRustKit/issues/{num}") };
+    if let Some((p, num)) = param
+        .as_ref()
+        .and_then(|p| parse_num(p).map(|num| (p, num)))
+    {
+        let url = if p.starts_with("http") {
+            p.clone()
+        } else {
+            format!("https://github.com/TibaldiHolding/TRustKit/issues/{num}")
+        };
         return IssueLinkage::LinkedIssue {
-            issue_number: num, issue_url: url,
-            project_board_id: "default".to_string(), project_item_id: format!("item_{num}"),
+            issue_number: num,
+            issue_url: url,
+            project_board_id: "default".to_string(),
+            project_item_id: format!("item_{num}"),
             board_column: BoardColumn::InProgress,
         };
     }
     if let Some(num) = parse_branch_num(branch) {
         return IssueLinkage::LinkedIssue {
-            issue_number: num, issue_url: format!("https://github.com/TibaldiHolding/TRustKit/issues/{num}"),
-            project_board_id: "default".to_string(), project_item_id: format!("item_{num}"),
+            issue_number: num,
+            issue_url: format!("https://github.com/TibaldiHolding/TRustKit/issues/{num}"),
+            project_board_id: "default".to_string(),
+            project_item_id: format!("item_{num}"),
             board_column: BoardColumn::InProgress,
         };
     }
-    IssueLinkage::UnlinkedLocalCycle { directory_slug: format!("no-issue-{ts}") }
+    IssueLinkage::UnlinkedLocalCycle {
+        directory_slug: format!("no-issue-{ts}"),
+    }
 }
 
 fn parse_num(s: &str) -> Option<u64> {
-    s.rfind("/issues/").map(|pos| &s[(pos + 8)..]).unwrap_or(s).trim().parse().ok()
+    s.rfind("/issues/")
+        .map(|pos| &s[(pos + 8)..])
+        .unwrap_or(s)
+        .trim()
+        .parse()
+        .ok()
 }
 
 fn parse_branch_num(b: &str) -> Option<u64> {
@@ -144,22 +176,58 @@ mod tests {
     use super::*;
     use crate::entities::ArtifactSeal;
     use crate::special_cases::ActiveCycleLookup;
-    use std::cell::RefCell;
+    use std::sync::Mutex;
 
-    struct FakeRepo(RefCell<Vec<SddCycle>>, RefCell<Vec<ExecutionEvidence>>);
+    struct FakeRepo(Mutex<Vec<SddCycle>>, Mutex<Vec<ExecutionEvidence>>);
     impl CycleEvidenceRepositoryPort for FakeRepo {
-        fn save_cycle(&self, c: &SddCycle) -> Result<(), DomainViolation> { self.0.borrow_mut().push(c.clone()); Ok(()) }
-        fn find_active_cycle(&self) -> Result<ActiveCycleLookup, DomainViolation> { Ok(ActiveCycleLookup::NoActiveCycle) }
-        fn save_artifact_seal(&self, _: &ArtifactSeal) -> Result<u64, DomainViolation> { Ok(1) }
-        fn list_artifact_seals(&self, _: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> { Ok(vec![]) }
-        fn append_evidence(&self, e: &ExecutionEvidence) -> Result<u64, DomainViolation> { self.1.borrow_mut().push(e.clone()); Ok(1) }
-        fn list_evidences_for_cycle(&self, _: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> { Ok(self.1.borrow().clone()) }
+        fn save_cycle(&self, c: &SddCycle) -> Result<(), DomainViolation> {
+            self.0.lock().unwrap().push(c.clone());
+            Ok(())
+        }
+        fn find_active_cycle(&self) -> Result<ActiveCycleLookup, DomainViolation> {
+            Ok(ActiveCycleLookup::NoActiveCycle)
+        }
+        fn save_artifact_seal(&self, _: &ArtifactSeal) -> Result<u64, DomainViolation> {
+            Ok(1)
+        }
+        fn list_artifact_seals(&self, _: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+            Ok(vec![])
+        }
+        fn append_evidence(&self, e: &ExecutionEvidence) -> Result<u64, DomainViolation> {
+            self.1.lock().unwrap().push(e.clone());
+            Ok(1)
+        }
+        fn list_evidences_for_cycle(
+            &self,
+            _: &str,
+        ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+            Ok(self.1.lock().unwrap().clone())
+        }
+        fn update_cycle_spec_lock(&self, _: &str, _: &str, _: &str) -> Result<(), DomainViolation> {
+            Ok(())
+        }
+        fn save_atomic_tasks(
+            &self,
+            _: &str,
+            _: &[crate::entities::TaskNode],
+            _: &crate::entities::WaveSchedule,
+        ) -> Result<(), DomainViolation> {
+            Ok(())
+        }
     }
 
     struct FakeBoard(IdentityVerification, BoardSyncOutcome);
     impl ProjectBoardGatewayPort for FakeBoard {
-        fn verify_active_identity(&self, _: &str) -> Result<IdentityVerification, DomainViolation> { Ok(self.0.clone()) }
-        fn transition_issue_column(&self, _: u64, _: BoardColumn) -> Result<BoardSyncOutcome, DomainViolation> { Ok(self.1.clone()) }
+        fn verify_active_identity(&self, _: &str) -> Result<IdentityVerification, DomainViolation> {
+            Ok(self.0.clone())
+        }
+        fn transition_issue_column(
+            &self,
+            _: u64,
+            _: BoardColumn,
+        ) -> Result<BoardSyncOutcome, DomainViolation> {
+            Ok(self.1.clone())
+        }
     }
 
     fn sample_req(issue: Option<&str>, prd: Option<&str>, branch: &str) -> InitializeCycleRequest {
@@ -176,19 +244,34 @@ mod tests {
 
     #[test]
     fn test_linked_issue_and_evidence() {
-        let repo = FakeRepo(RefCell::new(vec![]), RefCell::new(vec![]));
-        let board = FakeBoard(IdentityVerification::Verified { operator_handle: "marcos-rodoind".into() }, BoardSyncOutcome::Synchronized { column: BoardColumn::InProgress });
+        let repo = FakeRepo(Mutex::new(vec![]), Mutex::new(vec![]));
+        let board = FakeBoard(
+            IdentityVerification::Verified {
+                operator_handle: "marcos-rodoind".into(),
+            },
+            BoardSyncOutcome::Synchronized {
+                column: BoardColumn::InProgress,
+            },
+        );
         let res = execute(sample_req(Some("45"), None, "feat/45-cli"), &repo, &board).unwrap();
         assert_eq!(res.cycle.cycle_id, "issue-45-202610271415");
-        assert_eq!(res.cycle.spec_file_path, "docs/specs/issue-45-202610271415/spec.md");
-        assert_eq!(repo.0.borrow().len(), 1);
-        assert_eq!(repo.1.borrow().len(), 1);
+        assert_eq!(
+            res.cycle.spec_file_path,
+            "docs/specs/issue-45-202610271415/spec.md"
+        );
+        assert_eq!(repo.0.lock().unwrap().len(), 1);
+        assert_eq!(repo.1.lock().unwrap().len(), 1);
     }
 
     #[test]
     fn test_unlinked_fallback_and_from_prd() {
-        let repo = FakeRepo(RefCell::new(vec![]), RefCell::new(vec![]));
-        let board = FakeBoard(IdentityVerification::Verified { operator_handle: "marcos-rodoind".into() }, BoardSyncOutcome::SkippedUnlinkedCycle);
+        let repo = FakeRepo(Mutex::new(vec![]), Mutex::new(vec![]));
+        let board = FakeBoard(
+            IdentityVerification::Verified {
+                operator_handle: "marcos-rodoind".into(),
+            },
+            BoardSyncOutcome::SkippedUnlinkedCycle,
+        );
         let res = execute(sample_req(None, Some("docs/PRD.md"), "main"), &repo, &board).unwrap();
         assert_eq!(res.cycle.cycle_id, "no-issue-202610271415");
         assert_eq!(res.cycle.spec_file_path, "docs/PRD.md");
@@ -197,12 +280,29 @@ mod tests {
 
     #[test]
     fn test_identity_rejection_and_offline_sync() {
-        let repo = FakeRepo(RefCell::new(vec![]), RefCell::new(vec![]));
-        let rej = FakeBoard(IdentityVerification::Rejected { detected_handle: "other".into(), expected_handle: "marcos-rodoind".into() }, BoardSyncOutcome::SkippedUnlinkedCycle);
+        let repo = FakeRepo(Mutex::new(vec![]), Mutex::new(vec![]));
+        let rej = FakeBoard(
+            IdentityVerification::Rejected {
+                detected_handle: "other".into(),
+                expected_handle: "marcos-rodoind".into(),
+            },
+            BoardSyncOutcome::SkippedUnlinkedCycle,
+        );
         assert!(execute(sample_req(Some("45"), None, "feat/45"), &repo, &rej).is_err());
 
-        let off = FakeBoard(IdentityVerification::Verified { operator_handle: "marcos-rodoind".into() }, BoardSyncOutcome::DeferredOffline { queued_transition: BoardColumn::InProgress, retry_after_ms: 5000 });
+        let off = FakeBoard(
+            IdentityVerification::Verified {
+                operator_handle: "marcos-rodoind".into(),
+            },
+            BoardSyncOutcome::DeferredOffline {
+                queued_transition: BoardColumn::InProgress,
+                retry_after_ms: 5000,
+            },
+        );
         let res = execute(sample_req(Some("45"), None, "feat/45"), &repo, &off).unwrap();
-        assert!(matches!(res.sync_outcome, BoardSyncOutcome::DeferredOffline { .. }));
+        assert!(matches!(
+            res.sync_outcome,
+            BoardSyncOutcome::DeferredOffline { .. }
+        ));
     }
 }
