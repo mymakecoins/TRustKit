@@ -2,7 +2,7 @@
 
 > **Camada:** Domínio
 > **Estimativa:** M
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-002
@@ -33,8 +33,8 @@ O caso de uso de auditoria de Camada 0 é acionado antes de qualquer execução 
 - Tempo de resposta determinístico inferior a 5 milissegundos.
 
 ## Critério de Aceite
-- [ ] **Dado** arquivos íntegros, **quando** o caso de uso executa, **então** retorna `CleanPass` e persiste o evento com sucesso.
-- [ ] **Dado** uma quebra de invariante, **quando** o caso de uso executa, **então** rejeita imediatamente e bloqueia o avanço.
+- [x] **Dado** arquivos íntegros, **quando** o caso de uso executa, **então** retorna `CleanPass` e persiste o evento com sucesso.
+- [x] **Dado** uma quebra de invariante, **quando** o caso de uso executa, **então** rejeita imediatamente e bloqueia o avanço.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-core/src/use_cases/audit_ast_layer0.rs`.

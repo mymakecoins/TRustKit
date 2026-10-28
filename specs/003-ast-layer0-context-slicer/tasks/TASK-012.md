@@ -2,7 +2,7 @@
 
 > **Camada:** Domínio
 > **Estimativa:** M
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-002
@@ -31,7 +31,7 @@ O caso de uso de fatiamento de contexto é invocado pelo orquestrador no Gate 4 
 - Nenhum valor nulo nas estruturas de retorno.
 
 ## Critério de Aceite
-- [ ] **Dado** uma lista de arquivos de dependência de uma tarefa, **quando** o caso de uso executa, **então** entrega o resumo fatiado das assinaturas.
+- [x] **Dado** uma lista de arquivos de dependência de uma tarefa, **quando** o caso de uso executa, **então** entrega o resumo fatiado das assinaturas.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-core/src/use_cases/slice_ast_context.rs`.

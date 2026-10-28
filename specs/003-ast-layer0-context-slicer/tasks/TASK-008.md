@@ -2,7 +2,7 @@
 
 > **Camada:** Integração
 > **Estimativa:** G
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-002
@@ -33,7 +33,7 @@ Para evitar sobrecarga de tokens e manter o foco cirúrgico dos Builders em cada
 - A representação fatiada deve ser código sintaticamente compreensível pelo agente.
 
 ## Critério de Aceite
-- [ ] **Dado** um arquivo Rust com 500 linhas de implementação, **quando** fatiado, **então** retorna apenas as assinaturas públicas e estruturas em menos de 80 linhas.
+- [x] **Dado** um arquivo Rust com 500 linhas de implementação, **quando** fatiado, **então** retorna apenas as assinaturas públicas e estruturas em menos de 80 linhas.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-ast/src/context_slicer.rs`.

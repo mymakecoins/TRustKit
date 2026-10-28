@@ -2,7 +2,7 @@
 
 > **Camada:** Integração
 > **Estimativa:** M
-> **Status:** Pendente
+> **Status:** Concluída
 
 depends_on:
 - TASK-002
@@ -34,7 +34,7 @@ O auditor de integridade consolida a comparação entre a contagem de asserçõe
 - Qualquer remoção de asserção é tratada como tentativa de trapaça (Anti-Cheat).
 
 ## Critério de Aceite
-- [ ] **Dado** um teste com asserção removida, **quando** auditado, **então** retorna `AstAuditVerdict::Rejected` com `Exit Code: 4`.
+- [x] **Dado** um teste com asserção removida, **quando** auditado, **então** retorna `AstAuditVerdict::Rejected` com `Exit Code: 4`.
 
 ## Notas Técnicas
 - Arquivo alvo: `crates/trustkit-ast/src/test_integrity_auditor.rs`.
