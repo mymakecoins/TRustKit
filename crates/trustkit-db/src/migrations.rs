@@ -94,7 +94,25 @@ pub fn initialize_database(conn: &Connection) -> Result<(), DomainViolation> {
          );
 
          CREATE INDEX IF NOT EXISTS idx_evidences_cycle_gate ON execution_evidences(cycle_id, gate_stage, verdict);
-         CREATE INDEX IF NOT EXISTS idx_traceability_cycle ON traceability_links(cycle_id, business_rule_id);"
+         CREATE INDEX IF NOT EXISTS idx_traceability_cycle ON traceability_links(cycle_id, business_rule_id);
+
+         CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_pages_fts USING fts5(
+             slug UNINDEXED,
+             title,
+             tags,
+             body_content,
+             updated_at UNINDEXED,
+             blake3_digest UNINDEXED,
+             tokenize = 'porter unicode61'
+         );
+
+         CREATE TABLE IF NOT EXISTS knowledge_wiki_links (
+             source_slug TEXT NOT NULL,
+             target_slug TEXT NOT NULL,
+             PRIMARY KEY (source_slug, target_slug)
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_wiki_links_target ON knowledge_wiki_links(target_slug);"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
         subsystem: "sqlite_migrations".into(),
         details: format!("Failed initializing database schema: {e}"),
