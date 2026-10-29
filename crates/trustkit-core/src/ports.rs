@@ -7,8 +7,9 @@ pub use crate::port_dtos::*;
 
 use crate::entities::{
     ArtifactSeal, AstAuditVerdict, AtomicTask, CertificationSummary, ContextSliceRequest,
-    ContextSliceResult, CycleStatus, ExecutionEvidence, GateStage, SddCycle, SpecificationV2,
-    TaskNode, WaveSchedule,
+    ContextSliceResult, CycleStatus, ExecutionEvidence, GateStage, KnowledgeDocument,
+    KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome, KnowledgeSearchQuery,
+    KnowledgeWriteOutcome, SddCycle, SpecificationV2, TaskNode, WaveSchedule, WikiLink,
 };
 use crate::errors::DomainViolation;
 use crate::special_cases::{
@@ -108,4 +109,16 @@ pub trait VisualEvidencePort: Send + Sync {
 pub trait CycleCertificationPort: Send + Sync {
     fn render_gauntlet_report(&self, summary: &CertificationSummary, evidences: &[ExecutionEvidence]) -> Result<String, DomainViolation>;
     fn format_issue_completion_comment(&self, summary: &CertificationSummary, spec: &SpecificationV2) -> Result<String, DomainViolation>;
+}
+
+pub trait KnowledgeRepositoryPort: Send + Sync {
+    fn write_document(&self, document: &KnowledgeDocument) -> Result<KnowledgeWriteOutcome, DomainViolation>;
+    fn read_document(&self, slug: &str) -> Result<KnowledgeLookupOutcome, DomainViolation>;
+    fn search_documents(&self, query: &KnowledgeSearchQuery) -> Result<KnowledgeSearchOutcome, DomainViolation>;
+    fn list_documents(&self) -> Result<Vec<KnowledgeDocument>, DomainViolation>;
+    fn query_adjacent_links(&self, slug: &str) -> Result<Vec<WikiLink>, DomainViolation> {
+        let _ = slug;
+        Ok(vec![])
+    }
+    fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation>;
 }

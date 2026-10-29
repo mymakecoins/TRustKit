@@ -10,6 +10,7 @@ pub mod gate_entities;
 pub mod gauntlet_entities;
 pub mod gates_fsm;
 pub mod invariants_policy;
+pub mod knowledge_entities;
 pub mod port_dtos;
 pub mod ports;
 pub mod spec_entities;
