@@ -8,6 +8,7 @@ pub mod gauntlet_run_cmd;
 pub mod hook_cmd;
 pub mod init_cmd;
 pub mod mcp_cmd;
+pub mod memory_cmd;
 pub mod merge_cmd;
 pub mod pr_cmd;
 pub mod spec_init_cmd;

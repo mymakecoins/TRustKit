@@ -62,6 +62,13 @@ impl Cli {
             Command::Mcp(McpArgs { action }) => match action {
                 McpSubcommand::Serve(args) => args.json,
             },
+            Command::Memory(MemoryArgs { action }) => match action {
+                MemorySubcommand::Write(args) => args.json,
+                MemorySubcommand::Read(args) => args.json,
+                MemorySubcommand::Search(args) => args.json,
+                MemorySubcommand::List(args) => args.json,
+                MemorySubcommand::Rebuild(args) => args.json,
+            },
         }
     }
 }
@@ -106,6 +113,9 @@ pub enum Command {
 
     #[command(about = "Context slicing utilities for builder agent prompts")]
     Context(ContextArgs),
+
+    #[command(about = "Manage and query persistent project knowledge memory (.trustkit/wiki)")]
+    Memory(MemoryArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]
