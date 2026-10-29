@@ -3,6 +3,9 @@
 pub mod audit_ast_layer0;
 pub mod certify_cycle_and_report;
 pub mod complete_task;
+pub mod ingest_completed_task_knowledge;
+pub mod ingest_gauntlet_incident_knowledge;
+pub mod ingest_locked_spec_knowledge;
 pub mod initialize_cycle;
 pub mod initialize_spec_from_prd;
 pub mod inspect_pre_tool_command;

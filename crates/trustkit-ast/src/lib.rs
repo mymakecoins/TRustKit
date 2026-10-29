@@ -2,6 +2,7 @@
 
 pub mod ast_adapter;
 pub mod context_slicer;
+pub mod knowledge_link_extractor;
 pub mod lexical_scanner;
 pub mod prd_ingestor;
 pub mod rust_assertion_counter;

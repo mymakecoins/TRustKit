@@ -1,4 +1,4 @@
-// Handler for `trustkit mcp` (TASK-014).
+// Handler for `trustkit mcp` (TASK-014 & TASK-008).
 // Constitutional Principle I: Strict Hexagonal Isolation.
 // Constitutional Principle II: Absolute Prohibition of NULL.
 // Constitutional Principle IV: Zero Panic.
@@ -8,7 +8,10 @@
 use crate::cli_contract::{McpArgs, McpSubcommand};
 use crate::error_handler::DomainOutcome;
 use std::io::{self, BufReader};
+use std::path::Path;
+use std::sync::Arc;
 use trustkit_core::errors::DomainViolation;
+use trustkit_db::KnowledgeWikiFsRepository;
 use trustkit_orch::McpServer;
 
 pub fn execute(args: &McpArgs, _json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
@@ -18,7 +21,10 @@ pub fn execute(args: &McpArgs, _json_mode: bool) -> Result<DomainOutcome, Domain
 }
 
 pub fn execute_serve() -> Result<DomainOutcome, DomainViolation> {
-    let server = McpServer::new();
+    let server = match KnowledgeWikiFsRepository::open_from_root(Path::new(".")) {
+        Ok(repo) => McpServer::with_knowledge_repo(Arc::new(repo)),
+        Err(_) => McpServer::new(),
+    };
     let stdin = io::stdin();
     let stdout = io::stdout();
 

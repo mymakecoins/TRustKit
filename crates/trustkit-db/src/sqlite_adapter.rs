@@ -5,14 +5,15 @@
 
 use crate::cycle_ops;
 use crate::evidence_ops;
+use crate::knowledge_ops;
 use crate::migrations::initialize_database;
 use crate::task_ops;
 use rusqlite::Connection;
 use std::path::Path;
 use std::sync::Mutex;
 use trustkit_core::entities::{
-    ArtifactSeal, AtomicTask, CycleStatus, ExecutionEvidence, GateStage, SddCycle, TaskNode,
-    WaveSchedule,
+    ArtifactSeal, AtomicTask, CycleStatus, ExecutionEvidence, GateStage, KnowledgeDocument,
+    KnowledgeSearchOutcome, KnowledgeSearchQuery, SddCycle, TaskNode, WaveSchedule, WikiLink,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::CycleEvidenceRepositoryPort;
@@ -56,6 +57,38 @@ impl SqliteWalRepositoryAdapter {
     pub fn find_atomic_task(&self, cycle_id: &str, task_id: &str) -> Result<Option<AtomicTask>, DomainViolation> {
         let conn = self.lock_conn()?;
         task_ops::find_atomic_task(&conn, cycle_id, task_id)
+    }
+
+    pub fn upsert_knowledge_index(
+        &self,
+        doc: &KnowledgeDocument,
+        links: &[WikiLink],
+    ) -> Result<(), DomainViolation> {
+        let conn = self.lock_conn()?;
+        knowledge_ops::upsert_knowledge_index(&conn, doc, links)
+    }
+
+    pub fn remove_knowledge_index(&self, slug: &str) -> Result<bool, DomainViolation> {
+        let conn = self.lock_conn()?;
+        knowledge_ops::remove_knowledge_index(&conn, slug)
+    }
+
+    pub fn clear_knowledge_index(&self) -> Result<(), DomainViolation> {
+        let conn = self.lock_conn()?;
+        knowledge_ops::clear_knowledge_index(&conn)
+    }
+
+    pub fn query_adjacent_links(&self, slug: &str) -> Result<Vec<WikiLink>, DomainViolation> {
+        let conn = self.lock_conn()?;
+        knowledge_ops::query_adjacent_links(&conn, slug)
+    }
+
+    pub fn search_knowledge_fts5(
+        &self,
+        query: &KnowledgeSearchQuery,
+    ) -> Result<KnowledgeSearchOutcome, DomainViolation> {
+        let conn = self.lock_conn()?;
+        knowledge_ops::search_knowledge_fts5(&conn, query)
     }
 }
 

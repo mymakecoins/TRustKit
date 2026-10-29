@@ -5,6 +5,7 @@
 pub use crate::ast_entities::*;
 pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
+pub use crate::knowledge_entities::*;
 pub use crate::spec_entities::*;
 pub use crate::special_cases::{CircuitBreakerState, SpecLockState, WorktreeAllocation};
 use crate::errors::DomainViolation;
