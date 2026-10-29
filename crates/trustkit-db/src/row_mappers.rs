@@ -190,11 +190,19 @@ pub fn map_row_to_atomic_task(row: &Row) -> rusqlite::Result<AtomicTask> {
     };
 
     let worktree_allocation = match worktree_raw.as_str() {
-        s if s.starts_with("PROVISIONED:") => WorktreeAllocation::Provisioned {
-            path: s.trim_start_matches("PROVISIONED:").to_string(),
-        },
+        s if s.starts_with("PROVISIONED:") => {
+            let payload = s.trim_start_matches("PROVISIONED:");
+            let (path, branch) = match payload.split_once(':') {
+                Some((p, b)) => (p.to_string(), b.to_string()),
+                None => (payload.to_string(), String::new()),
+            };
+            WorktreeAllocation::Provisioned {
+                worktree_path: path,
+                branch_name: branch,
+            }
+        }
         s if s.starts_with("MERGED:") => WorktreeAllocation::MergedAndPruned {
-            sha: s.trim_start_matches("MERGED:").to_string(),
+            commit_sha: s.trim_start_matches("MERGED:").to_string(),
         },
         _ => WorktreeAllocation::NotProvisioned,
     };
