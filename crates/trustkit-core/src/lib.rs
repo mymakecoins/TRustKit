@@ -6,8 +6,12 @@
 pub mod ast_entities;
 pub mod entities;
 pub mod errors;
+pub mod gate_entities;
+pub mod gauntlet_entities;
 pub mod gates_fsm;
 pub mod invariants_policy;
+pub mod port_dtos;
 pub mod ports;
+pub mod spec_entities;
 pub mod special_cases;
 pub mod use_cases;

@@ -1,8 +1,12 @@
 // Clap v4 CLI command and flag definitions.
 // Constitutional Principle V: Separation of Construction and Execution.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
+// Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use clap::{Args, Parser, Subcommand};
+
+pub use crate::cli_gate_args::*;
+pub use crate::cli_spec_args::*;
 
 #[derive(Parser, Debug, PartialEq, Eq)]
 #[command(
@@ -38,12 +42,25 @@ impl Cli {
             },
             Command::Wave(WaveArgs { action }) => match action {
                 WaveSubcommand::Plan(args) => args.json,
+                WaveSubcommand::Run(args) => args.json,
             },
             Command::Gauntlet(GauntletArgs { action }) => match action {
                 GauntletSubcommand::AstAudit(args) => args.json,
+                GauntletSubcommand::Run(args) => args.json,
             },
             Command::Context(ContextArgs { action }) => match action {
                 ContextSubcommand::Slice(args) => args.json,
+            },
+            Command::Task(TaskArgs { action }) => match action {
+                TaskSubcommand::Test(args) => args.json,
+                TaskSubcommand::Complete(args) => args.json,
+            },
+            Command::Doctor(args) => args.json,
+            Command::Done(args) => args.json,
+            Command::Merge(args) => args.json,
+            Command::Pr(args) => args.json,
+            Command::Mcp(McpArgs { action }) => match action {
+                McpSubcommand::Serve(args) => args.json,
             },
         }
     }
@@ -66,8 +83,26 @@ pub enum Command {
     #[command(about = "Plan and organize execution waves from atomic tasks (Gate 3)")]
     Wave(WaveArgs),
 
+    #[command(about = "Execute atomic tasks under strict TDD phase verification (Gate 4)")]
+    Task(TaskArgs),
+
     #[command(about = "Run Gauntlet verification layers (Gate 5)")]
     Gauntlet(GauntletArgs),
+
+    #[command(about = "Diagnose cycle state and circuit breaker failure summaries")]
+    Doctor(DoctorArgs),
+
+    #[command(about = "Certify completed cycle, compile gauntlet report, and format issue comment")]
+    Done(DoneArgs),
+
+    #[command(about = "Perform deterministic merge into target branch at Gate 6")]
+    Merge(MergeArgs),
+
+    #[command(about = "Open human-directed Pull Request to target branch")]
+    Pr(PrArgs),
+
+    #[command(about = "TRustKit Model Context Protocol (MCP) server lifecycle")]
+    Mcp(McpArgs),
 
     #[command(about = "Context slicing utilities for builder agent prompts")]
     Context(ContextArgs),
@@ -125,26 +160,6 @@ pub enum SpecSubcommand {
     Lock(SpecLockArgs),
 }
 
-#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
-pub struct SpecLockArgs {
-    #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
-    pub spec: Option<String>,
-    #[arg(long, help = "Emit null-free JSON output")]
-    pub json: bool,
-}
-
-#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
-pub struct SpecInitArgs {
-    #[arg(long, help = "Path to upstream PRD or ADR Markdown file")]
-    pub from_prd: String,
-    #[arg(long, help = "Custom name/slug for the feature specification")]
-    pub name: Option<String>,
-    #[arg(long, help = "Output directory for the generated specification file")]
-    pub output_dir: Option<String>,
-    #[arg(long, help = "Emit null-free JSON output")]
-    pub json: bool,
-}
-
 #[derive(Args, Debug, PartialEq, Eq)]
 pub struct WaveArgs {
     #[command(subcommand)]
@@ -158,18 +173,11 @@ pub enum WaveSubcommand {
         about = "Construct DAG and plan topological execution waves"
     )]
     Plan(WavePlanArgs),
-}
-
-#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
-pub struct WavePlanArgs {
-    #[arg(
-        long,
-        help = "Path to directory containing atomic task definitions (TASK-NNN.md)"
+    #[command(
+        name = "run",
+        about = "Execute tasks in topological wave within isolated worktrees"
     )]
-    pub tasks_dir: Option<String>,
-
-    #[arg(long, help = "Emit null-free JSON output")]
-    pub json: bool,
+    Run(WaveRunArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq)]
@@ -185,15 +193,11 @@ pub enum GauntletSubcommand {
         about = "Execute Layer 0 syntactic AST invariant and anti-cheat audit"
     )]
     AstAudit(GauntletAstAuditArgs),
-}
-
-#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
-pub struct GauntletAstAuditArgs {
-    #[arg(long, num_args = 1.., value_delimiter = ' ', help = "Explicit list of files to audit")]
-    pub files: Vec<String>,
-
-    #[arg(long, help = "Emit null-free JSON output")]
-    pub json: bool,
+    #[command(
+        name = "run",
+        about = "Run concurrent verification gauntlet across Layer 0 and Layer 1 critics"
+    )]
+    Run(GauntletRunArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq)]
@@ -211,24 +215,11 @@ pub enum ContextSubcommand {
     Slice(ContextSliceArgs),
 }
 
-#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
-pub struct ContextSliceArgs {
-    #[arg(long, help = "Target file path to slice")]
-    pub file: Option<String>,
-
-    #[arg(long, num_args = 1.., value_delimiter = ' ', help = "Multiple target file paths to slice")]
-    pub files: Vec<String>,
-
-    #[arg(long, help = "Line or token budget limit")]
-    pub budget: Option<usize>,
-
-    #[arg(long, num_args = 1.., value_delimiter = ',', help = "Symbol filters to preserve")]
-    pub symbols: Vec<String>,
-
-    #[arg(long, help = "Emit null-free JSON output")]
-    pub json: bool,
-}
-
 #[cfg(test)]
 #[path = "cli_contract_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "cli_contract_help_tests.rs"]
+mod help_tests;
+
