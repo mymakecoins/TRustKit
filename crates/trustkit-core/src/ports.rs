@@ -7,9 +7,11 @@ pub use crate::port_dtos::*;
 
 use crate::entities::{
     ArtifactSeal, AstAuditVerdict, AtomicTask, CertificationSummary, ContextSliceRequest,
-    ContextSliceResult, CycleStatus, ExecutionEvidence, GateStage, KnowledgeDocument,
+    ContextSliceResult, CycleStatus, ExecutionEvidence, FileGraphManifest, GateStage,
+    GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome, KnowledgeDocument,
     KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome, KnowledgeSearchQuery,
-    KnowledgeWriteOutcome, SddCycle, SpecificationV2, TaskNode, WaveSchedule, WikiLink,
+    KnowledgeWriteOutcome, SddCycle, ShortestPathOutcome, SpecificationV2, StructuralEdge,
+    StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
 };
 use crate::errors::DomainViolation;
 use crate::special_cases::{
@@ -121,4 +123,54 @@ pub trait KnowledgeRepositoryPort: Send + Sync {
         Ok(vec![])
     }
     fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation>;
+}
+
+pub trait StructuralGraphRepositoryPort: Send + Sync {
+    fn detect_changed_files(
+        &self,
+        current_manifests: &[FileGraphManifest],
+    ) -> Result<Vec<String>, DomainViolation>;
+    fn save_graph_snapshot(
+        &self,
+        nodes: &[StructuralNode],
+        edges: &[StructuralEdge],
+        manifests: &[FileGraphManifest],
+        force: bool,
+    ) -> Result<GraphHealthVerdict, DomainViolation>;
+    fn load_nodes(&self) -> Result<Vec<StructuralNode>, DomainViolation>;
+    fn load_edges(&self) -> Result<Vec<StructuralEdge>, DomainViolation>;
+    fn load_manifests(&self) -> Result<Vec<FileGraphManifest>, DomainViolation> {
+        Ok(vec![])
+    }
+}
+
+pub trait StructuralGraphAnalyzerPort: Send + Sync {
+    fn extract_from_files(
+        &self,
+        _file_paths: &[String],
+    ) -> Result<(Vec<StructuralNode>, Vec<StructuralEdge>), DomainViolation> {
+        Ok((vec![], vec![]))
+    }
+    fn audit_graph_health(
+        &self,
+        nodes: &[StructuralNode],
+        edges: &[StructuralEdge],
+        top_god_nodes: usize,
+    ) -> Result<GraphHealthReport, DomainViolation>;
+    fn find_shortest_path(
+        &self,
+        nodes: &[StructuralNode],
+        edges: &[StructuralEdge],
+        source_id: &str,
+        target_id: &str,
+    ) -> Result<ShortestPathOutcome, DomainViolation>;
+    fn slice_graph_context(
+        &self,
+        nodes: &[StructuralNode],
+        edges: &[StructuralEdge],
+        root_file: &str,
+        mode: TraversalMode,
+        max_hops: usize,
+        max_line_budget: usize,
+    ) -> Result<GraphTraversalOutcome, DomainViolation>;
 }
