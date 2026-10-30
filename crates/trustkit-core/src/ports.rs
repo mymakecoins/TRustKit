@@ -6,12 +6,12 @@
 pub use crate::port_dtos::*;
 
 use crate::entities::{
-    ArtifactSeal, AstAuditVerdict, AtomicTask, CertificationSummary, ContextSliceRequest,
-    ContextSliceResult, CycleStatus, ExecutionEvidence, FileGraphManifest, GateStage,
-    GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome, KnowledgeDocument,
+    ArtifactSeal, AstAuditVerdict, AtomicTask, CertificationSummary, CodeReviewEffortLevel,
+    ContextSliceRequest, ContextSliceResult, CycleStatus, ExecutionEvidence, FileGraphManifest,
+    GateStage, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome, KnowledgeDocument,
     KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome, KnowledgeSearchQuery,
-    KnowledgeWriteOutcome, SddCycle, ShortestPathOutcome, SpecificationV2, StructuralEdge,
-    StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
+    KnowledgeWriteOutcome, SddCycle, SemanticReviewFinding, ShortestPathOutcome, SpecificationV2,
+    StructuralEdge, StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
 };
 use crate::errors::DomainViolation;
 use crate::special_cases::{
@@ -173,4 +173,28 @@ pub trait StructuralGraphAnalyzerPort: Send + Sync {
         max_hops: usize,
         max_line_budget: usize,
     ) -> Result<GraphTraversalOutcome, DomainViolation>;
+}
+
+pub trait SemanticCodeReviewerPort: Send + Sync {
+    fn review_task_diff(
+        &self,
+        cycle_id: &str,
+        task_id: &str,
+        effort_level: CodeReviewEffortLevel,
+    ) -> Result<Vec<SemanticReviewFinding>, DomainViolation>;
+}
+
+pub trait SecurityDiffReviewerPort: Send + Sync {
+    fn review_branch_diff(
+        &self,
+        target_branch: &str,
+    ) -> Result<Vec<SemanticReviewFinding>, DomainViolation>;
+}
+
+pub trait InteractivePromptPort: Send + Sync {
+    fn prompt_security_review_confirmation(&self) -> Result<bool, DomainViolation>;
+    fn prompt_abort_on_vulnerabilities(
+        &self,
+        findings: &[SemanticReviewFinding],
+    ) -> Result<bool, DomainViolation>;
 }

@@ -14,6 +14,8 @@ pub mod invariants_policy;
 pub mod knowledge_entities;
 pub mod port_dtos;
 pub mod ports;
+pub mod security_review_policy;
+pub mod semantic_review_entities;
 pub mod spec_entities;
 pub mod special_cases;
 pub mod use_cases;

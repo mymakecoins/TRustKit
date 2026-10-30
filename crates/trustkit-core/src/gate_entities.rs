@@ -76,6 +76,8 @@ pub enum EvidenceKind {
     BoardSync,
     SpecSeal,
     CriticVerdict,
+    CodeReview,
+    SecurityReview,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
