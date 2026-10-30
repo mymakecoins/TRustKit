@@ -15,6 +15,25 @@ impl AstContextSlicer {
         Self
     }
 
+    pub fn slice_graph(
+        &self,
+        nodes: &[trustkit_core::entities::StructuralNode],
+        edges: &[trustkit_core::entities::StructuralEdge],
+        root_file: &str,
+        mode: trustkit_core::entities::TraversalMode,
+        max_hops: usize,
+        max_line_budget: usize,
+    ) -> trustkit_core::entities::GraphTraversalOutcome {
+        crate::graph_context_slicer::GraphContextSlicer::new().slice_graph(
+            nodes,
+            edges,
+            root_file,
+            mode,
+            max_hops,
+            max_line_budget,
+        )
+    }
+
     pub fn slice_code(
         &self,
         _file_path: &str,

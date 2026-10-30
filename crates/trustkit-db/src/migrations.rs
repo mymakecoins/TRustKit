@@ -112,7 +112,40 @@ pub fn initialize_database(conn: &Connection) -> Result<(), DomainViolation> {
              PRIMARY KEY (source_slug, target_slug)
          );
 
-         CREATE INDEX IF NOT EXISTS idx_wiki_links_target ON knowledge_wiki_links(target_slug);"
+         CREATE INDEX IF NOT EXISTS idx_wiki_links_target ON knowledge_wiki_links(target_slug);
+
+         CREATE TABLE IF NOT EXISTS structural_graph_manifests (
+             file_path           TEXT PRIMARY KEY NOT NULL,
+             blake3_digest       TEXT NOT NULL,
+             node_count          INTEGER NOT NULL DEFAULT 0,
+             updated_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+         );
+
+         CREATE TABLE IF NOT EXISTS structural_graph_nodes (
+             node_id             TEXT PRIMARY KEY NOT NULL,
+             label               TEXT NOT NULL,
+             kind                TEXT NOT NULL,
+             source_file         TEXT NOT NULL,
+             architectural_layer TEXT NOT NULL,
+             created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_graph_nodes_file ON structural_graph_nodes(source_file);
+         CREATE INDEX IF NOT EXISTS idx_graph_nodes_layer ON structural_graph_nodes(architectural_layer);
+
+         CREATE TABLE IF NOT EXISTS structural_graph_edges (
+             source_id           TEXT NOT NULL,
+             target_id           TEXT NOT NULL,
+             relation            TEXT NOT NULL,
+             confidence          TEXT NOT NULL CHECK (confidence IN ('EXTRACTED', 'INFERRED', 'AMBIGUOUS')),
+             source_file         TEXT NOT NULL,
+             created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+             PRIMARY KEY (source_id, target_id, relation)
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON structural_graph_edges(source_id);
+         CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON structural_graph_edges(target_id);
+         CREATE INDEX IF NOT EXISTS idx_graph_edges_file ON structural_graph_edges(source_file);"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
         subsystem: "sqlite_migrations".into(),
         details: format!("Failed initializing database schema: {e}"),

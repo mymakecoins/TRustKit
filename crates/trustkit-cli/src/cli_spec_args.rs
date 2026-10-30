@@ -57,6 +57,75 @@ pub struct ContextSliceArgs {
     #[arg(long, num_args = 1.., value_delimiter = ',', help = "Symbol filters to preserve")]
     pub symbols: Vec<String>,
 
+    #[arg(long, help = "Graph traversal mode: bfs or dfs")]
+    pub mode: Option<String>,
+
+    #[arg(long, help = "Maximum graph traversal hops from target")]
+    pub hops: Option<usize>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct GraphArgs {
+    #[command(subcommand)]
+    pub action: GraphSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
+pub enum GraphSubcommand {
+    #[command(name = "build", about = "Build or update the AST structural graph and emit GRAPH_REPORT.md")]
+    Build(GraphBuildArgs),
+    #[command(name = "health", about = "Audit graph health, god nodes, loops and architectural boundaries")]
+    Health(GraphHealthArgs),
+    #[command(name = "path", about = "Find shortest path between two graph nodes via BFS")]
+    Path(GraphPathArgs),
+    #[command(name = "explain", about = "Explain structural connections and wiki relationships for a node")]
+    Explain(GraphExplainArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct GraphBuildArgs {
+    #[arg(long, help = "Incremental scan using BLAKE3 digests, only updating changed files")]
+    pub update: bool,
+
+    #[arg(long, help = "Bypass Shrink-Guard if node count decreases")]
+    pub force: bool,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct GraphHealthArgs {
+    #[arg(long, default_value_t = 10, help = "Maximum number of God Nodes to rank")]
+    pub top_god_nodes: usize,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct GraphPathArgs {
+    #[arg(help = "Source node ID or file path")]
+    pub source: String,
+
+    #[arg(help = "Target node ID or file path")]
+    pub target: String,
+
+    #[arg(long, help = "Consider edges undirected")]
+    pub undirected: bool,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct GraphExplainArgs {
+    #[arg(help = "Node identifier to explain")]
+    pub node_id: String,
+
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }

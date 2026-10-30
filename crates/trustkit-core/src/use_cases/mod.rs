@@ -18,4 +18,8 @@ pub mod record_tdd_phase;
 pub mod run_execution_wave;
 pub mod run_gauntlet_layer1;
 pub mod slice_ast_context;
+pub mod structural_graph_report;
+pub mod structural_graph_use_cases;
 pub mod trip_circuit_breaker;
+
+pub use structural_graph_use_cases::*;

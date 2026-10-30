@@ -64,6 +64,8 @@ impl User {{
         files: Vec::new(),
         budget: Some(20),
         symbols: vec!["User".to_string()],
+        mode: None,
+        hops: None,
         json: true,
     };
 

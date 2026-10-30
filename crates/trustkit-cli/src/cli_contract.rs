@@ -63,11 +63,17 @@ impl Cli {
                 McpSubcommand::Serve(args) => args.json,
             },
             Command::Memory(MemoryArgs { action }) => match action {
-                MemorySubcommand::Write(args) => args.json,
-                MemorySubcommand::Read(args) => args.json,
-                MemorySubcommand::Search(args) => args.json,
-                MemorySubcommand::List(args) => args.json,
-                MemorySubcommand::Rebuild(args) => args.json,
+                MemorySubcommand::Write(a) => a.json,
+                MemorySubcommand::Read(a) => a.json,
+                MemorySubcommand::Search(a) => a.json,
+                MemorySubcommand::List(a) => a.json,
+                MemorySubcommand::Rebuild(a) => a.json,
+            },
+            Command::Graph(GraphArgs { action }) => match action {
+                GraphSubcommand::Build(a) => a.json,
+                GraphSubcommand::Health(a) => a.json,
+                GraphSubcommand::Path(a) => a.json,
+                GraphSubcommand::Explain(a) => a.json,
             },
         }
     }
@@ -116,6 +122,9 @@ pub enum Command {
 
     #[command(about = "Manage and query persistent project knowledge memory (.trustkit/wiki)")]
     Memory(MemoryArgs),
+
+    #[command(about = "Structural graph intelligence, AST relationships and health checks")]
+    Graph(GraphArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]

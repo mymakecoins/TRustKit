@@ -5,6 +5,7 @@ pub mod doctor_cmd;
 pub mod done_cmd;
 pub mod gauntlet_ast_audit_cmd;
 pub mod gauntlet_run_cmd;
+pub mod graph_cmd;
 pub mod hook_cmd;
 pub mod init_cmd;
 pub mod mcp_cmd;
