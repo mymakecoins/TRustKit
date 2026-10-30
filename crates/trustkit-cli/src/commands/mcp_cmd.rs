@@ -10,8 +10,9 @@ use crate::error_handler::DomainOutcome;
 use std::io::{self, BufReader};
 use std::path::Path;
 use std::sync::Arc;
+use trustkit_ast::GraphHealthAuditor;
 use trustkit_core::errors::DomainViolation;
-use trustkit_db::KnowledgeWikiFsRepository;
+use trustkit_db::{GraphSqliteRepository, KnowledgeWikiFsRepository};
 use trustkit_orch::McpServer;
 
 pub fn execute(args: &McpArgs, _json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
@@ -21,10 +22,15 @@ pub fn execute(args: &McpArgs, _json_mode: bool) -> Result<DomainOutcome, Domain
 }
 
 pub fn execute_serve() -> Result<DomainOutcome, DomainViolation> {
-    let server = match KnowledgeWikiFsRepository::open_from_root(Path::new(".")) {
-        Ok(repo) => McpServer::with_knowledge_repo(Arc::new(repo)),
+    let mut server = match KnowledgeWikiFsRepository::open_from_root(Path::new(".")) {
+        Ok(k_repo) => McpServer::with_knowledge_repo(Arc::new(k_repo)),
         Err(_) => McpServer::new(),
     };
+    if let Ok(g_repo) = GraphSqliteRepository::open_from_root(Path::new(".")) {
+        server = server.with_graph_repo(Arc::new(g_repo));
+    }
+    server = server.with_graph_analyzer(Arc::new(GraphHealthAuditor::new()));
+
     let stdin = io::stdin();
     let stdout = io::stdout();
 

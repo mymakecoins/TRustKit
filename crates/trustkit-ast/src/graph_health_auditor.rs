@@ -19,9 +19,7 @@ use crate::graph_context_slicer::GraphContextSlicer;
 pub struct GraphHealthAuditor;
 
 impl GraphHealthAuditor {
-    pub const fn new() -> Self {
-        Self
-    }
+    pub const fn new() -> Self { Self }
 
     pub fn compute_cohesion_scores(
         &self,
@@ -62,6 +60,13 @@ impl GraphHealthAuditor {
 }
 
 impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
+    fn extract_from_files(
+        &self,
+        file_paths: &[String],
+    ) -> Result<(Vec<StructuralNode>, Vec<StructuralEdge>), DomainViolation> {
+        crate::ast_graph_extractor::AstGraphExtractor::new().extract_from_files(file_paths)
+    }
+
     fn audit_graph_health(
         &self,
         nodes: &[StructuralNode],

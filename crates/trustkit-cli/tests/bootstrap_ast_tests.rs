@@ -25,6 +25,8 @@ fn test_bootstrap_dispatch_context_slice() {
                 files: Vec::new(),
                 budget: Some(10),
                 symbols: vec!["Config".to_string()],
+                mode: None,
+                hops: None,
                 json: true,
             }),
         }),

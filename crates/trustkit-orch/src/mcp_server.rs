@@ -11,7 +11,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_core::knowledge_entities::{
     KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeSearchQuery, KnowledgeWriteOutcome,
 };
-use trustkit_core::ports::KnowledgeRepositoryPort;
+use trustkit_core::ports::{
+    KnowledgeRepositoryPort, StructuralGraphAnalyzerPort, StructuralGraphRepositoryPort,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
@@ -52,24 +54,36 @@ pub struct McpTool {
 #[derive(Default, Clone)]
 pub struct McpServer {
     knowledge_repo: Option<Arc<dyn KnowledgeRepositoryPort>>,
+    graph_repo: Option<Arc<dyn StructuralGraphRepositoryPort>>,
+    graph_analyzer: Option<Arc<dyn StructuralGraphAnalyzerPort>>,
 }
 
 impl std::fmt::Debug for McpServer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("McpServer").field("has_knowledge_repo", &self.knowledge_repo.is_some()).finish()
+        write!(f, "McpServer(k={}, g={})", self.knowledge_repo.is_some(), self.graph_repo.is_some())
     }
 }
 
-fn tool(name: &str, description: &str, input_schema: Value) -> McpTool {
+pub(crate) fn tool(name: &str, description: &str, input_schema: Value) -> McpTool {
     McpTool { name: name.to_string(), description: description.to_string(), input_schema }
 }
 
 impl McpServer {
-    pub fn new() -> Self { Self { knowledge_repo: None } }
-    pub fn with_knowledge_repo(repo: Arc<dyn KnowledgeRepositoryPort>) -> Self { Self { knowledge_repo: Some(repo) } }
+    pub fn new() -> Self { Self { knowledge_repo: None, graph_repo: None, graph_analyzer: None } }
+    pub fn with_knowledge_repo(repo: Arc<dyn KnowledgeRepositoryPort>) -> Self {
+        Self { knowledge_repo: Some(repo), graph_repo: None, graph_analyzer: None }
+    }
+    pub fn with_graph_repo(mut self, repo: Arc<dyn StructuralGraphRepositoryPort>) -> Self {
+        self.graph_repo = Some(repo);
+        self
+    }
+    pub fn with_graph_analyzer(mut self, analyzer: Arc<dyn StructuralGraphAnalyzerPort>) -> Self {
+        self.graph_analyzer = Some(analyzer);
+        self
+    }
 
     pub fn list_tools() -> Vec<McpTool> {
-        vec![
+        let mut tools = vec![
             tool("trustkit_init", "Inicializa o ciclo SDD deterministico (Gate 0)", json!({"type":"object","properties":{"issue":{"type":"integer"},"from_prd":{"type":"string"}}})),
             tool("trustkit_spec_lock", "Valida e congela especificacao com digest BLAKE3 (Gates 1 e 2)", json!({"type":"object"})),
             tool("trustkit_wave_plan", "Gera o planejamento topologico em ondas a partir do DAG (Gate 3)", json!({"type":"object"})),
@@ -82,17 +96,15 @@ impl McpServer {
             tool("trustkit_knowledge_read", "Le documento da memoria perene (.trustkit/wiki/<slug>.md)", json!({"type":"object","properties":{"slug":{"type":"string"}},"required":["slug"]})),
             tool("trustkit_knowledge_write", "Grava atomicamente nota Markdown em .trustkit/wiki/ e indexa no FTS5", json!({"type":"object","properties":{"slug":{"type":"string"},"title":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"content":{"type":"string"}},"required":["slug","title","content"]})),
             tool("trustkit_knowledge_rebuild", "Reconstroi deterministicamente o indice FTS5 e grafo de wikilinks", json!({"type":"object","properties":{}})),
-        ]
+        ];
+        tools.extend(crate::mcp_graph_dispatch::graph_tools());
+        tools
     }
 
     pub fn handle_request(&self, req: &JsonRpcRequest) -> Option<JsonRpcResponse> {
         let req_id = req.id.clone().unwrap_or_else(|| json!(0));
         match req.method.as_str() {
-            "initialize" => Some(Self::ok_resp(req_id, json!({
-                "protocolVersion": "2024-11-05",
-                "serverInfo": { "name": "trustkit-mcp-server", "version": "0.1.0" },
-                "capabilities": { "tools": {} }
-            }))),
+            "initialize" => Some(Self::ok_resp(req_id, json!({"protocolVersion": "2024-11-05", "serverInfo": {"name": "trustkit-mcp-server", "version": "0.1.0"}, "capabilities": {"tools": {}}}))),
             "notifications/initialized" => None,
             "ping" => Some(Self::ok_resp(req_id, json!({}))),
             "tools/list" => Some(Self::ok_resp(req_id, json!({ "tools": Self::list_tools() }))),
@@ -112,6 +124,10 @@ impl McpServer {
         }
         let (text_response, is_error) = if tool_name.starts_with("trustkit_knowledge_") {
             self.dispatch_knowledge_tool(tool_name, args)
+        } else if tool_name.starts_with("trustkit_graph_") {
+            crate::mcp_graph_dispatch::dispatch_graph_tool(
+                tool_name, args, self.graph_repo.as_ref(), self.graph_analyzer.as_ref(), self.knowledge_repo.as_ref(),
+            )
         } else {
             (json!({ "tool": tool_name, "status": "acknowledged", "gate": "SDD_GATEWAY_READY" }).to_string(), false)
         };
@@ -131,8 +147,7 @@ impl McpServer {
                 let doc = KnowledgeDocument::new(slug, title, extract_tags(args.get("tags")), content, ts, String::new());
                 match repo.write_document(&doc) {
                     Ok(KnowledgeWriteOutcome::Success { slug, file_path, blake3_digest, indexed_links_count }) => (
-                        json!({"verdict":"PASS","tool":tool_name,"outcome":"SUCCESS","slug":slug,"file_path":file_path,"blake3_digest":blake3_digest,"indexed_links_count":indexed_links_count}).to_string(), false,
-                    ),
+                        json!({"verdict":"PASS","tool":tool_name,"outcome":"SUCCESS","slug":slug,"file_path":file_path,"blake3_digest":blake3_digest,"indexed_links_count":indexed_links_count}).to_string(), false),
                     Err(e) => (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true),
                 }
             }
@@ -168,11 +183,10 @@ impl McpServer {
     }
 
     fn ok_resp(id: Value, result: Value) -> JsonRpcResponse {
-        JsonRpcResponse { jsonrpc: "2.0".to_string(), id, result: Some(result), error: None }
+        JsonRpcResponse { jsonrpc: "2.0".into(), id, result: Some(result), error: None }
     }
-
     fn err_resp(id: Value, code: i32, message: String) -> JsonRpcResponse {
-        JsonRpcResponse { jsonrpc: "2.0".to_string(), id, result: None, error: Some(JsonRpcError { code, message, data: None }) }
+        JsonRpcResponse { jsonrpc: "2.0".into(), id, result: None, error: Some(JsonRpcError { code, message, data: None }) }
     }
 
     pub fn run_stdio<R: BufRead, W: Write>(&self, mut reader: R, mut writer: W) -> Result<(), std::io::Error> {
@@ -195,8 +209,8 @@ impl McpServer {
 
 fn extract_tags(val: Option<&Value>) -> Vec<String> {
     match val {
-        Some(Value::Array(arr)) => arr.iter().filter_map(Value::as_str).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
-        Some(Value::String(csv)) => csv.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
+        Some(Value::Array(a)) => a.iter().filter_map(Value::as_str).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
+        Some(Value::String(c)) => c.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
         _ => Vec::new(),
     }
 }
@@ -217,18 +231,19 @@ mod tests {
         let list_req = JsonRpcRequest { jsonrpc: "2.0".to_string(), id: Some(json!(2)), method: "tools/list".to_string(), params: None };
         let list_resp = server.handle_request(&list_req).expect("response");
         let tools_arr = list_resp.result.unwrap().get("tools").unwrap().as_array().unwrap().clone();
-        assert_eq!(tools_arr.len(), 12);
+        assert_eq!(tools_arr.len(), 16);
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_lock"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_knowledge_search"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_knowledge_write"));
+        assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_graph_query"));
+        assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_graph_health"));
     }
 
     #[test]
     fn test_run_stdio_stream() {
         let server = McpServer::new();
-        let input = "{\"jsonrpc\":\"2.0\",\"id\":10,\"method\":\"ping\"}\n";
         let mut output = Vec::new();
-        server.run_stdio(Cursor::new(input), &mut output).expect("run stdio");
+        server.run_stdio(Cursor::new("{\"jsonrpc\":\"2.0\",\"id\":10,\"method\":\"ping\"}\n"), &mut output).expect("run stdio");
         assert!(String::from_utf8_lossy(&output).contains("\"id\":10"));
     }
 }

@@ -8,9 +8,9 @@ use crate::cli_contract::{
     HookSubcommand, SpecArgs, SpecSubcommand, WaveArgs, WaveSubcommand,
 };
 use crate::commands::{
-    context_slice_cmd, doctor_cmd, done_cmd, gauntlet_ast_audit_cmd, gauntlet_run_cmd, hook_cmd,
-    init_cmd, mcp_cmd, memory_cmd, merge_cmd, pr_cmd, spec_init_cmd, spec_lock_cmd, status_cmd,
-    task_cmd, wave_plan_cmd, wave_run_cmd,
+    context_slice_cmd, doctor_cmd, done_cmd, gauntlet_ast_audit_cmd, gauntlet_run_cmd, graph_cmd,
+    hook_cmd, init_cmd, mcp_cmd, memory_cmd, merge_cmd, pr_cmd, spec_init_cmd, spec_lock_cmd,
+    status_cmd, task_cmd, wave_plan_cmd, wave_run_cmd,
 };
 use crate::error_handler::DomainOutcome;
 use trustkit_core::errors::DomainViolation;
@@ -55,6 +55,7 @@ impl FastSyncBootstrap {
             Command::Pr(args) => pr_cmd::execute(args, json_mode),
             Command::Mcp(args) => mcp_cmd::execute(args, json_mode),
             Command::Memory(args) => memory_cmd::execute(args, json_mode),
+            Command::Graph(args) => graph_cmd::execute(args, json_mode),
             Command::Init(_) => Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "bootstrap".to_string(),
                 details: "Command 'init' requires FullConcurrentBootstrap path.".to_string(),
@@ -138,6 +139,7 @@ pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
         | Command::Spec(_)
         | Command::Context(_)
         | Command::Memory(_)
+        | Command::Graph(_)
         | Command::Wave(WaveArgs {
             action: WaveSubcommand::Plan(_),
         })

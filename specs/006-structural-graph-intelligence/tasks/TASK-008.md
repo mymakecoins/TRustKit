@@ -2,7 +2,7 @@
 
 > **Camada:** Interface CLI & Orquestracao MCP
 > **Estimativa:** G
-> **Status:** Pendente
+> **Status:** Concluido
 
 depends_on: [TASK-007]
 layer: CLI
@@ -38,8 +38,8 @@ Implementar:
 - Limite maximo de 250 linhas de codigo por arquivo.
 
 ## Criterio de Aceite
-- [ ] **Dado** a execucao de `trustkit graph build --json` seguida de `trustkit graph explain <NODE_ID> --json`, **entao** o CLI retorna `Exit Code: 0` com JSON estruturado sem campos `null`.
-- [ ] **Dado** uma requisicao JSON-RPC `tools/list` ao servidor MCP (`trustkit mcp`), **entao** as tools `trustkit_graph_query`, `trustkit_graph_path`, `trustkit_graph_explain` e `trustkit_graph_health` sao listadas e respondem a `tools/call` em `< 5ms`.
+- [x] **Dado** a execucao de `trustkit graph build --json` seguida de `trustkit graph explain <NODE_ID> --json`, **entao** o CLI retorna `Exit Code: 0` com JSON estruturado sem campos `null`.
+- [x] **Dado** uma requisicao JSON-RPC `tools/list` ao servidor MCP (`trustkit mcp`), **entao** as tools `trustkit_graph_query`, `trustkit_graph_path`, `trustkit_graph_explain` e `trustkit_graph_health` sao listadas e respondem a `tools/call` em `< 5ms`.
 
 ## Notas Tecnicas
 - Conectar os novos adaptadores no Composition Root (`crates/trustkit-cli/src/bootstrap.rs`).
