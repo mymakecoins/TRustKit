@@ -103,7 +103,8 @@ impl StructuralGraphRepositoryPort for GraphSqliteRepository {
 
         {
             let mut insert_node = tx.prepare(
-                "INSERT INTO structural_graph_nodes (node_id, label, kind, source_file, architectural_layer) VALUES (?1, ?2, ?3, ?4, ?5)"
+                "INSERT INTO structural_graph_nodes (node_id, label, kind, source_file, architectural_layer) VALUES (?1, ?2, ?3, ?4, ?5) \
+                 ON CONFLICT(node_id) DO UPDATE SET label = ?2, kind = ?3, source_file = ?4, architectural_layer = ?5"
             ).map_err(|e| boundary_err("Failed preparing node insert", e))?;
 
             for n in nodes {

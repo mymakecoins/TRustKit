@@ -154,24 +154,36 @@ fn split_command_statements(command: &str) -> Vec<&str> {
     let mut stmts = Vec::new();
     let (mut last, mut sq, mut dq) = (0, false, false);
     let bytes = command.as_bytes();
-    for i in 0..bytes.len() {
+    let mut i = 0;
+    while i < bytes.len() {
         match bytes[i] {
             b'\'' if !dq => sq = !sq,
             b'"' if !sq => dq = !dq,
-            b';' | b'|' if !sq && !dq => {
-                stmts.push(&command[last..i]);
-                last = if bytes.get(i + 1) == Some(&b'|') {
-                    i + 2
-                } else {
-                    i + 1
-                };
+            b';' if !sq && !dq => {
+                if last < i {
+                    stmts.push(&command[last..i]);
+                }
+                last = i + 1;
+            }
+            b'|' if !sq && !dq => {
+                if last < i {
+                    stmts.push(&command[last..i]);
+                }
+                if bytes.get(i + 1) == Some(&b'|') {
+                    i += 1;
+                }
+                last = i + 1;
             }
             b'&' if !sq && !dq && bytes.get(i + 1) == Some(&b'&') => {
-                stmts.push(&command[last..i]);
-                last = i + 2;
+                if last < i {
+                    stmts.push(&command[last..i]);
+                }
+                i += 1;
+                last = i + 1;
             }
             _ => {}
         }
+        i += 1;
     }
     if last < command.len() {
         stmts.push(&command[last..]);
@@ -300,5 +312,16 @@ mod tests {
                 "Should pass: {cmd}"
             );
         }
+    }
+
+    #[test]
+    fn test_split_command_statements_with_pipes_and_or() {
+        let stmts = split_command_statements("cmd1 || cmd2 | cmd3 && cmd4; cmd5");
+        assert_eq!(stmts.len(), 5);
+        assert_eq!(stmts[0].trim(), "cmd1");
+        assert_eq!(stmts[1].trim(), "cmd2");
+        assert_eq!(stmts[2].trim(), "cmd3");
+        assert_eq!(stmts[3].trim(), "cmd4");
+        assert_eq!(stmts[4].trim(), "cmd5");
     }
 }
