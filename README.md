@@ -75,11 +75,13 @@ O ciclo de vida de desenvolvimento é estruturado em 7 portões determinísticos
     |
 [Gate 3] Decomposição Atômica e Planejamento de Ondas DAG
     |
-[Gate 4] Execução Paralela em Git Worktrees + Ciclo TDD Estrito (RED -> GREEN)
+[Gate 4] Execução Paralela em Git Worktrees + Ciclo TDD Estrito (RED -> GREEN -> REFACTOR / Code Review)
     |
-[Gate 5] Gauntlet V2 (Auditoria AST Camada 0 + Swarm de Críticos Camada 1)
+[Gate 5] Gauntlet V2 (Auditoria AST Camada 0 + Swarm de Críticos Camada 1 + Security Review Opcional)
     |
-[Gate 6] Certificação Oficial, Merge Determinístico e Pull Request sob Demanda
+[Gate 6] Certificação Oficial, Security Review Sob Demanda, Merge Determinístico e Pull Request
+    |
+[Pre-Release] Auditoria Defensiva Global em 6 Fases (trustkit audit security)
 ```
 
 ### Gate 0: Inicialização do Ciclo
@@ -104,8 +106,8 @@ Valida a pasta de tarefas (`tasks/TASK-NNN.md`), constrói o grafo direcionado a
 trustkit wave plan [--json]
 ```
 
-### Gate 4: Execução em Git Worktrees e TDD Estrito
-Executa tarefas em paralelo criando árvores de trabalho isoladas e fiscaliza a conformidade TDD:
+### Gate 4: Execução em Git Worktrees, TDD Estrito e Revisão Semântica (Fase Refactor)
+Executa tarefas em paralelo criando árvores de trabalho isoladas, fiscaliza a conformidade TDD (`RED -> GREEN`) e incorpora a revisão semântica multi-ângulo na fase `REFACTOR`:
 ```bash
 # Despacha a execução da onda em worktrees isoladas
 trustkit wave run --wave <INDICE_ONDA> [--json]
@@ -116,37 +118,60 @@ trustkit task test <TASK_ID> --phase red [--json]
 # Registra a fase GREEN (execução com sucesso após a implementação)
 trustkit task test <TASK_ID> --phase green [--json]
 
-# Conclui e homologa a tarefa atômica
-trustkit task complete <TASK_ID> [--json]
+# Executa revisão semântica multi-ângulo na fase REFACTOR (low, medium, high, max)
+trustkit task review <TASK_ID> [--effort medium] [--json]
+
+# Conclui e homologa a tarefa atômica (opcionalmente disparando code-review inline)
+trustkit task complete <TASK_ID> [--code-review medium] [--json]
 ```
 
-### Gate 5: Gauntlet Loop V2
-Auditoria em duas camadas que protege o repositório contra regressões e violações:
+### Gate 5: Gauntlet Loop V2 e Revisão de Segurança Opcional
+Auditoria em duas camadas que protege o repositório contra regressões e violações, acompanhada de revisão especializada de segurança de aplicação (`security-review`) opcional sob decisão do usuário:
 - Camada 0 (AST Audit nativo em microssegundos): checagem de anti-cheat em asserções de testes, integridade sintática, ausência de emojis, ausência de trailers IA e detecção de `any` ou `raw.githubusercontent`.
 - Camada 1 (Swarm Concorrente): execução de lint, compilação de release, testes E2E com Playwright e críticos de contrato/domínio.
+- Camada AppSec Opcional (`security-review`): análise focada no diff da branch em busca de vulnerabilidades exploráveis de alta confiança (`>= 8/10`) com filtragem anti-falso-positivo. Pode ser controlada via flags CLI (`--security-review` ou `--skip-security-review`), prompt interativo TTY (`[s/N]`, padrão `N`) ou política declarativa em `trustkit.toml`.
 
 ```bash
 # Auditoria de Camada 0 (AST e sintaxe estática)
 trustkit gauntlet ast-audit [--json]
 
-# Execução completa da esteira do Gauntlet
+# Execução completa da esteira do Gauntlet (com prompt interativo TTY [s/N] se aplicável)
 trustkit gauntlet run [--json]
+
+# Execução forçando ou dispensando explicitamente a revisão de segurança do diff
+trustkit gauntlet run --security-review [--json]
+trustkit gauntlet run --skip-security-review [--json]
 
 # Diagnóstico de falhas e análise de Circuit Breaker
 trustkit doctor [--json]
 ```
 
+Configuração declarativa opcional em `trustkit.toml`:
+```toml
+[governance.gauntlet]
+# Modos: "prompt" (pergunta no terminal), "always" (sempre executa), "disabled" (nunca pergunta)
+security_review_mode = "prompt"
+min_confidence_threshold = 8
+```
+
 ### Gate 6: Certificação, Merge e Pull Request
-Consolida as evidências em `gauntlet-report.md`, executa o merge determinístico para a branch alvo e, sob demanda explícita, abre o Pull Request:
+Consolida as evidências em `gauntlet-report.md` (incluindo o status da revisão de segurança ou permitindo executá-la sob demanda caso tenha sido dispensada no Gate 5), executa o merge determinístico para a branch alvo e, sob demanda explícita, abre o Pull Request:
 ```bash
-# Consolida a sessão e gera o relatório final
-trustkit done [--json]
+# Consolida a sessão e gera o relatório final (com suporte às flags de security-review)
+trustkit done [--security-review | --skip-security-review] [--json]
 
 # Realiza o merge determinístico para a branch alvo
 trustkit merge --target develop [--json]
 
 # Abre o Pull Request (somente sob autorização explícita)
 trustkit pr --target develop [--json]
+```
+
+### Homologação Pré-Release: Auditoria Defensiva Global (`audit security`)
+Para homologação de marcos de versão ou antes de merges em branches estáveis (`staging` ou `main`), o TRustKit oferece um subcomando desacoplado de auditoria defensiva em 6 fases com validação de ledger determinístico (`coverage-ledger.json` e `findings.json`):
+```bash
+# Executa auditoria global pré-release (perfis: quick, standard, deep)
+trustkit audit security [--profile standard] [--scope .] [--output-dir .trustkit/audits/security] [--json]
 ```
 
 ---

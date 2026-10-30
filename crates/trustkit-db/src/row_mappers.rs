@@ -246,6 +246,8 @@ pub fn map_row_to_evidence(row: &Row) -> rusqlite::Result<ExecutionEvidence> {
         "AST_AUDIT" => EvidenceKind::AstAudit,
         "BOARD_SYNC" => EvidenceKind::BoardSync,
         "SPEC_SEAL" => EvidenceKind::SpecSeal,
+        "CODE_REVIEW" => EvidenceKind::CodeReview,
+        "SECURITY_REVIEW" => EvidenceKind::SecurityReview,
         _ => EvidenceKind::CriticVerdict,
     };
     let verdict = match verdict_raw.as_str() {

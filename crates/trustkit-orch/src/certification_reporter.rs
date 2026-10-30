@@ -6,7 +6,7 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use std::fmt::Write as _;
-use trustkit_core::entities::ExecutionEvidence;
+use trustkit_core::entities::{EvidenceKind, ExecutionEvidence, GateVerdict};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::gauntlet_entities::CertificationSummary;
 use trustkit_core::ports::CycleCertificationPort;
@@ -49,6 +49,26 @@ impl CycleCertificationPort for CycleCertificationReporter {
             report,
             "- **Circuit Breaker State:** {:?}",
             summary.circuit_breaker_state
+        )
+        .unwrap();
+        let security_review_status = evidences
+            .iter()
+            .rev()
+            .find(|e| e.evidence_kind == EvidenceKind::SecurityReview)
+            .map(|e| {
+                if e.sanitized_stdout_tail.contains("SkippedByDeveloper") {
+                    "SKIPPED (Opt-out pelo desenvolvedor)".to_string()
+                } else if e.verdict == GateVerdict::Pass {
+                    "PASS (Confianca >= 8)".to_string()
+                } else {
+                    "FAIL (Vulnerabilidades detectadas)".to_string()
+                }
+            })
+            .unwrap_or_else(|| "SKIPPED (Opt-out pelo desenvolvedor)".to_string());
+        writeln!(
+            report,
+            "- **Specialized Security Review:** {}",
+            security_review_status
         )
         .unwrap();
         writeln!(report).unwrap();

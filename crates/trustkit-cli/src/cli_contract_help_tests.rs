@@ -41,6 +41,7 @@ fn test_all_subcommands_help_zero_emojis() {
         vec!["trustkit", "--help"],
         vec!["trustkit", "task", "--help"],
         vec!["trustkit", "task", "test", "--help"],
+        vec!["trustkit", "task", "review", "--help"],
         vec!["trustkit", "task", "complete", "--help"],
         vec!["trustkit", "wave", "--help"],
         vec!["trustkit", "wave", "run", "--help"],
@@ -52,6 +53,8 @@ fn test_all_subcommands_help_zero_emojis() {
         vec!["trustkit", "pr", "--help"],
         vec!["trustkit", "mcp", "--help"],
         vec!["trustkit", "mcp", "serve", "--help"],
+        vec!["trustkit", "audit", "--help"],
+        vec!["trustkit", "audit", "security", "--help"],
     ];
 
     for invocation in test_invocations {

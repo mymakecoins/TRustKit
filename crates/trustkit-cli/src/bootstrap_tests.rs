@@ -107,7 +107,10 @@ fn test_sync_bootstrap_doctor_dispatches() {
 fn test_sync_bootstrap_done_dispatches() {
     let cli = Cli {
         json: true,
-        command: Command::Done(DoneArgs { json: true }),
+        command: Command::Done(DoneArgs {
+            json: true,
+            ..Default::default()
+        }),
     };
     let res = FastSyncBootstrap::dispatch(&cli);
     assert!(res.is_err());
@@ -209,7 +212,10 @@ fn test_dispatch_cli_routes_gates_4_5_6_to_full_concurrent() {
 
     let cli_done = Cli {
         json: true,
-        command: Command::Done(DoneArgs { json: true }),
+        command: Command::Done(DoneArgs {
+            json: true,
+            ..Default::default()
+        }),
     };
     let res = dispatch_cli(&cli_done);
     assert!(res.is_err());

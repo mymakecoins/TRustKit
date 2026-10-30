@@ -80,7 +80,14 @@ fn test_parse_doctor_and_done() {
 
     let cli_done = Cli::try_parse_from(["trustkit", "done", "--json"]).expect("done parse");
     assert!(cli_done.is_json_mode());
-    assert_eq!(cli_done.command, Command::Done(DoneArgs { json: true }));
+    assert_eq!(
+        cli_done.command,
+        Command::Done(DoneArgs {
+            security_review: false,
+            skip_security_review: false,
+            json: true,
+        })
+    );
 }
 
 #[test]
