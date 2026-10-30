@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TRustKit Modular Architecture",
+    "subtitle": "Hexagonal Cargo Workspace with strict domain boundaries and native deterministic governance",
+    "output": "01-trustkit-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "entry-flow",
+        "label": "Execution Entry",
+        "focus": ["agents", "cli", "core"],
+        "note": "Agent commands entering through Clap CLI parser into pure domain model."
+      },
+      {
+        "id": "governance-core",
+        "label": "Engine & Analysis",
+        "focus": ["core", "orch", "ast", "db"],
+        "note": "Core delegating to async orchestrator, AST scanner, and transactional DB."
+      },
+      {
+        "id": "storage-worktrees",
+        "label": "State & Isolation",
+        "focus": ["orch", "worktrees", "db", "state_db"],
+        "note": "Safe parallel execution via Git worktrees and immutable audit logs in SQLite WAL."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "agents",
+      "type": "external",
+      "label": "Agent Environment",
+      "sublabel": "Claude / Antigravity",
+      "pos": [40, 270],
+      "size": [130, 60]
+    },
+    {
+      "id": "cli",
+      "type": "frontend",
+      "label": "trustkit-cli",
+      "sublabel": "Clap Composition Root",
+      "pos": [250, 270],
+      "size": [130, 60]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "trustkit-core",
+      "sublabel": "Pure Domain & DAG Scheduler",
+      "pos": [460, 270],
+      "size": [140, 60]
+    },
+    {
+      "id": "orch",
+      "type": "backend",
+      "label": "trustkit-orch",
+      "sublabel": "Tokio & Worktree Sup",
+      "pos": [680, 140],
+      "size": [140, 60]
+    },
+    {
+      "id": "ast",
+      "type": "security",
+      "label": "trustkit-ast",
+      "sublabel": "Tree-Sitter & Anti-Cheat",
+      "pos": [680, 270],
+      "size": [140, 60]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "trustkit-db",
+      "sublabel": "SQLite WAL & BLAKE3 Hasher",
+      "pos": [680, 400],
+      "size": [140, 60]
+    },
+    {
+      "id": "worktrees",
+      "type": "cloud",
+      "label": "Git Worktrees",
+      "sublabel": "Reflink CoW Workspaces",
+      "pos": [900, 140],
+      "size": [130, 60]
+    },
+    {
+      "id": "state_db",
+      "type": "database",
+      "label": "state.db",
+      "sublabel": "WAL & FTS5 Index",
+      "pos": [900, 400],
+      "size": [130, 60]
+    },
+    {
+      "id": "gh",
+      "type": "external",
+      "label": "trustkit-gh",
+      "sublabel": "GitHub Projects & PRs",
+      "pos": [460, 430],
+      "size": [140, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Cargo Workspace (Rust)",
+      "wraps": ["cli", "core", "orch", "ast", "db", "gh"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Storage & Worktrees",
+      "wraps": ["worktrees", "state_db"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "agent-to-cli",
+      "from": "agents",
+      "to": "cli",
+      "label": "CLI invoke",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cli-to-core",
+      "from": "cli",
+      "to": "core"
+    },
+    {
+      "id": "core-to-orch",
+      "from": "core",
+      "to": "orch",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "core-to-ast",
+      "from": "core",
+      "to": "ast"
+    },
+    {
+      "id": "core-to-db",
+      "from": "core",
+      "to": "db",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "core-to-gh",
+      "from": "core",
+      "to": "gh",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "variant": "dashed"
+    },
+    {
+      "id": "orch-to-worktrees",
+      "from": "orch",
+      "to": "worktrees",
+      "label": "reflink CoW",
+      "variant": "dashed"
+    },
+    {
+      "id": "db-to-state",
+      "from": "db",
+      "to": "state_db",
+      "label": "WAL append",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Hexagonal Core & Review Ports",
+      "items": [
+        "trustkit-core defines SemanticCodeReviewerPort, SecurityDiffReviewerPort, and InteractivePromptPort",
+        "Deterministic domain ports orchestrate adapters without infrastructure leakage"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "AST, Code & Security Review",
+      "items": [
+        "Tree-Sitter mechanically parses syntax at Layer 0 alongside multi-angle Code Review (Gate 4)",
+        "Optional Security Review (Gates 5/6) and 6-phase Pre-Release Audit (trustkit audit security)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Parallel Isolation",
+      "items": [
+        "Git worktrees provide isolated filesystems for autonomous agents",
+        "Transactions and BLAKE3 hashes committed to SQLite in WAL mode"
+      ]
+    }
+  ]
+}

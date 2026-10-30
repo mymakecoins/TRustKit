@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "TRustKit Living Memory & Context Slicing Dataflow",
+    "subtitle": "From AST syntax trees and BLAKE3 seals to multi-hop context slices and agent prompts",
+    "output": "04-trustkit-memory-dataflow.html",
+    "viewBox": [1120, 720],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "ingestion-path",
+        "label": "Ingestion & Extraction",
+        "focus": ["src_code", "spec_doc", "ast_parser", "blake3_seal"],
+        "note": "Raw code files and markdown specs parsed into ASTs and sealed with cryptographic hashes."
+      },
+      {
+        "id": "graph-index",
+        "label": "Topology & Living Wiki",
+        "focus": ["ast_parser", "code_graph", "blake3_seal", "fts_index"],
+        "note": "Tree-Sitter extracts structural graph while SQLite FTS5 indexes living wiki documents."
+      },
+      {
+        "id": "slicing-consumption",
+        "label": "Context Slicing to Agent",
+        "focus": ["code_graph", "fts_index", "slicer", "agent_ctx"],
+        "note": "Multi-hop traversal generates minimal context slices injected into LLM KV-cache."
+      }
+    ]
+  },
+  "stages": [
+    { "label": "Artifacts" },
+    { "label": "Extraction" },
+    { "label": "Topology & Storage" },
+    { "label": "Context Engine" },
+    { "label": "Consumers" }
+  ],
+  "nodes": [
+    {
+      "id": "src_code",
+      "type": "frontend",
+      "label": "Source Code",
+      "sublabel": "Rust / TS modules",
+      "stage": 0,
+      "row": 0,
+      "tag": "codebase"
+    },
+    {
+      "id": "spec_doc",
+      "type": "frontend",
+      "label": "Spec & Wiki",
+      "sublabel": "spec.md + PRD",
+      "stage": 0,
+      "row": 2,
+      "tag": "requirements"
+    },
+    {
+      "id": "ast_parser",
+      "type": "security",
+      "label": "Tree-Sitter",
+      "sublabel": "native AST parser",
+      "stage": 1,
+      "row": 0,
+      "tag": "syntax tree"
+    },
+    {
+      "id": "blake3_seal",
+      "type": "security",
+      "label": "BLAKE3 Seal",
+      "sublabel": "parallel hasher",
+      "stage": 1,
+      "row": 2,
+      "tag": "integrity"
+    },
+    {
+      "id": "code_graph",
+      "type": "backend",
+      "label": "Structural Graph",
+      "sublabel": "nodes & God nodes",
+      "stage": 2,
+      "row": 0,
+      "tag": "coupling"
+    },
+    {
+      "id": "fts_index",
+      "type": "database",
+      "label": "SQLite FTS5",
+      "sublabel": "BM25 wiki search",
+      "stage": 2,
+      "row": 2,
+      "tag": "living memory"
+    },
+    {
+      "id": "slicer",
+      "type": "backend",
+      "label": "Context Slicer",
+      "sublabel": "BFS / DFS multi-hop",
+      "stage": 3,
+      "row": 1,
+      "tag": "minimal slice"
+    },
+    {
+      "id": "agent_ctx",
+      "type": "external",
+      "label": "Agent KV-Cache",
+      "sublabel": "dense prompt window",
+      "stage": 4,
+      "row": 1,
+      "tag": "low token cost"
+    }
+  ],
+  "flows": [
+    {
+      "from": "src_code",
+      "to": "ast_parser",
+      "label": "parse AST",
+      "classification": "grammar",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "spec_doc",
+      "to": "blake3_seal",
+      "label": "compute digest",
+      "classification": "hash",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "ast_parser",
+      "to": "code_graph",
+      "label": "structural edges",
+      "classification": "topology",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "blake3_seal",
+      "to": "fts_index",
+      "label": "index terms",
+      "classification": "bm25",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "code_graph",
+      "to": "slicer",
+      "label": "graph traversal",
+      "classification": "subgraph",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "fts_index",
+      "to": "slicer",
+      "label": "semantic hits",
+      "classification": "ranked text",
+      "variant": "default",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "slicer",
+      "to": "agent_ctx",
+      "label": "inject slice",
+      "classification": "curated prompt",
+      "variant": "emphasis",
+      "route": "straight"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Dual Indexing",
+      "items": [
+        "Tree-Sitter parses AST nodes and architectural dependencies deterministically",
+        "BLAKE3 seals markdown specs and wikis for immutable revision checks"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Sub-graph Slicing",
+      "items": [
+        "BFS/DFS multi-hop algorithms identify dependent symbols without full repository dumping",
+        "SQLite FTS5 provides BM25 full-text queries for relevant documentation"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Token Economy",
+      "items": [
+        "Eliminates prompt bloating by delivering only pertinent code slices",
+        "Prevents KV-cache eviction in multi-agent collaborative workflows"
+      ]
+    }
+  ]
+}

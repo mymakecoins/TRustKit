@@ -63,3 +63,48 @@ fn test_scanner_passes_clean_code() {
     let violations = scanner.scan_content("src/main.rs", content);
     assert!(violations.is_empty());
 }
+
+#[test]
+fn test_scanner_verifies_bilingual_readmes_and_diagrams_have_zero_violations() {
+    let scanner = InvariantLexicalScanner::new();
+    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .expect("workspace root should exist");
+
+    for rel in [
+        "README.md",
+        "README.en.md",
+        "docs/diagrams/01-trustkit-architecture.json",
+        "docs/diagrams/02-trustkit-7gates-workflow.json",
+        "docs/diagrams/03-trustkit-task-tdd-sequence.json",
+        "docs/diagrams/05-trustkit-feature-lifecycle.json",
+    ] {
+        let full_path = repo_root.join(rel);
+        let content = std::fs::read_to_string(&full_path)
+            .unwrap_or_else(|e| panic!("Failed reading {}: {e}", full_path.display()));
+        let violations = scanner.scan_content(rel, &content);
+        assert!(
+            violations.is_empty(),
+            "Expected zero lexical violations in {rel}, found: {violations:?}"
+        );
+    }
+
+    for html_rel in [
+        "docs/diagrams/01-trustkit-architecture.html",
+        "docs/diagrams/02-trustkit-7gates-workflow.html",
+        "docs/diagrams/03-trustkit-task-tdd-sequence.html",
+        "docs/diagrams/05-trustkit-feature-lifecycle.html",
+    ] {
+        let html_path = repo_root.join(html_rel);
+        if html_path.is_file() {
+            let content = std::fs::read_to_string(&html_path)
+                .unwrap_or_else(|e| panic!("Failed reading {}: {e}", html_path.display()));
+            let violations = scanner.scan_content(html_rel, &content);
+            assert!(
+                violations.is_empty(),
+                "Expected zero lexical violations in {html_rel}, found: {violations:?}"
+            );
+        }
+    }
+}
