@@ -56,7 +56,9 @@ pub fn append_evidence(conn: &Connection, ev: &ExecutionEvidence) -> Result<u64,
         EvidenceKind::AstAudit => "AST_AUDIT",
         EvidenceKind::BoardSync => "BOARD_SYNC",
         EvidenceKind::SpecSeal => "SPEC_SEAL",
-        _ => "CRITIC_VERDICT",
+        EvidenceKind::CodeReview => "CODE_REVIEW",
+        EvidenceKind::SecurityReview => "SECURITY_REVIEW",
+        EvidenceKind::CriticVerdict => "CRITIC_VERDICT",
     };
     let verdict = match ev.verdict {
         GateVerdict::Pass => "PASS",
