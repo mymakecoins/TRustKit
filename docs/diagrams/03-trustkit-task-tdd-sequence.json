@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "TRustKit Worktree & Mechanical TDD Sequence",
+    "subtitle": "Step-by-step task execution with CoW isolation, AST anti-cheat audit, and WAL commit",
+    "output": "03-trustkit-task-tdd-sequence.html",
+    "viewBox": [820, 760],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "worktree-spawn",
+        "label": "Worktree Allocation",
+        "focus": ["agent", "cli", "orch", "git"],
+        "note": "Agent requests isolated workspace provisioned via copy-on-write Git worktree."
+      },
+      {
+        "id": "tdd-verification",
+        "label": "Mechanical TDD Cycle",
+        "focus": ["agent", "cli", "ast"],
+        "note": "Mandatory RED phase proof followed by GREEN implementation verified by Tree-sitter."
+      },
+      {
+        "id": "state-commit",
+        "label": "Immutable State Commit",
+        "focus": ["cli", "db", "agent"],
+        "note": "Cryptographic BLAKE3 audit record committed directly into SQLite WAL."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "agent", "type": "external", "label": "Agent", "sublabel": "autonomous builder" },
+    { "id": "cli", "type": "frontend", "label": "trustkit", "sublabel": "native CLI" },
+    { "id": "orch", "type": "backend", "label": "trustkit-orch", "sublabel": "Tokio supervisor" },
+    { "id": "git", "type": "cloud", "label": "Git Engine", "sublabel": "worktree reflink" },
+    { "id": "ast", "type": "security", "label": "trustkit-ast", "sublabel": "anti-cheat inspector" },
+    { "id": "db", "type": "database", "label": "state.db", "sublabel": "SQLite WAL" }
+  ],
+  "segments": [
+    { "from": 150, "to": 330, "label": "Worktree Provisioning" },
+    { "from": 350, "to": 560, "label": "Mechanical TDD Validation" },
+    { "from": 580, "to": 690, "label": "Immutable Audit & Return" }
+  ],
+  "messages": [
+    { "id": "spawn-cmd", "from": "agent", "to": "cli", "y": 180, "label": "trustkit worktree create TASK-042", "variant": "default" },
+    { "id": "orch-alloc", "from": "cli", "to": "orch", "y": 218, "label": "allocate worktree", "variant": "emphasis" },
+    { "id": "git-spawn", "from": "orch", "to": "git", "y": 255, "label": "git worktree add --reflink", "variant": "default" },
+    { "id": "git-ready", "from": "git", "to": "orch", "y": 290, "label": "tree ready path", "variant": "return" },
+    { "id": "orch-ready", "from": "orch", "to": "cli", "y": 322, "label": "workspace provisioned", "variant": "return" },
+    { "id": "tdd-red-cmd", "from": "agent", "to": "cli", "y": 372, "label": "trustkit tdd red (failing test)", "variant": "security" },
+    { "id": "ast-audit-red", "from": "cli", "to": "ast", "y": 410, "label": "audit genuine failure", "variant": "security" },
+    { "id": "ast-red-ok", "from": "ast", "to": "cli", "y": 444, "label": "verified red phase", "variant": "return" },
+    { "id": "tdd-green-cmd", "from": "agent", "to": "cli", "y": 485, "label": "trustkit tdd green (passing test)", "variant": "emphasis" },
+    { "id": "ast-audit-green", "from": "cli", "to": "ast", "y": 520, "label": "audit assertion density", "variant": "security" },
+    { "id": "ast-green-ok", "from": "ast", "to": "cli", "y": 552, "label": "verified genuine assertions", "variant": "return" },
+    { "id": "wal-commit-cmd", "from": "cli", "to": "db", "y": 600, "label": "commit BLAKE3 evidence", "variant": "emphasis" },
+    { "id": "wal-ack", "from": "db", "to": "cli", "y": 638, "label": "WAL transaction sealed", "variant": "return" },
+    { "id": "agent-done", "from": "cli", "to": "agent", "y": 672, "label": "task complete receipt", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "cli", "from": 180, "to": 678, "type": "frontend" },
+    { "participant": "orch", "from": 218, "to": 326, "type": "backend" },
+    { "participant": "git", "from": 255, "to": 295, "type": "cloud" },
+    { "participant": "ast", "from": 410, "to": 448, "type": "security" },
+    { "participant": "ast", "from": 520, "to": 556, "type": "security" },
+    { "participant": "db", "from": 600, "to": 642, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Reflink Isolation",
+      "items": [
+        "Git worktree isolates file operations so concurrent agents never corrupt the index",
+        "Copy-on-write prevents redundant disk allocation on modern filesystems"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Anti-Cheat Mechanics",
+      "items": [
+        "trustkit-ast parses AST to verify the test actually exercises the intended logic",
+        "Enforces that tests failed before implementation and pass with non-trivial assertions"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Immutable Ledger",
+      "items": [
+        "Each phase change is signed with BLAKE3 hashes and persisted in SQLite WAL",
+        "Creates tamper-proof receipts that cannot be hallucinated or bypassed"
+      ]
+    }
+  ]
+}

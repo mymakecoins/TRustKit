@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "TRustKit Feature & Task Lifecycle",
+    "subtitle": "State machine from session init and cryptographic lock to Gauntlet review, PR gate, and merge",
+    "output": "05-trustkit-feature-lifecycle.html",
+    "viewBox": [980, 680],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "sdd-rail",
+        "label": "Main SDD rail",
+        "focus": ["init", "locked", "tdd", "gauntlet", "certified"],
+        "note": "Follow the feature through sequential gates from setup to immutable certification."
+      },
+      {
+        "id": "remediation-loop",
+        "label": "Gauntlet review & remedy",
+        "focus": ["tdd", "gauntlet", "vetoed"],
+        "note": "Inspect Gauntlet adversarial review and return loop for remediation."
+      },
+      {
+        "id": "human-release",
+        "label": "Human release gate",
+        "focus": ["certified", "pr_demand", "merged", "aborted"],
+        "note": "Strict human-controlled PR trigger and terminal outcomes."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "SDD Phases" },
+    { "id": "waiting", "label": "Governance Gates" },
+    { "id": "recovery", "label": "Remediation Loop" },
+    { "id": "terminal", "label": "Terminal Exits" }
+  ],
+  "states": [
+    {
+      "id": "init",
+      "type": "start",
+      "label": "Session Init",
+      "sublabel": "identity setup",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "gate 0"
+    },
+    {
+      "id": "locked",
+      "type": "active",
+      "label": "Spec Locked",
+      "sublabel": "blake3 digest",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "gate 1-2"
+    },
+    {
+      "id": "tdd",
+      "type": "active",
+      "label": "Worktree TDD",
+      "sublabel": "red to green",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "gate 4"
+    },
+    {
+      "id": "gauntlet",
+      "type": "decision",
+      "label": "Gauntlet Eval",
+      "sublabel": "ast + critics",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "gate 5"
+    },
+    {
+      "id": "certified",
+      "type": "success",
+      "label": "Certified",
+      "sublabel": "wal recorded",
+      "lane": "main",
+      "col": 4,
+      "step": "05",
+      "tag": "gate 6"
+    },
+    {
+      "id": "pr_demand",
+      "type": "waiting",
+      "label": "PR Demand",
+      "sublabel": "human trigger",
+      "lane": "waiting",
+      "col": 2,
+      "tag": "on-demand"
+    },
+    {
+      "id": "vetoed",
+      "type": "failure",
+      "label": "Vetoed",
+      "sublabel": "critic rejection",
+      "lane": "recovery",
+      "col": 1,
+      "tag": "retryable"
+    },
+    {
+      "id": "aborted",
+      "type": "failure",
+      "label": "Aborted",
+      "sublabel": "invariant breach",
+      "lane": "terminal",
+      "col": 0,
+      "tag": "terminal"
+    },
+    {
+      "id": "merged",
+      "type": "success",
+      "label": "Merged",
+      "sublabel": "fast-forward apply",
+      "lane": "terminal",
+      "col": 2,
+      "tag": "terminal"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "tdd-aborted",
+      "from": "tdd",
+      "to": "aborted",
+      "variant": "security",
+      "route": "straight",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "gauntlet-veto",
+      "from": "gauntlet",
+      "to": "vetoed",
+      "variant": "security",
+      "route": "straight",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "veto-retry",
+      "from": "vetoed",
+      "to": "tdd",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "bottom"
+    },
+    {
+      "id": "cert-pr",
+      "from": "certified",
+      "to": "pr_demand",
+      "variant": "dashed",
+      "route": "straight",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "pr-merged",
+      "from": "pr_demand",
+      "to": "merged",
+      "variant": "emphasis",
+      "route": "straight",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Main Promotion Rail",
+      "items": [
+        "Ordered movement from Session Init to Certified status",
+        "Spec Lock is an immutable precondition for worktree execution",
+        "Certified proves mechanical and adversarial compliance"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Governance & Vetoes",
+      "items": [
+        "Invariant breach instantly aborts the run into a terminal exit",
+        "Gauntlet veto allows remediation back into the worktree TDD state"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Human Control",
+      "items": [
+        "Pull Request creation is strictly gated on human developer demand",
+        "Direct pushes to protected branches are constitutionally forbidden"
+      ]
+    }
+  ]
+}

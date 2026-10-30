@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "TRustKit 7-Gate SDD Workflow",
+    "subtitle": "Deterministic Spec-Driven Development with cryptographic freeze, TDD, and Gauntlet V2",
+    "output": "02-trustkit-7gates-workflow.html",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "spec-lock",
+        "label": "Identity & Spec Lock",
+        "focus": ["gate0_init", "gate1_spec", "gate3_plan"],
+        "note": "Session setup, context slicing, Gherkin specs, and cryptographic BLAKE3 freezing."
+      },
+      {
+        "id": "execution-gauntlet",
+        "label": "TDD & Gauntlet Loop",
+        "focus": ["gate3_plan", "gate4_tdd", "gate5_gauntlet", "gauntlet_veto"],
+        "note": "Worktree isolation, mechanical RED/GREEN assertions, and adversarial Gauntlet review."
+      },
+      {
+        "id": "certification-merge",
+        "label": "Immutable Certification",
+        "focus": ["gate5_gauntlet", "gate6_cert"],
+        "note": "Tamper-proof SQLite WAL record and on-demand pull request opening."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "orch", "label": "Session Governance" },
+    { "id": "spec", "label": "Specification" },
+    { "id": "plan", "label": "Wave Planning" },
+    { "id": "build", "label": "Execution" },
+    { "id": "audit", "label": "Verification" },
+    { "id": "exceptions", "label": "Remediation", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "spec_phase", "label": "Spec & Lock", "fromCol": 0, "toCol": 1 },
+    { "id": "build_phase", "label": "Plan & TDD", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "verify_phase", "label": "Gauntlet & Merge", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "gauntlet_gate", "label": "Gauntlet Gate", "lane": "audit", "fromCol": 4, "toCol": 4, "variant": "security" },
+    { "id": "repair_loop", "label": "Retry Loop", "lane": "exceptions", "fromCol": 3, "toCol": 4, "variant": "dashed" }
+  ],
+  "mainPath": [
+    "gate0_init",
+    "gate1_spec",
+    "gate3_plan",
+    "gate4_tdd",
+    "gate5_gauntlet",
+    "gate6_cert"
+  ],
+  "nodes": [
+    {
+      "id": "gate0_init",
+      "lane": "orch",
+      "col": 0,
+      "type": "frontend",
+      "label": "Init",
+      "sublabel": "gate 0 identity",
+      "tag": "trustkit init"
+    },
+    {
+      "id": "gate1_spec",
+      "lane": "spec",
+      "col": 1,
+      "type": "security",
+      "label": "Spec Lock",
+      "sublabel": "blake3 digest",
+      "tag": "immutable"
+    },
+    {
+      "id": "gate3_plan",
+      "lane": "plan",
+      "col": 2,
+      "type": "backend",
+      "label": "Wave DAG",
+      "sublabel": "coupling check",
+      "tag": "atomic tasks"
+    },
+    {
+      "id": "gate4_tdd",
+      "lane": "build",
+      "col": 3,
+      "type": "cloud",
+      "label": "TDD Cycle",
+      "sublabel": "red to green",
+      "tag": "reflink CoW"
+    },
+    {
+      "id": "gate5_gauntlet",
+      "lane": "audit",
+      "col": 4,
+      "type": "security",
+      "label": "Gauntlet",
+      "sublabel": "ast + critics",
+      "tag": "adversarial"
+    },
+    {
+      "id": "gate6_cert",
+      "lane": "audit",
+      "col": 5,
+      "type": "database",
+      "label": "Certify",
+      "sublabel": "wal record",
+      "tag": "merge ready"
+    },
+    {
+      "id": "gauntlet_veto",
+      "lane": "exceptions",
+      "col": 4,
+      "type": "security",
+      "label": "Veto",
+      "sublabel": "gate failed",
+      "tag": "blocks merge"
+    }
+  ],
+  "edges": [
+    {
+      "id": "g0-to-g1",
+      "from": "gate0_init",
+      "to": "gate1_spec",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "g1-to-g3",
+      "from": "gate1_spec",
+      "to": "gate3_plan",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "g3-to-g4",
+      "from": "gate3_plan",
+      "to": "gate4_tdd",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "g4-to-g5",
+      "from": "gate4_tdd",
+      "to": "gate5_gauntlet",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "g5-to-g6",
+      "from": "gate5_gauntlet",
+      "to": "gate6_cert",
+      "variant": "emphasis"
+    },
+    {
+      "id": "g5-to-veto",
+      "from": "gate5_gauntlet",
+      "to": "gauntlet_veto",
+      "variant": "security",
+      "role": "error",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "veto-to-g4",
+      "from": "gauntlet_veto",
+      "to": "gate4_tdd",
+      "label": "remedy",
+      "variant": "dashed",
+      "role": "return",
+      "route": "return-left",
+      "fromSide": "left",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Deterministic Governance",
+      "items": [
+        "Spec locked with BLAKE3 cryptographic digest before code execution starts",
+        "Wave DAG decomposes tasks to enforce maximum coupling safety"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Mechanical TDD Invariant",
+      "items": [
+        "Gate 4 strictly rejects any implementation without a prior registered RED test",
+        "Git worktrees run in isolated CoW trees to prevent index pollution"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Gauntlet V2 & Merge",
+      "items": [
+        "Layer 0 parses AST mechanically to catch fake mocks and empty assertions",
+        "Layer 1 critic swarm must reach consensus before final certification"
+      ]
+    }
+  ]
+}
