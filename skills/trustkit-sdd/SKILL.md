@@ -1,5 +1,5 @@
 ---
-name: trustkit
+name: trustkit-sdd
 description: Governança determinística de Spec-Driven Development (SDD), isolamento de Git Worktrees e Gauntlet V2 em Rust nativo.
 compatibility: Requer o binário estático trustkit disponível no PATH ou workspace.
 metadata:
@@ -7,7 +7,7 @@ metadata:
   architecture: Hybrid Rust Core + Thin Skill
 ---
 
-# Thin Skill Declarativa: TRustKit (v4)
+# Thin Skill Declarativa: TRustKit SDD (v4)
 
 Esta skill orquestra o ciclo de vida do SDD delegando todas as validações determinísticas, isolamento de Worktrees, fiscalização de TDD e transições de Gates ao binário nativo `trustkit`.
 
