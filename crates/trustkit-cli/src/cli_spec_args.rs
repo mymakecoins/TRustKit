@@ -43,6 +43,21 @@ pub struct GauntletAstAuditArgs {
     pub json: bool,
 }
 
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct ContextArgs {
+    #[command(subcommand)]
+    pub action: ContextSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
+pub enum ContextSubcommand {
+    #[command(
+        name = "slice",
+        about = "Slice AST context within budget for builder agents"
+    )]
+    Slice(ContextSliceArgs),
+}
+
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct ContextSliceArgs {
     #[arg(long, help = "Target file path to slice")]

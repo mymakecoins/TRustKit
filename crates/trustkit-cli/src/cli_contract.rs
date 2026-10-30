@@ -53,6 +53,7 @@ impl Cli {
             },
             Command::Task(TaskArgs { action }) => match action {
                 TaskSubcommand::Test(args) => args.json,
+                TaskSubcommand::Review(args) => args.json,
                 TaskSubcommand::Complete(args) => args.json,
             },
             Command::Doctor(args) => args.json,
@@ -74,6 +75,9 @@ impl Cli {
                 GraphSubcommand::Health(a) => a.json,
                 GraphSubcommand::Path(a) => a.json,
                 GraphSubcommand::Explain(a) => a.json,
+            },
+            Command::Audit(AuditArgs { action }) => match action {
+                AuditSubcommand::Security(a) => a.json,
             },
         }
     }
@@ -125,6 +129,9 @@ pub enum Command {
 
     #[command(about = "Structural graph intelligence, AST relationships and health checks")]
     Graph(GraphArgs),
+
+    #[command(about = "Decoupled pre-release homologation and repository security audits")]
+    Audit(AuditArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]
@@ -217,21 +224,6 @@ pub enum GauntletSubcommand {
         about = "Run concurrent verification gauntlet across Layer 0 and Layer 1 critics"
     )]
     Run(GauntletRunArgs),
-}
-
-#[derive(Args, Debug, PartialEq, Eq)]
-pub struct ContextArgs {
-    #[command(subcommand)]
-    pub action: ContextSubcommand,
-}
-
-#[derive(Subcommand, Debug, PartialEq, Eq)]
-pub enum ContextSubcommand {
-    #[command(
-        name = "slice",
-        about = "Slice AST context within budget for builder agents"
-    )]
-    Slice(ContextSliceArgs),
 }
 
 #[cfg(test)]

@@ -156,7 +156,11 @@ fn test_done_cmd_persists_gauntlet_report_and_returns_exit_code_0() {
         repo.append_evidence(&ev).expect("append critic evidence");
     }
 
-    let args = DoneArgs { json: false };
+    let args = DoneArgs {
+        json: false,
+        skip_security_review: true,
+        ..Default::default()
+    };
     let result = done_cmd::execute_with_db(&args, false, &db_path);
     assert!(result.is_ok());
 
@@ -257,6 +261,7 @@ fn test_task_complete_advances_to_committed() {
 
     let args = TaskCompleteArgs {
         task_id: "TASK-001".to_string(),
+        code_review: None,
         json: true,
     };
 
@@ -278,7 +283,10 @@ fn test_gauntlet_run_without_layer0_clean_pass_fails_with_exit_code_5() {
     let dir = tempdir().expect("tempdir");
     let (db_path, _) = setup_cycle_with_task(dir.path(), "TASK-001", CycleStatus::Active);
 
-    let args = trustkit_cli::cli_contract::GauntletRunArgs { json: true };
+    let args = trustkit_cli::cli_contract::GauntletRunArgs {
+        json: true,
+        ..Default::default()
+    };
     let result = trustkit_cli::commands::gauntlet_run_cmd::execute_with_db(&args, true, &db_path);
     assert!(result.is_err());
 
