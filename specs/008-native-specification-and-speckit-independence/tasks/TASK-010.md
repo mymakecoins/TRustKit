@@ -2,7 +2,7 @@
 
 > **Camada:** Diagramas / Archify
 > **Estimativa:** P
-> **Status:** Pendente
+> **Status:** Concluido
 
 depends_on: [TASK-009]
 layer: DIAGRAMS
@@ -34,8 +34,8 @@ Atualizar as definicoes e renderizar os diagramas standalone HTML:
 - Zero sobreposicao de labels e suporte completo a temas Dark/Light.
 
 ## Criterio de Aceite
-- [ ] **Dado** os arquivos HTML atualizados em `docs/diagrams/`, **quando** inspecionados, **entao** sao documentos HTML standalone validos contendo o SVG renderizado e os novos nos arquiteturais.
-- [ ] **Dado** os novos arquivos em `docs/diagrams/`, **quando** analisados pelo scanner de invariantes, **entao** nao possuem emojis ou trailers de IA.
+- [x] **Dado** os arquivos HTML atualizados em `docs/diagrams/`, **quando** inspecionados, **entao** sao documentos HTML standalone validos contendo o SVG renderizado e os novos nos arquiteturais.
+- [x] **Dado** os novos arquivos em `docs/diagrams/`, **quando** analisados pelo scanner de invariantes, **entao** nao possuem emojis ou trailers de IA.
 
 ## Notas Tecnicas
 - Validar conformidade de tags e ausencia de caracteres proibidos.

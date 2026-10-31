@@ -4501,7 +4501,7 @@
       <p class="subtitle">Hexagonal Cargo Workspace with strict domain boundaries and native deterministic governance</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"entry-flow","label":"Execution Entry","focus":["agents","cli","core"],"note":"Agent commands entering through Clap CLI parser into pure domain model."},{"id":"governance-core","label":"Engine \u0026 Analysis","focus":["core","orch","ast","db"],"note":"Core delegating to async orchestrator, AST scanner, and transactional DB."},{"id":"storage-worktrees","label":"State \u0026 Isolation","focus":["orch","worktrees","db","state_db"],"note":"Safe parallel execution via Git worktrees and immutable audit logs in SQLite WAL."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"entry-flow","label":"Execution Entry","focus":["agents","cli","core"],"note":"Agent commands entering through Clap CLI parser into pure domain model."},{"id":"governance-core","label":"Engine \u0026 Analysis","focus":["core","orch","ast","db"],"note":"Core delegating to async orchestrator with native MCP spec tools, AST spec linter, and transactional DB."},{"id":"storage-worktrees","label":"State \u0026 Isolation","focus":["orch","worktrees","db","state_db"],"note":"Safe parallel execution via Git worktrees and immutable audit logs in SQLite WAL."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4613,30 +4613,30 @@
         <text data-detail="context" x="315" y="314" class="t-muted" font-size="9" text-anchor="middle">Clap Composition Root</text>
         </g>
 
-        <g id="node-core" data-node-id="core" data-node-label="trustkit-core" tabindex="0" role="button" aria-label="Focus trustkit-core, Pure Domain &amp; DAG Scheduler, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Pure Domain &amp; DAG Scheduler" data-node-context="Cargo Workspace (Rust)">
-          <title>trustkit-core · Pure Domain &amp; DAG Scheduler · Cargo Workspace (Rust)</title>
+        <g id="node-core" data-node-id="core" data-node-label="trustkit-core" tabindex="0" role="button" aria-label="Focus trustkit-core, Pure Domain &amp; Spec Scaffold, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Pure Domain &amp; Spec Scaffold" data-node-context="Cargo Workspace (Rust)">
+          <title>trustkit-core · Pure Domain &amp; Spec Scaffold · Cargo Workspace (Rust)</title>
           <rect x="460" y="270" width="140" height="60" rx="6" class="c-mask"/>
           <rect x="460" y="270" width="140" height="60" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(466 276) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
           <text data-detail-anchor x="530" y="298" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">trustkit-core</text>
-        <text data-detail="context" x="530" y="314" class="t-muted" font-size="8.1" text-anchor="middle">Pure Domain &amp; DAG Scheduler</text>
+        <text data-detail="context" x="530" y="314" class="t-muted" font-size="8.1" text-anchor="middle">Pure Domain &amp; Spec Scaffold</text>
         </g>
 
-        <g id="node-orch" data-node-id="orch" data-node-label="trustkit-orch" tabindex="0" role="button" aria-label="Focus trustkit-orch, Tokio &amp; Worktree Sup, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Tokio &amp; Worktree Sup" data-node-context="Cargo Workspace (Rust)">
-          <title>trustkit-orch · Tokio &amp; Worktree Sup · Cargo Workspace (Rust)</title>
+        <g id="node-orch" data-node-id="orch" data-node-label="trustkit-orch" tabindex="0" role="button" aria-label="Focus trustkit-orch, Tokio, MCP &amp; Worktrees, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Tokio, MCP &amp; Worktrees" data-node-context="Cargo Workspace (Rust)">
+          <title>trustkit-orch · Tokio, MCP &amp; Worktrees · Cargo Workspace (Rust)</title>
           <rect x="680" y="140" width="140" height="60" rx="6" class="c-mask"/>
           <rect x="680" y="140" width="140" height="60" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(686 146) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
           <text data-detail-anchor x="750" y="168" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">trustkit-orch</text>
-        <text data-detail="context" x="750" y="184" class="t-muted" font-size="9" text-anchor="middle">Tokio &amp; Worktree Sup</text>
+        <text data-detail="context" x="750" y="184" class="t-muted" font-size="9" text-anchor="middle">Tokio, MCP &amp; Worktrees</text>
         </g>
 
-        <g id="node-ast" data-node-id="ast" data-node-label="trustkit-ast" tabindex="0" role="button" aria-label="Focus trustkit-ast, Tree-Sitter &amp; Anti-Cheat, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="security" data-node-sublabel="Tree-Sitter &amp; Anti-Cheat" data-node-context="Cargo Workspace (Rust)">
-          <title>trustkit-ast · Tree-Sitter &amp; Anti-Cheat · Cargo Workspace (Rust)</title>
+        <g id="node-ast" data-node-id="ast" data-node-label="trustkit-ast" tabindex="0" role="button" aria-label="Focus trustkit-ast, Tree-Sitter &amp; Spec Linter, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="security" data-node-sublabel="Tree-Sitter &amp; Spec Linter" data-node-context="Cargo Workspace (Rust)">
+          <title>trustkit-ast · Tree-Sitter &amp; Spec Linter · Cargo Workspace (Rust)</title>
           <rect x="680" y="270" width="140" height="60" rx="6" class="c-mask"/>
           <rect x="680" y="270" width="140" height="60" rx="6" class="c-security" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(686 276) scale(0.6875)">
@@ -4644,7 +4644,7 @@
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
           <text data-detail-anchor x="750" y="298" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">trustkit-ast</text>
-        <text data-detail="context" x="750" y="314" class="t-muted" font-size="9" text-anchor="middle">Tree-Sitter &amp; Anti-Cheat</text>
+        <text data-detail="context" x="750" y="314" class="t-muted" font-size="8.8" text-anchor="middle">Tree-Sitter &amp; Spec Linter</text>
         </g>
 
         <g id="node-db" data-node-id="db" data-node-label="trustkit-db" tabindex="0" role="button" aria-label="Focus trustkit-db, SQLite WAL &amp; BLAKE3 Hasher, Cargo Workspace (Rust)" aria-pressed="false" data-node-kind="database" data-node-sublabel="SQLite WAL &amp; BLAKE3 Hasher" data-node-context="Cargo Workspace (Rust)">
@@ -4927,22 +4927,22 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Hexagonal Core &amp; Review Ports</h3>
+          <h3>Hexagonal Core &amp; Spec Scaffold</h3>
         </div>
         <ul>
-          <li>&bull; trustkit-core defines SemanticCodeReviewerPort, SecurityDiffReviewerPort, and InteractivePromptPort</li>
-          <li>&bull; Deterministic domain ports orchestrate adapters without infrastructure leakage</li>
+          <li>&bull; trustkit-core defines SpecScaffoldComposerPort, SemanticCodeReviewerPort, and InteractivePromptPort</li>
+          <li>&bull; Deterministic domain ports orchestrate prompt scaffold, AST slicing, and BM25 knowledge search</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot rose"></div>
-          <h3>AST, Code &amp; Security Review</h3>
+          <h3>AST, Spec Linter &amp; Security</h3>
         </div>
         <ul>
-          <li>&bull; Tree-Sitter mechanically parses syntax at Layer 0 alongside multi-angle Code Review (Gate 4)</li>
-          <li>&bull; Optional Security Review (Gates 5/6) and 6-phase Pre-Release Audit (trustkit audit security)</li>
+          <li>&bull; SpecLinter parses sections and Gherkin pre-lock (&lt; 3ms) alongside multi-angle Code Review (Gate 4)</li>
+          <li>&bull; Native Tokio MCP server exposes trustkit_spec_template, trustkit_spec_context, and trustkit_spec_lint</li>
         </ul>
       </div>
 

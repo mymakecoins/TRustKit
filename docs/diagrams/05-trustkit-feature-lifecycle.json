@@ -3,7 +3,7 @@
   "diagram_type": "lifecycle",
   "meta": {
     "title": "TRustKit Feature & Task Lifecycle",
-    "subtitle": "State machine from session init and cryptographic lock to Gauntlet review, PR gate, and merge",
+    "subtitle": "State machine from session init, prompt scaffold and cryptographic lock to Gauntlet review, PR gate, and merge",
     "output": "05-trustkit-feature-lifecycle.html",
     "viewBox": [980, 680],
     "animation": "trace",
@@ -14,7 +14,7 @@
         "id": "sdd-rail",
         "label": "Main SDD rail",
         "focus": ["init", "locked", "tdd", "gauntlet", "certified"],
-        "note": "Follow the feature through sequential gates from setup to immutable certification."
+        "note": "Follow the feature through prompt scaffold, AST linting, BLAKE3 lock, to immutable certification."
       },
       {
         "id": "remediation-loop",
@@ -50,8 +50,8 @@
     {
       "id": "locked",
       "type": "active",
-      "label": "Spec Locked",
-      "sublabel": "blake3 digest",
+      "label": "Prompt & Lock",
+      "sublabel": "scaffold, lint & blake3",
       "lane": "main",
       "col": 1,
       "step": "02",
@@ -175,8 +175,8 @@
       "dot": "cyan",
       "title": "Main Promotion Rail",
       "items": [
-        "Ordered movement from Session Init to Certified status",
-        "Spec Lock is an immutable precondition for worktree execution",
+        "Ordered movement from Session Init, prompt scaffold, and AST linting to Certified status",
+        "Spec Lock with BLAKE3 is an immutable precondition for worktree execution",
         "Certified proves mechanical and adversarial compliance"
       ]
     },
