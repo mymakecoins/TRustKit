@@ -6,6 +6,16 @@
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
+pub struct JsonSpecPromptResponse {
+    pub verdict: String,
+    pub idea: String,
+    pub token_estimate: usize,
+    pub system_instructions: String,
+    pub scaffold_markdown: String,
+    pub context_summary: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct JsonTaskTestResponse {
     pub verdict: String,
     pub task_id: String,
@@ -183,6 +193,17 @@ impl GatePresenter {
             format!(
                 "[{}] Pull Request #{} opened for cycle {} -> {}\nURL: {}\nBoard column: {}",
                 res.verdict, res.pr_number, res.cycle_id, res.target_branch, res.pr_url, res.board_column
+            )
+        }
+    }
+
+    pub fn render_spec_prompt(res: &JsonSpecPromptResponse, json_mode: bool) -> String {
+        if json_mode {
+            serde_json::to_string(res).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
+        } else {
+            format!(
+                "[{}] Spec Prompt Generated (~{} tokens)\n\n--- INSTRUCOES CONSTITUCIONAIS ---\n{}\n\n--- CONTEXTO ---\n{}\n\n--- ESQUELETO SPEC.MD ---\n{}",
+                res.verdict, res.token_estimate, res.system_instructions, res.context_summary, res.scaffold_markdown
             )
         }
     }

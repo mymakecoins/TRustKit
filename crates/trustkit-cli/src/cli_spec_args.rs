@@ -6,6 +6,18 @@
 use clap::{Args, Subcommand};
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct SpecPromptArgs {
+    #[arg(long, help = "Feature idea or description in natural language")]
+    pub idea: String,
+    #[arg(long, default_value = "2", help = "Number of context hops for knowledge and AST search")]
+    pub context_hops: usize,
+    #[arg(long, default_value = "4000", help = "Token budget for prompt output")]
+    pub budget: usize,
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct SpecLockArgs {
     #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
     pub spec: Option<String>,
