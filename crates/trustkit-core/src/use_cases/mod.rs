@@ -3,6 +3,7 @@
 pub mod audit_ast_layer0;
 pub mod certify_cycle_and_report;
 pub mod complete_task;
+pub mod compose_spec_context;
 pub mod ingest_completed_task_knowledge;
 pub mod ingest_gauntlet_incident_knowledge;
 pub mod ingest_locked_spec_knowledge;
