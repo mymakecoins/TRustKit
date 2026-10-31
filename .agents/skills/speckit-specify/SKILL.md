@@ -1,11 +1,22 @@
 ---
 name: "speckit-specify"
-description: "Create or update the feature specification from a natural language feature description."
+description: "DEPRECATED: Use trustkit-sdd. Create or update the feature specification from a natural language feature description."
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
   author: "github-spec-kit"
   source: "templates/commands/specify.md"
+  status: "deprecated"
+  superseded_by: "trustkit-sdd"
 ---
+
+> DEPRECATION NOTICE:
+> Esta skill legada do Spec Kit foi substituida pelo fluxo nativo de especificacao do TRustKit (Gate 1 e Gate 2).
+> Agentes devem utilizar exclusivamente a thin skill 'trustkit-sdd' e os comandos nativos:
+> - trustkit spec prompt --idea "<ideia>" --context-hops 2 --json
+> - trustkit spec lint --file <caminho> --json
+> - trustkit spec lock --spec <caminho> --json
+> Ou as ferramentas MCP nativas: trustkit_spec_template, trustkit_spec_context, trustkit_spec_lint.
+
 
 
 ## User Input

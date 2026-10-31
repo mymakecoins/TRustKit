@@ -17,7 +17,7 @@
         "id": "governance-core",
         "label": "Engine & Analysis",
         "focus": ["core", "orch", "ast", "db"],
-        "note": "Core delegating to async orchestrator, AST scanner, and transactional DB."
+        "note": "Core delegating to async orchestrator with native MCP spec tools, AST spec linter, and transactional DB."
       },
       {
         "id": "storage-worktrees",
@@ -48,7 +48,7 @@
       "id": "core",
       "type": "backend",
       "label": "trustkit-core",
-      "sublabel": "Pure Domain & DAG Scheduler",
+      "sublabel": "Pure Domain & Spec Scaffold",
       "pos": [460, 270],
       "size": [140, 60]
     },
@@ -56,7 +56,7 @@
       "id": "orch",
       "type": "backend",
       "label": "trustkit-orch",
-      "sublabel": "Tokio & Worktree Sup",
+      "sublabel": "Tokio, MCP & Worktrees",
       "pos": [680, 140],
       "size": [140, 60]
     },
@@ -64,7 +64,7 @@
       "id": "ast",
       "type": "security",
       "label": "trustkit-ast",
-      "sublabel": "Tree-Sitter & Anti-Cheat",
+      "sublabel": "Tree-Sitter & Spec Linter",
       "pos": [680, 270],
       "size": [140, 60]
     },
@@ -171,18 +171,18 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Hexagonal Core & Review Ports",
+      "title": "Hexagonal Core & Spec Scaffold",
       "items": [
-        "trustkit-core defines SemanticCodeReviewerPort, SecurityDiffReviewerPort, and InteractivePromptPort",
-        "Deterministic domain ports orchestrate adapters without infrastructure leakage"
+        "trustkit-core defines SpecScaffoldComposerPort, SemanticCodeReviewerPort, and InteractivePromptPort",
+        "Deterministic domain ports orchestrate prompt scaffold, AST slicing, and BM25 knowledge search"
       ]
     },
     {
       "dot": "rose",
-      "title": "AST, Code & Security Review",
+      "title": "AST, Spec Linter & Security",
       "items": [
-        "Tree-Sitter mechanically parses syntax at Layer 0 alongside multi-angle Code Review (Gate 4)",
-        "Optional Security Review (Gates 5/6) and 6-phase Pre-Release Audit (trustkit audit security)"
+        "SpecLinter parses sections and Gherkin pre-lock (< 3ms) alongside multi-angle Code Review (Gate 4)",
+        "Native Tokio MCP server exposes trustkit_spec_template, trustkit_spec_context, and trustkit_spec_lint"
       ]
     },
     {

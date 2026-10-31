@@ -4498,10 +4498,10 @@
         <div class="pulse-dot"></div>
         <h1>TRustKit 7-Gate SDD Workflow</h1>
       </div>
-      <p class="subtitle">Deterministic Spec-Driven Development with cryptographic freeze, TDD, and Gauntlet V2</p>
+      <p class="subtitle">Deterministic Spec-Driven Development with native prompt scaffold, AST linter, cryptographic freeze, TDD, and Gauntlet V2</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"spec-lock","label":"Identity \u0026 Spec Lock","focus":["gate0_init","gate1_spec","gate3_plan"],"note":"Session setup, context slicing, Gherkin specs, and cryptographic BLAKE3 freezing."},{"id":"execution-gauntlet","label":"TDD \u0026 Gauntlet Loop","focus":["gate3_plan","gate4_tdd","gate5_gauntlet","gauntlet_veto"],"note":"Worktree isolation, mechanical RED/GREEN assertions, and adversarial Gauntlet review."},{"id":"certification-merge","label":"Immutable Certification","focus":["gate5_gauntlet","gate6_cert"],"note":"Tamper-proof SQLite WAL record and on-demand pull request opening."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"spec-lock","label":"Identity \u0026 Spec Lock","focus":["gate0_init","gate1_spec","gate3_plan"],"note":"Session setup, context slicing, prompt scaffold, AST linter, and cryptographic BLAKE3 freezing."},{"id":"execution-gauntlet","label":"TDD \u0026 Gauntlet Loop","focus":["gate3_plan","gate4_tdd","gate5_gauntlet","gauntlet_veto"],"note":"Worktree isolation, mechanical RED/GREEN assertions, and adversarial Gauntlet review."},{"id":"certification-merge","label":"Immutable Certification","focus":["gate5_gauntlet","gate6_cert"],"note":"Tamper-proof SQLite WAL record and on-demand pull request opening."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4546,7 +4546,7 @@
     <div class="diagram-container" data-detail-level="read">
       <svg viewBox="0 0 720 900" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase">
         <title id="archify-diagram-title">TRustKit 7-Gate SDD Workflow</title>
-        <desc id="archify-diagram-description">Deterministic Spec-Driven Development with cryptographic freeze, TDD, and Gauntlet V2</desc>
+        <desc id="archify-diagram-description">Deterministic Spec-Driven Development with native prompt scaffold, AST linter, cryptographic freeze, TDD, and Gauntlet V2</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -4631,17 +4631,17 @@
         <text data-detail="fine" x="88" y="141" class="t-frontend" font-size="7" text-anchor="middle">trustkit init</text>
         </g>
 
-        <g id="node-gate1_spec" data-node-id="gate1_spec" data-node-label="Spec Lock" tabindex="0" role="button" aria-label="Focus Spec Lock, blake3 digest, Specification › Spec &amp; Lock" aria-pressed="false" data-node-kind="security" data-node-sublabel="blake3 digest" data-node-tag="immutable" data-node-context="Specification › Spec &amp; Lock">
-          <title>Spec Lock · blake3 digest · Specification › Spec &amp; Lock · immutable</title>
+        <g id="node-gate1_spec" data-node-id="gate1_spec" data-node-label="Prompt &amp; Lint" tabindex="0" role="button" aria-label="Focus Prompt &amp; Lint, scaffold + ast lint, Specification › Spec &amp; Lock" aria-pressed="false" data-node-kind="security" data-node-sublabel="scaffold + ast lint" data-node-tag="gate 1-2 lock" data-node-context="Specification › Spec &amp; Lock">
+          <title>Prompt &amp; Lint · scaffold + ast lint · Specification › Spec &amp; Lock · gate 1-2 lock</title>
           <rect x="174" y="209" width="92" height="68" rx="6" class="c-mask"/>
           <rect x="174" y="209" width="92" height="68" rx="6" class="c-security" data-animate="node" style="--step:1" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(180 215) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-detail-anchor x="220" y="230" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Spec Lock</text>
-          <text data-detail="context" x="220" y="247" class="t-muted" font-size="8" text-anchor="middle">blake3 digest</text>
-        <text data-detail="fine" x="220" y="265" class="t-security" font-size="7" text-anchor="middle">immutable</text>
+          <text data-detail-anchor x="220" y="230" class="t-primary" font-size="10.7" font-weight="600" text-anchor="middle">Prompt &amp; Lint</text>
+          <text data-detail="context" x="220" y="247" class="t-muted" font-size="7.3" text-anchor="middle">scaffold + ast lint</text>
+        <text data-detail="fine" x="220" y="265" class="t-security" font-size="7" text-anchor="middle">gate 1-2 lock</text>
         </g>
 
         <g id="node-gate3_plan" data-node-id="gate3_plan" data-node-label="Wave DAG" tabindex="0" role="button" aria-label="Focus Wave DAG, coupling check, Wave Planning › Plan &amp; TDD" aria-pressed="false" data-node-kind="backend" data-node-sublabel="coupling check" data-node-tag="atomic tasks" data-node-context="Wave Planning › Plan &amp; TDD">
@@ -4929,11 +4929,11 @@
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Deterministic Governance</h3>
+          <h3>Deterministic Governance &amp; Spec Scaffold</h3>
         </div>
         <ul>
-          <li>&bull; Spec locked with BLAKE3 cryptographic digest before code execution starts</li>
-          <li>&bull; Wave DAG decomposes tasks to enforce maximum coupling safety</li>
+          <li>&bull; Gate 1 scaffold prompts from natural language with AST context slicing and sub-3ms Rust linter</li>
+          <li>&bull; Gate 2 locks specification with BLAKE3 cryptographic digest before wave DAG planning</li>
         </ul>
       </div>
 

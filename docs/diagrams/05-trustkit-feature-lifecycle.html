@@ -4498,10 +4498,10 @@
         <div class="pulse-dot"></div>
         <h1>TRustKit Feature &amp; Task Lifecycle</h1>
       </div>
-      <p class="subtitle">State machine from session init and cryptographic lock to Gauntlet review, PR gate, and merge</p>
+      <p class="subtitle">State machine from session init, prompt scaffold and cryptographic lock to Gauntlet review, PR gate, and merge</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"sdd-rail","label":"Main SDD rail","focus":["init","locked","tdd","gauntlet","certified"],"note":"Follow the feature through sequential gates from setup to immutable certification."},{"id":"remediation-loop","label":"Gauntlet review \u0026 remedy","focus":["tdd","gauntlet","vetoed"],"note":"Inspect Gauntlet adversarial review and return loop for remediation."},{"id":"human-release","label":"Human release gate","focus":["certified","pr_demand","merged","aborted"],"note":"Strict human-controlled PR trigger and terminal outcomes."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"sdd-rail","label":"Main SDD rail","focus":["init","locked","tdd","gauntlet","certified"],"note":"Follow the feature through prompt scaffold, AST linting, BLAKE3 lock, to immutable certification."},{"id":"remediation-loop","label":"Gauntlet review \u0026 remedy","focus":["tdd","gauntlet","vetoed"],"note":"Inspect Gauntlet adversarial review and return loop for remediation."},{"id":"human-release","label":"Human release gate","focus":["certified","pr_demand","merged","aborted"],"note":"Strict human-controlled PR trigger and terminal outcomes."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4546,7 +4546,7 @@
     <div class="diagram-container" data-detail-level="read">
       <svg viewBox="0 0 980 680" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase">
         <title id="archify-diagram-title">TRustKit Feature &amp; Task Lifecycle</title>
-        <desc id="archify-diagram-description">State machine from session init and cryptographic lock to Gauntlet review, PR gate, and merge</desc>
+        <desc id="archify-diagram-description">State machine from session init, prompt scaffold and cryptographic lock to Gauntlet review, PR gate, and merge</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -4602,16 +4602,16 @@
         <text data-detail="fine" x="94" y="177" class="t-frontend" font-size="7" text-anchor="middle">gate 0</text>
         </g>
 
-        <g id="node-locked" data-node-id="locked" data-node-label="Spec Locked" tabindex="0" role="button" aria-label="Focus Spec Locked, blake3 digest, SDD Phases" aria-pressed="false" data-node-kind="active" data-node-sublabel="blake3 digest" data-node-tag="gate 1-2" data-node-context="SDD Phases">
-          <title>Spec Locked · blake3 digest · SDD Phases · gate 1-2</title>
+        <g id="node-locked" data-node-id="locked" data-node-label="Prompt &amp; Lock" tabindex="0" role="button" aria-label="Focus Prompt &amp; Lock, scaffold, lint &amp; blake3, SDD Phases" aria-pressed="false" data-node-kind="active" data-node-sublabel="scaffold, lint &amp; blake3" data-node-tag="gate 1-2" data-node-context="SDD Phases">
+          <title>Prompt &amp; Lock · scaffold, lint &amp; blake3 · SDD Phases · gate 1-2</title>
           <rect x="189" y="126" width="118" height="62" rx="7" class="c-mask"/>
           <rect x="189" y="126" width="118" height="62" rx="7" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="active" class="semantic-sigil s-backend" transform="translate(290 132) scale(0.6875)">
             <path d="M2 8h3l1.5-3.5L9 12l1.6-4H14"/>
           </g>
         <text data-detail="fine" x="199" y="140" class="t-backend" font-size="7" font-weight="700">02</text>
-          <text data-detail-anchor x="248" y="147" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">Spec Locked</text>
-          <text data-detail="context" x="248" y="163" class="t-muted" font-size="7" text-anchor="middle">blake3 digest</text>
+          <text data-detail-anchor x="248" y="147" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">Prompt &amp; Lock</text>
+          <text data-detail="context" x="248" y="163" class="t-muted" font-size="7" text-anchor="middle">scaffold, lint &amp; blake3</text>
         <text data-detail="fine" x="248" y="177" class="t-backend" font-size="7" text-anchor="middle">gate 1-2</text>
         </g>
 
@@ -4931,8 +4931,8 @@
           <h3>Main Promotion Rail</h3>
         </div>
         <ul>
-          <li>&bull; Ordered movement from Session Init to Certified status</li>
-          <li>&bull; Spec Lock is an immutable precondition for worktree execution</li>
+          <li>&bull; Ordered movement from Session Init, prompt scaffold, and AST linting to Certified status</li>
+          <li>&bull; Spec Lock with BLAKE3 is an immutable precondition for worktree execution</li>
           <li>&bull; Certified proves mechanical and adversarial compliance</li>
         </ul>
       </div>

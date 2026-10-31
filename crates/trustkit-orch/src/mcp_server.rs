@@ -98,6 +98,7 @@ impl McpServer {
             tool("trustkit_knowledge_rebuild", "Reconstroi deterministicamente o indice FTS5 e grafo de wikilinks", json!({"type":"object","properties":{}})),
         ];
         tools.extend(crate::mcp_graph_dispatch::graph_tools());
+        tools.extend(crate::mcp_spec_dispatch::spec_tools());
         tools
     }
 
@@ -128,6 +129,8 @@ impl McpServer {
             crate::mcp_graph_dispatch::dispatch_graph_tool(
                 tool_name, args, self.graph_repo.as_ref(), self.graph_analyzer.as_ref(), self.knowledge_repo.as_ref(),
             )
+        } else if tool_name.starts_with("trustkit_spec_") {
+            crate::mcp_spec_dispatch::dispatch_spec_tool(tool_name, args, self.knowledge_repo.as_ref())
         } else {
             (json!({ "tool": tool_name, "status": "acknowledged", "gate": "SDD_GATEWAY_READY" }).to_string(), false)
         };
@@ -231,8 +234,11 @@ mod tests {
         let list_req = JsonRpcRequest { jsonrpc: "2.0".to_string(), id: Some(json!(2)), method: "tools/list".to_string(), params: None };
         let list_resp = server.handle_request(&list_req).expect("response");
         let tools_arr = list_resp.result.unwrap().get("tools").unwrap().as_array().unwrap().clone();
-        assert_eq!(tools_arr.len(), 16);
+        assert_eq!(tools_arr.len(), 19);
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_lock"));
+        assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_template"));
+        assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_context"));
+        assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_lint"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_knowledge_search"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_knowledge_write"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_graph_query"));

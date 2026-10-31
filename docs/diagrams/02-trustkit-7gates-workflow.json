@@ -3,7 +3,7 @@
   "diagram_type": "workflow",
   "meta": {
     "title": "TRustKit 7-Gate SDD Workflow",
-    "subtitle": "Deterministic Spec-Driven Development with cryptographic freeze, TDD, and Gauntlet V2",
+    "subtitle": "Deterministic Spec-Driven Development with native prompt scaffold, AST linter, cryptographic freeze, TDD, and Gauntlet V2",
     "output": "02-trustkit-7gates-workflow.html",
     "animation": "trace",
     "quality_profile": "showcase",
@@ -12,7 +12,7 @@
         "id": "spec-lock",
         "label": "Identity & Spec Lock",
         "focus": ["gate0_init", "gate1_spec", "gate3_plan"],
-        "note": "Session setup, context slicing, Gherkin specs, and cryptographic BLAKE3 freezing."
+        "note": "Session setup, context slicing, prompt scaffold, AST linter, and cryptographic BLAKE3 freezing."
       },
       {
         "id": "execution-gauntlet",
@@ -68,9 +68,9 @@
       "lane": "spec",
       "col": 1,
       "type": "security",
-      "label": "Spec Lock",
-      "sublabel": "blake3 digest",
-      "tag": "immutable"
+      "label": "Prompt & Lint",
+      "sublabel": "scaffold + ast lint",
+      "tag": "gate 1-2 lock"
     },
     {
       "id": "gate3_plan",
@@ -182,10 +182,10 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Deterministic Governance",
+      "title": "Deterministic Governance & Spec Scaffold",
       "items": [
-        "Spec locked with BLAKE3 cryptographic digest before code execution starts",
-        "Wave DAG decomposes tasks to enforce maximum coupling safety"
+        "Gate 1 scaffold prompts from natural language with AST context slicing and sub-3ms Rust linter",
+        "Gate 2 locks specification with BLAKE3 cryptographic digest before wave DAG planning"
       ]
     },
     {
