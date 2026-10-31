@@ -95,14 +95,20 @@ Valida identidade GitHub, branches, estado da arvore de trabalho e inicializa o 
 trustkit init --issue <ISSUE_ID> [--from-prd <CAMINHO_PRD>] [--json]
 ```
 
-### Gate 1 & 2: Especificacao e Congelamento (Spec Lock)
-Inicializa o documento de requisitos (`spec.md`), valida sintaxe Mermaid, cenarios Gherkin e o fechamento da Matriz de Rastreabilidade (RN -> RF -> TASK -> E2E). Ao congelar, sela o documento com BLAKE3 e ingere na memoria perene:
+### Gate 1 & 2: Especificacao Nativa, Linting e Congelamento (Spec Lock)
+O TRustKit e 100% auto-suficiente para formulacao de especificacoes sem depender do ecossistema externo Spec Kit:
 ```bash
-# Inicializacao da especificacao a partir de PRD ou template
-trustkit spec init --issue <ISSUE_ID> [--from-prd docs/PRD.md] [--json]
+# Gera o prompt estruturado com fatiamento de contexto AST e busca FTS5 na memoria viva
+trustkit spec prompt --idea "<DESCRICAO_DA_FEATURE>" [--context-hops 2] [--budget 4000] [--json]
 
-# Congelamento e selamento criptografico
-trustkit spec lock [--json]
+# Executa linter estatico imediato (< 3ms) para validacao pre-lock e auto-correcao
+trustkit spec lint [--file <CAMINHO_SPEC>] [--json]
+
+# Inicializacao da especificacao a partir de PRD upstream
+trustkit spec init --from-prd <CAMINHO_PRD> [--name <SLUG>] [--json]
+
+# Congelamento e selamento criptografico com BLAKE3 e ingestao na memoria viva
+trustkit spec lock [--spec <CAMINHO_SPEC>] [--json]
 ```
 
 ### Gate 3: Tarefas Atomicas e Planejamento de Ondas DAG
@@ -269,6 +275,9 @@ trustkit mcp
 ```
 
 ### Ferramentas MCP Expostas:
+- `trustkit_spec_template`: Gera o template deterministico do spec.md com regras constitucionais.
+- `trustkit_spec_context`: Recupera contexto fatiado da memoria viva e do grafo AST para especificacao.
+- `trustkit_spec_lint`: Executa linter estatico imediato (< 3ms) em markdown com diagnosticos semanticos.
 - `trustkit_cycle_status`: Consulta o estado do ciclo ativo, gate atual e saude da esteira.
 - `trustkit_context_slice`: Executa o fatiamento de contexto AST e multi-hop de arquivos e simbolos.
 - `trustkit_memory_search`: Busca textual na memoria perene com ranqueamento BM25.
@@ -291,6 +300,8 @@ trustkit mcp
 | `004-worktree-tdd-gauntlet` | Worktrees, TDD Guard & Gauntlet V2 | Worktrees Copy-on-Write, ciclo TDD RED->GREEN, Swarm Gauntlet e servidor MCP. |
 | `005-project-knowledge-memory` | Project Knowledge Memory | Base wiki persistente, FTS5 BM25, wikilinks bidirecionais e ingestao de incidentes. |
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | Grafo AST de codigo e documentacao, multi-hop slicer, detector de God Nodes e GRAPH_REPORT.md. |
+| `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Revisao semantica multi-angulo (refactor), security review opcional e auditoria defensiva em 6 fases. |
+| `008-native-specification-and-speckit-independence` | Native Spec & SpecKit Independence | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e emancipacao do speckit. |
 
 ---
 

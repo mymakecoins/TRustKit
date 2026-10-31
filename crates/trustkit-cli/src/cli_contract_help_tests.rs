@@ -39,6 +39,10 @@ fn test_all_subcommands_help_zero_emojis() {
 
     let test_invocations = [
         vec!["trustkit", "--help"],
+        vec!["trustkit", "spec", "--help"],
+        vec!["trustkit", "spec", "prompt", "--help"],
+        vec!["trustkit", "spec", "lint", "--help"],
+        vec!["trustkit", "spec", "lock", "--help"],
         vec!["trustkit", "task", "--help"],
         vec!["trustkit", "task", "test", "--help"],
         vec!["trustkit", "task", "review", "--help"],

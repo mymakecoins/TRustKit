@@ -95,14 +95,20 @@ Validates GitHub profile identity, branches, working tree cleanliness, and initi
 trustkit init --issue <ISSUE_ID> [--from-prd <PRD_PATH>] [--json]
 ```
 
-### Gate 1 & 2: Specification & Cryptographic Freezing (Spec Lock)
-Scaffolds specification requirements (`spec.md`), validates Mermaid syntax, Gherkin scenarios, and Traceability Matrix completeness (RN -> RF -> TASK -> E2E). When frozen, seals the artifact using BLAKE3 and ingests it into persistent memory:
+### Gate 1 & 2: Native Specification, Linting & Cryptographic Freezing (Spec Lock)
+TRustKit is 100% self-contained for natural language specification authoring without depending on the external Spec Kit ecosystem:
 ```bash
-# Initialize specification template from PRD or default scaffold
-trustkit spec init --issue <ISSUE_ID> [--from-prd docs/PRD.md] [--json]
+# Generate structured prompt with AST context slicing and living memory FTS5 search
+trustkit spec prompt --idea "<FEATURE_DESCRIPTION>" [--context-hops 2] [--budget 4000] [--json]
 
-# Freeze specification and apply cryptographic seal
-trustkit spec lock [--json]
+# Execute sub-3ms static linter for pre-lock validation and agentic self-correction
+trustkit spec lint [--file <SPEC_PATH>] [--json]
+
+# Initialize specification from upstream PRD
+trustkit spec init --from-prd <PRD_PATH> [--name <SLUG>] [--json]
+
+# Freeze specification and apply BLAKE3 cryptographic seal
+trustkit spec lock [--spec <SPEC_PATH>] [--json]
 ```
 
 ### Gate 3: Atomic Tasks & DAG Wave Planning
@@ -269,6 +275,9 @@ trustkit mcp
 ```
 
 ### Exposed MCP Tools:
+- `trustkit_spec_template`: Deterministically generate spec.md skeleton with constitutional rules.
+- `trustkit_spec_context`: Retrieve sliced context from living memory and AST graph for specification.
+- `trustkit_spec_lint`: Execute sub-3ms static markdown linter with structured semantic diagnostics.
 - `trustkit_cycle_status`: Query active cycle state, current gate, and pipeline health.
 - `trustkit_context_slice`: Execute AST single-file and multi-hop graph context slicing.
 - `trustkit_memory_search`: Full-text search across persistent memory with BM25 ranking.
@@ -291,6 +300,8 @@ trustkit mcp
 | `004-worktree-tdd-gauntlet` | Worktrees, TDD Guard & Gauntlet V2 | Copy-on-Write worktrees, RED->GREEN TDD guard, Gauntlet Swarm, and native MCP. |
 | `005-project-knowledge-memory` | Project Knowledge Memory | Persistent wiki, SQLite FTS5 BM25 search, bidirectional wikilinks, and incident ingestion. |
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | AST code/wiki graph, multi-hop slicer, God Node detector, and GRAPH_REPORT.md. |
+| `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Multi-angle semantic review (refactor phase), optional security review, and 6-phase pre-release audit. |
+| `008-native-specification-and-speckit-independence` | Native Spec & SpecKit Independence | Native prompt scaffolding, FTS5/AST context slicing, sub-3ms pre-lock linter, MCP tools, and speckit decoupling. |
 
 ---
 

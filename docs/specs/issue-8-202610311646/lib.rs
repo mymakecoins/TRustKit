@@ -1,4 +1,4 @@
 #[test]
-fn test_task_008_green() {
+fn test_task_009_green() {
     assert_eq!(2 + 2, 4);
 }
