@@ -4,6 +4,7 @@ pub mod async_supervisor;
 pub mod certification_reporter;
 pub mod mcp_graph_dispatch;
 pub mod mcp_server;
+pub mod mcp_spec_dispatch;
 pub mod visual_evidence_guard;
 pub mod worktree_provider;
 
