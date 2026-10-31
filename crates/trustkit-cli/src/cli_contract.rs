@@ -38,6 +38,7 @@ impl Cli {
             },
             Command::Spec(SpecArgs { action }) => match action {
                 SpecSubcommand::Prompt(args) => args.json,
+                SpecSubcommand::Lint(args) => args.json,
                 SpecSubcommand::Init(args) => args.json,
                 SpecSubcommand::Lock(args) => args.json,
             },
@@ -183,6 +184,8 @@ pub struct SpecArgs {
 pub enum SpecSubcommand {
     #[command(name = "prompt", about = "Generate structured spec prompt and skeleton for a feature idea")]
     Prompt(SpecPromptArgs),
+    #[command(name = "lint", about = "Validate specification markdown against structural and constitutional invariants")]
+    Lint(SpecLintArgs),
     #[command(name = "init", about = "Initialize a Spec V2 skeleton from upstream PRD or ADR")]
     Init(SpecInitArgs),
     #[command(name = "lock", about = "Validate and cryptographically seal specification at Gate 2")]

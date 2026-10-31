@@ -10,7 +10,7 @@ use crate::cli_contract::{
 use crate::commands::{
     audit_security_cmd, context_slice_cmd, doctor_cmd, done_cmd, gauntlet_ast_audit_cmd,
     gauntlet_run_cmd, graph_cmd, hook_cmd, init_cmd, mcp_cmd, memory_cmd, merge_cmd, pr_cmd,
-    spec_init_cmd, spec_lock_cmd, spec_prompt_cmd, status_cmd, task_cmd, wave_plan_cmd, wave_run_cmd,
+    spec_init_cmd, spec_lint_cmd, spec_lock_cmd, spec_prompt_cmd, status_cmd, task_cmd, wave_plan_cmd, wave_run_cmd,
 };
 use crate::error_handler::DomainOutcome;
 use trustkit_core::errors::DomainViolation;
@@ -33,6 +33,7 @@ impl FastSyncBootstrap {
             },
             Command::Spec(SpecArgs { action }) => match action {
                 SpecSubcommand::Prompt(args) => spec_prompt_cmd::execute(args, json_mode),
+                SpecSubcommand::Lint(args) => spec_lint_cmd::execute(args, json_mode),
                 SpecSubcommand::Init(args) => spec_init_cmd::execute(args, json_mode),
                 SpecSubcommand::Lock(args) => spec_lock_cmd::execute(args, json_mode),
             },

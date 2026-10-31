@@ -18,6 +18,14 @@ pub struct SpecPromptArgs {
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct SpecLintArgs {
+    #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
+    pub file: Option<String>,
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct SpecLockArgs {
     #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
     pub spec: Option<String>,

@@ -14,6 +14,7 @@ pub mod memory_cmd;
 pub mod merge_cmd;
 pub mod pr_cmd;
 pub mod spec_init_cmd;
+pub mod spec_lint_cmd;
 pub mod spec_lock_cmd;
 pub mod spec_prompt_cmd;
 pub mod status_cmd;
