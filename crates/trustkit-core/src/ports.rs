@@ -11,6 +11,7 @@ use crate::entities::{
     GateStage, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome, KnowledgeDocument,
     KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome, KnowledgeSearchQuery,
     KnowledgeWriteOutcome, SddCycle, SemanticReviewFinding, ShortestPathOutcome, SpecificationV2,
+    SpecPromptPayload, SpecPromptRequest,
     StructuralEdge, StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
 };
 use crate::errors::DomainViolation;
@@ -197,4 +198,11 @@ pub trait InteractivePromptPort: Send + Sync {
         &self,
         findings: &[SemanticReviewFinding],
     ) -> Result<bool, DomainViolation>;
+}
+
+pub trait SpecScaffoldComposerPort: Send + Sync {
+    fn compose_spec_prompt(
+        &self,
+        request: &SpecPromptRequest,
+    ) -> Result<SpecPromptPayload, DomainViolation>;
 }
