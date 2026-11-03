@@ -45,10 +45,8 @@ pub struct JsonRpcError {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct McpTool {
-    pub name: String,
-    pub description: String,
-    #[serde(rename = "inputSchema")]
-    pub input_schema: Value,
+    pub name: String, pub description: String,
+    #[serde(rename = "inputSchema")] pub input_schema: Value,
 }
 
 #[derive(Default, Clone)]
@@ -74,12 +72,10 @@ impl McpServer {
         Self { knowledge_repo: Some(repo), graph_repo: None, graph_analyzer: None }
     }
     pub fn with_graph_repo(mut self, repo: Arc<dyn StructuralGraphRepositoryPort>) -> Self {
-        self.graph_repo = Some(repo);
-        self
+        self.graph_repo = Some(repo); self
     }
     pub fn with_graph_analyzer(mut self, analyzer: Arc<dyn StructuralGraphAnalyzerPort>) -> Self {
-        self.graph_analyzer = Some(analyzer);
-        self
+        self.graph_analyzer = Some(analyzer); self
     }
 
     pub fn list_tools() -> Vec<McpTool> {
@@ -99,6 +95,7 @@ impl McpServer {
         ];
         tools.extend(crate::mcp_graph_dispatch::graph_tools());
         tools.extend(crate::mcp_spec_dispatch::spec_tools());
+        tools.extend(crate::mcp_terminal_dispatch::terminal_tools());
         tools
     }
 
@@ -106,8 +103,7 @@ impl McpServer {
         let req_id = req.id.clone().unwrap_or_else(|| json!(0));
         match req.method.as_str() {
             "initialize" => Some(Self::ok_resp(req_id, json!({"protocolVersion": "2024-11-05", "serverInfo": {"name": "trustkit-mcp-server", "version": "0.1.0"}, "capabilities": {"tools": {}}}))),
-            "notifications/initialized" => None,
-            "ping" => Some(Self::ok_resp(req_id, json!({}))),
+            "notifications/initialized" => None, "ping" => Some(Self::ok_resp(req_id, json!({}))),
             "tools/list" => Some(Self::ok_resp(req_id, json!({ "tools": Self::list_tools() }))),
             "tools/call" => Some(self.handle_tool_call(req_id, req.params.as_ref())),
             _ => Some(Self::err_resp(req_id, -32601, format!("Method '{}' not found", req.method))),
@@ -126,11 +122,11 @@ impl McpServer {
         let (text_response, is_error) = if tool_name.starts_with("trustkit_knowledge_") {
             self.dispatch_knowledge_tool(tool_name, args)
         } else if tool_name.starts_with("trustkit_graph_") {
-            crate::mcp_graph_dispatch::dispatch_graph_tool(
-                tool_name, args, self.graph_repo.as_ref(), self.graph_analyzer.as_ref(), self.knowledge_repo.as_ref(),
-            )
+            crate::mcp_graph_dispatch::dispatch_graph_tool(tool_name, args, self.graph_repo.as_ref(), self.graph_analyzer.as_ref(), self.knowledge_repo.as_ref())
         } else if tool_name.starts_with("trustkit_spec_") {
             crate::mcp_spec_dispatch::dispatch_spec_tool(tool_name, args, self.knowledge_repo.as_ref())
+        } else if tool_name.starts_with("trustkit_terminal_") || tool_name == "trustkit_wave_status" {
+            crate::mcp_terminal_dispatch::dispatch_terminal_tool(tool_name, args)
         } else {
             (json!({ "tool": tool_name, "status": "acknowledged", "gate": "SDD_GATEWAY_READY" }).to_string(), false)
         };
@@ -196,10 +192,7 @@ impl McpServer {
         let mut line = String::new();
         while reader.read_line(&mut line)? > 0 {
             let trimmed = line.trim();
-            if !trimmed.is_empty()
-                && let Ok(req) = serde_json::from_str::<JsonRpcRequest>(trimmed)
-                && let Some(resp) = self.handle_request(&req)
-            {
+            if !trimmed.is_empty() && let Ok(req) = serde_json::from_str::<JsonRpcRequest>(trimmed) && let Some(resp) = self.handle_request(&req) {
                 let json_line = serde_json::to_string(&resp).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
                 writeln!(writer, "{json_line}")?;
                 writer.flush()?;
@@ -234,7 +227,7 @@ mod tests {
         let list_req = JsonRpcRequest { jsonrpc: "2.0".to_string(), id: Some(json!(2)), method: "tools/list".to_string(), params: None };
         let list_resp = server.handle_request(&list_req).expect("response");
         let tools_arr = list_resp.result.unwrap().get("tools").unwrap().as_array().unwrap().clone();
-        assert_eq!(tools_arr.len(), 19);
+        assert_eq!(tools_arr.len(), 22);
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_lock"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_template"));
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_context"));

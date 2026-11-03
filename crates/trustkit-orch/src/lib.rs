@@ -6,6 +6,7 @@ pub mod herdr_socket_adapter;
 pub mod mcp_graph_dispatch;
 pub mod mcp_server;
 pub mod mcp_spec_dispatch;
+pub mod mcp_terminal_dispatch;
 pub mod supervisor_runtime_selector;
 pub mod terminal_output_sanitizer;
 pub mod visual_evidence_guard;
