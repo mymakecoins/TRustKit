@@ -74,6 +74,7 @@ fn test_render_wave_run_dual_mode() {
         successful_tasks: vec!["TASK-001".to_string(), "TASK-002".to_string()],
         failed_tasks: vec![],
         duration_ms: 450,
+        runtime_used: "native".to_string(),
     };
 
     let json = GatePresenter::render_wave_run(&payload, true);

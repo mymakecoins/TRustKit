@@ -57,11 +57,11 @@ Elabore as tarefas atomicas em `tasks/TASK-NNN.md` e planeje o DAG de ondas para
 trustkit wave plan --json
 ```
 
-### Gate 4: Execucao em Git Worktrees e TDD Estrito
-Execute as tarefas da onda com isolamento de worktree e garanta as fases TDD:
+### Gate 4: Execucao em Git Worktrees, Multiplexacao de Terminais e TDD Estrito
+Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (herdr-core ou nativo) e garanta as fases TDD:
 ```bash
-# Executa a onda com isolamento de worktree
-trustkit wave run --wave <WAVE_INDEX> --json
+# Executa a onda com isolamento de worktree e runtime de terminais (auto, herdr, native)
+trustkit wave run --wave <WAVE_INDEX> [--runtime auto|herdr|native] [--agent-cmd "<cmd>"] --json
 
 # Registra a fase RED (falha obrigatoria comprovada)
 trustkit task test <TASK_ID> --phase red --json
@@ -72,6 +72,11 @@ trustkit task test <TASK_ID> --phase green --json
 # Conclui a tarefa atomica
 trustkit task complete <TASK_ID> --json
 ```
+
+Ferramentas MCP de monitoramento e controle de terminais de agentes estao disponiveis:
+- `trustkit_wave_status`: consulta status agregado de tarefas e terminais da onda.
+- `trustkit_terminal_inspect`: inspeciona estado semantico e buffer recente sanitizado da tarefa.
+- `trustkit_terminal_send`: envia entradas ao stdin do terminal para destravar agentes em estado Blocked.
 
 ### Gate 5: Gauntlet V2 (Auditoria AST e Swarm de Criticos)
 Execute a auditoria lexica/AST da Camada 0 e os criticos da Camada 1:

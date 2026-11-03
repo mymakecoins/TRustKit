@@ -1,4 +1,4 @@
-// Handler for `trustkit wave run` (TASK-014).
+// Handler for `trustkit wave run` (TASK-014 / TASK-007).
 // Constitutional Principle I: Strict Hexagonal Isolation.
 // Constitutional Principle II: Absolute Prohibition of NULL.
 // Constitutional Principle IV: Zero Panic.
@@ -10,12 +10,14 @@ use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonWaveRunResponse};
 use std::path::Path;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use trustkit_core::entities::{GateVerdict, RuntimeBackendMode};
 use trustkit_core::errors::DomainViolation;
-use trustkit_core::ports::CycleEvidenceRepositoryPort;
+use trustkit_core::ports::{CycleEvidenceRepositoryPort, TerminalMultiplexerPort};
 use trustkit_core::special_cases::ActiveCycleLookup;
 use trustkit_core::use_cases::run_execution_wave::{self, RunExecutionWaveRequest};
+use trustkit_core::use_cases::run_interactive_wave::{self, RunInteractiveWaveRequest};
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
-use trustkit_orch::WorktreeIsolationProvider;
+use trustkit_orch::{SupervisorRuntimeSelector, WorktreeIsolationProvider};
 
 fn current_timestamp_iso() -> String {
     let now = SystemTime::now()
@@ -58,28 +60,57 @@ pub fn execute_with_db(
     let worktree_provider = WorktreeIsolationProvider::new(repo_root);
     let now_iso = current_timestamp_iso();
 
-    let request = RunExecutionWaveRequest {
-        cycle_id: active_cycle.cycle_id,
-        wave_index: args.wave,
-        now_iso,
+    let selector = SupervisorRuntimeSelector::new();
+    let mode = RuntimeBackendMode::from_str_name(&args.runtime);
+    let resolved = selector.resolve(mode)?;
+
+    let (successful_tasks, failed_tasks, verdict_str) = if resolved.multiplexer.is_some() || !args.agent_cmd.is_empty() {
+        let req = RunInteractiveWaveRequest {
+            cycle_id: active_cycle.cycle_id,
+            wave_index: args.wave,
+            runtime_mode: resolved.active_mode,
+            agent_command: args.agent_cmd.clone(),
+            now_iso,
+        };
+        let mux_ref = resolved.multiplexer.as_ref().map(|m| m as &dyn TerminalMultiplexerPort);
+        let outcome = run_interactive_wave::execute(req, &repo, &worktree_provider, mux_ref)?;
+        let mut succ = Vec::new();
+        let mut fail = Vec::new();
+        for t in outcome.tasks_dispatched {
+            if t.state.is_done() {
+                succ.push(t.task_id);
+            } else {
+                fail.push(t.task_id);
+            }
+        }
+        let v = match outcome.overall_verdict {
+            GateVerdict::Pass => "PASS".to_string(),
+            GateVerdict::Blocked => "BLOCKED".to_string(),
+            GateVerdict::Fail => "FAIL".to_string(),
+            GateVerdict::Info => "INFO".to_string(),
+        };
+        (succ, fail, v)
+    } else {
+        let request = RunExecutionWaveRequest {
+            cycle_id: active_cycle.cycle_id,
+            wave_index: args.wave,
+            now_iso,
+        };
+        let outcome = run_execution_wave::execute(request, &repo, &worktree_provider)?;
+        let succ: Vec<String> = outcome.tasks_executed.iter().map(|t| t.task_id.clone()).collect();
+        (succ, Vec::new(), "PASS".to_string())
     };
 
-    let outcome = run_execution_wave::execute(request, &repo, &worktree_provider)?;
     let duration_ms = start.elapsed().as_millis() as u64;
 
-    let successful_tasks: Vec<String> = outcome
-        .tasks_executed
-        .iter()
-        .map(|t| t.task_id.clone())
-        .collect();
-
     let response = JsonWaveRunResponse {
-        verdict: "PASS".to_string(),
-        wave_index: outcome.wave_index,
-        total_tasks: outcome.tasks_executed.len(),
+        verdict: verdict_str,
+        wave_index: args.wave,
+        total_tasks: successful_tasks.len() + failed_tasks.len(),
         successful_tasks,
-        failed_tasks: Vec::new(),
+        failed_tasks,
         duration_ms,
+        runtime_used: resolved.active_mode.as_str().to_string(),
     };
 
     println!("{}", GatePresenter::render_wave_run(&response, json_mode));

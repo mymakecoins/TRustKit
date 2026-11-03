@@ -107,6 +107,12 @@ pub struct WaveRunArgs {
     #[arg(long, help = "Topological execution wave index number")]
     pub wave: u32,
 
+    #[arg(long, default_value = "auto", help = "Runtime execution backend (auto, herdr, native)")]
+    pub runtime: String,
+
+    #[arg(long, default_value = "", help = "Optional builder agent command to execute in terminal")]
+    pub agent_cmd: String,
+
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }

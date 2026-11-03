@@ -28,6 +28,9 @@ fn test_trustkit_sdd_skill_contains_native_spec_workflows_and_zero_emojis() {
     assert!(content.contains("trustkit_spec_template"), "Must document MCP spec template tool");
     assert!(content.contains("trustkit_spec_context"), "Must document MCP spec context tool");
     assert!(content.contains("trustkit_spec_lint"), "Must document MCP spec lint tool");
+    assert!(content.contains("trustkit_wave_status"), "Must document MCP wave status tool");
+    assert!(content.contains("trustkit_terminal_inspect"), "Must document MCP terminal inspect tool");
+    assert!(content.contains("trustkit_terminal_send"), "Must document MCP terminal send tool");
 
     // Validacao lexica rigorosa de invariantes: zero emojis e zero trailers de IA
     let scanner = InvariantLexicalScanner;

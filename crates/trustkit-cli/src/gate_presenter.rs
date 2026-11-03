@@ -58,6 +58,8 @@ pub struct JsonWaveRunResponse {
     pub successful_tasks: Vec<String>,
     pub failed_tasks: Vec<String>,
     pub duration_ms: u64,
+    #[serde(default)]
+    pub runtime_used: String,
 }
 
 #[derive(Debug, Clone, Serialize)]

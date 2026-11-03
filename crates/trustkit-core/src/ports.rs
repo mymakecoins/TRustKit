@@ -10,8 +10,9 @@ use crate::entities::{
     ContextSliceRequest, ContextSliceResult, CycleStatus, ExecutionEvidence, FileGraphManifest,
     GateStage, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome, KnowledgeDocument,
     KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome, KnowledgeSearchQuery,
-    KnowledgeWriteOutcome, SddCycle, SemanticReviewFinding, ShortestPathOutcome, SpecificationV2,
-    SpecPromptPayload, SpecPromptRequest,
+    KnowledgeWriteOutcome, MultiplexedTerminalHandle, MultiplexedTerminalRequest,
+    SddCycle, SemanticReviewFinding, ShortestPathOutcome, SpecificationV2,
+    SpecPromptPayload, SpecPromptRequest, AgentSemanticState,
     StructuralEdge, StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
 };
 use crate::errors::DomainViolation;
@@ -205,4 +206,12 @@ pub trait SpecScaffoldComposerPort: Send + Sync {
         &self,
         request: &SpecPromptRequest,
     ) -> Result<SpecPromptPayload, DomainViolation>;
+}
+
+pub trait TerminalMultiplexerPort: Send + Sync {
+    fn spawn_terminal(&self, request: &MultiplexedTerminalRequest) -> Result<MultiplexedTerminalHandle, DomainViolation>;
+    fn query_terminal_state(&self, handle: &MultiplexedTerminalHandle) -> Result<AgentSemanticState, DomainViolation>;
+    fn send_terminal_input(&self, handle: &MultiplexedTerminalHandle, input: &str) -> Result<(), DomainViolation>;
+    fn read_terminal_buffer(&self, handle: &MultiplexedTerminalHandle, max_lines: usize) -> Result<String, DomainViolation>;
+    fn terminate_terminal(&self, handle: &MultiplexedTerminalHandle) -> Result<(), DomainViolation>;
 }
