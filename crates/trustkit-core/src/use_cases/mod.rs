@@ -19,6 +19,7 @@ pub mod record_tdd_phase;
 pub mod review_task_code;
 pub mod run_execution_wave;
 pub mod run_gauntlet_layer1;
+pub mod run_interactive_wave;
 pub mod run_security_review;
 pub mod slice_ast_context;
 pub mod structural_graph_report;
