@@ -104,7 +104,7 @@ impl SpecScaffoldTemplate {
     }
 
     pub fn estimate_tokens(content: &str) -> usize {
-        (content.len() + 3) / 4
+        content.len().div_ceil(4)
     }
 }
 
