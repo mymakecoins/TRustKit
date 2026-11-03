@@ -7,6 +7,7 @@ pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
 pub use crate::graph_entities::*;
 pub use crate::knowledge_entities::*;
+pub use crate::osc7501_encoder::*;
 pub use crate::semantic_review_entities::*;
 pub use crate::spec_entities::*;
 pub use crate::spec_scaffold_entities::*;
