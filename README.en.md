@@ -117,11 +117,16 @@ Validates atomic task files (`tasks/TASK-NNN.md`), inspects topological coupling
 trustkit wave plan [--json]
 ```
 
-### Gate 4: Git Worktree Execution, Strict TDD, and Semantic Code Review (Refactor Phase)
-Executes tasks in parallel across isolated worktrees, enforces strict TDD compliance (`RED -> GREEN`), and integrates multi-angle semantic code review into the `REFACTOR` phase:
+### Gate 4: Git Worktree Execution, Terminal Multiplexing, and Strict TDD
+Executes tasks in parallel across isolated worktrees, orchestrates interactive builder agents via pseudoterminals (PTY multiplexer or native fallback), enforces strict TDD compliance (`RED -> GREEN`), and integrates multi-angle semantic code review into the `REFACTOR` phase:
+- Fork-free integration with PTY multiplexer: communication over OpenRPC JSON-RPC 2.0 via Unix Domain Sockets for headless PTY control and persistent background agent sessions.
+- Native OSC 7501 telemetry: deterministic emission of operational states (`working`, `blocked`, `done`, `error`) and execution progress compatible with Ghostty VT parsers.
+- Terminal buffer sanitizer: strips residual ANSI sequences, enforces zero emojis (Principle VII), purges AI authoring trailers, and automatically redacts secrets.
+- Native MCP monitoring tools: `trustkit_wave_status`, `trustkit_terminal_inspect`, and `trustkit_terminal_send` to inspect buffers and unblock interactive agents directly from the MCP client.
+
 ```bash
-# Dispatch execution wave in isolated worktrees
-trustkit wave run --wave <WAVE_INDEX> [--json]
+# Dispatch execution wave in isolated worktrees with runtime selector (auto, pty, native)
+trustkit wave run --wave <WAVE_INDEX> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] [--json]
 
 # Record mandatory RED phase (proven test failure)
 trustkit task test <TASK_ID> --phase red [--json]
