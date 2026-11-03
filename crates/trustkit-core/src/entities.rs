@@ -10,6 +10,7 @@ pub use crate::knowledge_entities::*;
 pub use crate::semantic_review_entities::*;
 pub use crate::spec_entities::*;
 pub use crate::spec_scaffold_entities::*;
+pub use crate::terminal_multiplexer_entities::*;
 pub use crate::special_cases::{CircuitBreakerState, SpecLockState, WorktreeAllocation};
 use crate::errors::DomainViolation;
 use crate::special_cases::{IssueLinkage, TddLifecycleState};
