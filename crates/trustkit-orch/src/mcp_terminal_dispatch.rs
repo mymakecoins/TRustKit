@@ -7,7 +7,7 @@
 
 use serde_json::{Map, Value, json};
 use crate::mcp_server::{McpTool, tool};
-use crate::herdr_socket_adapter::HerdrSocketAdapter;
+use crate::pty_socket_adapter::PtySocketAdapter;
 use crate::terminal_output_sanitizer::TerminalOutputSanitizer;
 
 pub fn terminal_tools() -> Vec<McpTool> {
@@ -69,7 +69,7 @@ pub fn dispatch_terminal_tool(name: &str, args: &Map<String, Value>) -> (String,
             let task_id = args.get("task_id").and_then(Value::as_str).unwrap_or("");
             let lines = args.get("lines").and_then(Value::as_u64).unwrap_or(50) as usize;
 
-            let buffer = if let Some(adapter) = HerdrSocketAdapter::discover_default() {
+            let buffer = if let Some(adapter) = PtySocketAdapter::discover_default() {
                 let handle = trustkit_core::entities::MultiplexedTerminalHandle::new(
                     format!("term-{task_id}"),
                     task_id,
@@ -97,7 +97,7 @@ pub fn dispatch_terminal_tool(name: &str, args: &Map<String, Value>) -> (String,
             let task_id = args.get("task_id").and_then(Value::as_str).unwrap_or("");
             let input = args.get("input").and_then(Value::as_str).unwrap_or("");
 
-            if let Some(adapter) = HerdrSocketAdapter::discover_default() {
+            if let Some(adapter) = PtySocketAdapter::discover_default() {
                 let handle = trustkit_core::entities::MultiplexedTerminalHandle::new(
                     format!("term-{task_id}"),
                     task_id,

@@ -157,7 +157,7 @@ impl AgentSemanticState {
 pub enum RuntimeBackendMode {
     #[default]
     Auto,
-    Herdr,
+    Pty,
     Native,
 }
 
@@ -165,14 +165,14 @@ impl RuntimeBackendMode {
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Auto => "auto",
-            Self::Herdr => "herdr",
+            Self::Pty => "pty",
             Self::Native => "native",
         }
     }
 
     pub fn from_str_name(s: &str) -> Self {
         match s.trim().to_ascii_lowercase().as_str() {
-            "herdr" => Self::Herdr,
+            "pty" => Self::Pty,
             "native" => Self::Native,
             _ => Self::Auto,
         }

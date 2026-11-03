@@ -15,13 +15,13 @@ test_file: crates/trustkit-ast/tests/skill_trustkit_sdd_tests.rs
 ---
 
 ## Contexto
-Com a adicao do suporte a multiplexacao de PTYs via `herdr-core`, emissao de telemetria `OSC 7501`, novas flags no Gate 4 e ferramentas MCP de terminais, a documentacao oficial do projeto e as instrucoes do agente orquestrador na Thin Skill `trustkit-sdd` devem ser atualizadas em estrita paridade bilingue (Portugues do Brasil e Ingles).
+Com a adicao do suporte a multiplexacao de PTYs via `multiplexador PTY`, emissao de telemetria `OSC 7501`, novas flags no Gate 4 e ferramentas MCP de terminais, a documentacao oficial do projeto e as instrucoes do agente orquestrador na Thin Skill `trustkit-sdd` devem ser atualizadas em estrita paridade bilingue (Portugues do Brasil e Ingles).
 
 ## Escopo
 Atualizar:
 1. `README.md`:
-   - Detalhar a integracao nativa com `herdr-core` no Gate 4 e o funcionamento do protocolo `OSC 7501`.
-   - Documentar os novos parametros de `trustkit wave run --runtime <auto|herdr|native>`.
+   - Detalhar a integracao nativa com `multiplexador PTY` no Gate 4 e o funcionamento do protocolo `OSC 7501`.
+   - Documentar os novos parametros de `trustkit wave run --runtime <auto|pty|native>`.
    - Listar as novas ferramentas MCP de inspecao de terminais.
 2. `README.en.md`:
    - Atualizacao espelho em Ingles com identica densidade tecnica e precisao terminologica.

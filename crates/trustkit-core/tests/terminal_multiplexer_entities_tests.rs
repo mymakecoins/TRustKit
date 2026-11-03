@@ -94,8 +94,8 @@ fn test_runtime_backend_mode_parsing() {
         RuntimeBackendMode::Auto
     );
     assert_eq!(
-        RuntimeBackendMode::from_str_name("herdr"),
-        RuntimeBackendMode::Herdr
+        RuntimeBackendMode::from_str_name("pty"),
+        RuntimeBackendMode::Pty
     );
     assert_eq!(
         RuntimeBackendMode::from_str_name("native"),

@@ -22,7 +22,7 @@ Implementar em `crates/trustkit-core/src/terminal_multiplexer_entities.rs` e reg
 - `MultiplexedTerminalHandle`: `terminal_id: String`, `task_id: String`, `pid: u32`, `created_at_iso: String`.
 - `AgentSemanticState`: enum estrito `Working`, `Blocked { kind: BlockReasonKind, detail: String }`, `Done { exit_code: i32 }`, `Failed { reason: String }`.
 - `BlockReasonKind`: enum estrito `Permission`, `Question`, `Authentication`, `Unknown`.
-- `RuntimeBackendMode`: enum estrito `Auto`, `Herdr`, `Native`.
+- `RuntimeBackendMode`: enum estrito `Auto`, `Pty`, `Native`.
 - Trait de porta pura `TerminalMultiplexerPort: Send + Sync` em `crates/trustkit-core/src/ports.rs` com metodos:
   - `spawn_terminal(&self, request: &MultiplexedTerminalRequest) -> Result<MultiplexedTerminalHandle, DomainViolation>`
   - `query_terminal_state(&self, handle: &MultiplexedTerminalHandle) -> Result<AgentSemanticState, DomainViolation>`

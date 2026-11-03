@@ -118,15 +118,15 @@ trustkit wave plan [--json]
 ```
 
 ### Gate 4: Execução em Git Worktrees, Multiplexação de Terminais e TDD Estrito
-Executa tarefas em paralelo criando árvores de trabalho isoladas, orquestra agentes construtores interativos via pseudoterminais (`herdr-core` ou fallback nativo), fiscaliza a conformidade TDD (`RED -> GREEN`) e incorpora a revisão semântica multi-ângulo na fase `REFACTOR`:
-- Integração sem fork com `herdr-core`: comunicação via OpenRPC JSON-RPC 2.0 sobre Unix Domain Socket para controle headless de PTYs e sessões de agentes persistentes em background.
+Executa tarefas em paralelo criando árvores de trabalho isoladas, orquestra agentes construtores interativos via pseudoterminais (multiplexador PTY ou fallback nativo), fiscaliza a conformidade TDD (`RED -> GREEN`) e incorpora a revisão semântica multi-ângulo na fase `REFACTOR`:
+- Integração sem fork com multiplexador PTY: comunicação via OpenRPC JSON-RPC 2.0 sobre Unix Domain Socket para controle headless de PTYs e sessões de agentes persistentes em background.
 - Telemetria nativa OSC 7501: emissão determinística de estados (`working`, `blocked`, `done`, `error`) e progresso operacional compatível com parsers Ghostty VT.
 - Sanitizador de buffers de terminal: remoção de sequências ANSI residuais, expurgo rigoroso de emojis (Princípio VII), expurgo de trailers de IA e redação automática de segredos.
 - Ferramentas MCP de monitoramento: `trustkit_wave_status`, `trustkit_terminal_inspect` e `trustkit_terminal_send` para inspecionar buffers e destravar agentes interativos sem sair do cliente MCP.
 
 ```bash
-# Despacho da onda com isolamento de worktree e seletor de runtime (auto, herdr, native)
-trustkit wave run --wave <INDICE_ONDA> [--runtime auto|herdr|native] [--agent-cmd "<cmd>"] [--json]
+# Despacho da onda com isolamento de worktree e seletor de runtime (auto, pty, native)
+trustkit wave run --wave <INDICE_ONDA> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] [--json]
 
 # Registro obrigatorio da fase RED (falha comprovada do teste)
 trustkit task test <TASK_ID> --phase red [--json]

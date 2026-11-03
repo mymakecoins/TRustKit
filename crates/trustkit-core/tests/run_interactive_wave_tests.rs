@@ -170,7 +170,7 @@ fn test_run_interactive_wave_success_with_multiplexer() {
     let req = RunInteractiveWaveRequest {
         cycle_id: "test-cycle-1".to_string(),
         wave_index: 1,
-        runtime_mode: RuntimeBackendMode::Herdr,
+        runtime_mode: RuntimeBackendMode::Pty,
         agent_command: "claude".to_string(),
         now_iso: "2026-11-03T17:00:00Z".to_string(),
     };
@@ -199,7 +199,7 @@ fn test_run_interactive_wave_blocked_stops_merge() {
     let req = RunInteractiveWaveRequest {
         cycle_id: "test-cycle-1".to_string(),
         wave_index: 1,
-        runtime_mode: RuntimeBackendMode::Herdr,
+        runtime_mode: RuntimeBackendMode::Pty,
         agent_command: "claude".to_string(),
         now_iso: "2026-11-03T17:00:00Z".to_string(),
     };

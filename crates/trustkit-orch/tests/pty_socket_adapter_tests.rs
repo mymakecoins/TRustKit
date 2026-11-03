@@ -1,4 +1,4 @@
-// Tests for HerdrSocketAdapter IPC communication (TASK-003).
+// Tests for PtySocketAdapter IPC communication (TASK-003).
 // Constitutional Principle I: Strict Hexagonal Isolation.
 // Constitutional Principle IV: Zero Panic.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
@@ -12,12 +12,12 @@ use trustkit_core::entities::{
     AgentSemanticState, BlockReasonKind, MultiplexedTerminalRequest,
 };
 use trustkit_core::ports::TerminalMultiplexerPort;
-use trustkit_orch::HerdrSocketAdapter;
+use trustkit_orch::PtySocketAdapter;
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_herdr_socket_adapter_mock_lifecycle() {
+async fn test_pty_socket_adapter_mock_lifecycle() {
     let dir = tempdir().unwrap();
-    let socket_path = dir.path().join("herdr_mock.sock");
+    let socket_path = dir.path().join("pty_mock.sock");
 
     let listener = UnixListener::bind(&socket_path).unwrap();
 
@@ -100,7 +100,7 @@ async fn test_herdr_socket_adapter_mock_lifecycle() {
         }
     });
 
-    let adapter = HerdrSocketAdapter::new(socket_path);
+    let adapter = PtySocketAdapter::new(socket_path);
 
     let req = MultiplexedTerminalRequest::new(
         "TASK-001",
@@ -141,8 +141,8 @@ async fn test_herdr_socket_adapter_mock_lifecycle() {
 }
 
 #[test]
-fn test_herdr_socket_adapter_missing_socket_fails_cleanly() {
-    let adapter = HerdrSocketAdapter::new(PathBuf::from("/tmp/non_existent_herdr.sock"));
+fn test_pty_socket_adapter_missing_socket_fails_cleanly() {
+    let adapter = PtySocketAdapter::new(PathBuf::from("/tmp/non_existent_pty.sock"));
     let req = MultiplexedTerminalRequest::new(
         "TASK-001",
         "/tmp/worktree",

@@ -9,13 +9,13 @@ use std::path::PathBuf;
 use trustkit_core::entities::{encode_osc7501, Osc7501Payload, RuntimeBackendMode};
 use trustkit_core::errors::DomainViolation;
 use crate::async_supervisor::AsyncExecutionSupervisor;
-use crate::herdr_socket_adapter::HerdrSocketAdapter;
+use crate::pty_socket_adapter::PtySocketAdapter;
 
 #[derive(Debug, Clone)]
 pub struct ResolvedRuntimeBackend {
     pub active_mode: RuntimeBackendMode,
     pub fallback_triggered: bool,
-    pub multiplexer: Option<HerdrSocketAdapter>,
+    pub multiplexer: Option<PtySocketAdapter>,
     pub supervisor: AsyncExecutionSupervisor,
 }
 
@@ -33,20 +33,20 @@ impl SupervisorRuntimeSelector {
         Self { custom_socket_path: Some(socket_path) }
     }
 
-    fn check_herdr_available(&self) -> Option<HerdrSocketAdapter> {
+    fn check_pty_available(&self) -> Option<PtySocketAdapter> {
         if let Some(ref path) = self.custom_socket_path {
             if path.exists() {
-                return Some(HerdrSocketAdapter::new(path.clone()));
+                return Some(PtySocketAdapter::new(path.clone()));
             }
             None
         } else {
-            HerdrSocketAdapter::discover_default()
+            PtySocketAdapter::discover_default()
         }
     }
 
     pub fn resolve(&self, requested: RuntimeBackendMode) -> Result<ResolvedRuntimeBackend, DomainViolation> {
         let supervisor = AsyncExecutionSupervisor::new();
-        let herdr_opt = self.check_herdr_available();
+        let pty_opt = self.check_pty_available();
 
         let resolved = match requested {
             RuntimeBackendMode::Native => ResolvedRuntimeBackend {
@@ -55,10 +55,10 @@ impl SupervisorRuntimeSelector {
                 multiplexer: None,
                 supervisor,
             },
-            RuntimeBackendMode::Herdr => {
-                if let Some(adapter) = herdr_opt {
+            RuntimeBackendMode::Pty => {
+                if let Some(adapter) = pty_opt {
                     ResolvedRuntimeBackend {
-                        active_mode: RuntimeBackendMode::Herdr,
+                        active_mode: RuntimeBackendMode::Pty,
                         fallback_triggered: false,
                         multiplexer: Some(adapter),
                         supervisor,
@@ -66,14 +66,14 @@ impl SupervisorRuntimeSelector {
                 } else {
                     return Err(DomainViolation::InfrastructureBoundaryFault {
                         subsystem: "runtime_selector".to_string(),
-                        details: "Herdr daemon socket is unavailable. Start herdr or run with --runtime native or --runtime auto".to_string(),
+                        details: "PTY multiplexer daemon socket is unavailable. Start the daemon or run with --runtime native or --runtime auto".to_string(),
                     });
                 }
             }
             RuntimeBackendMode::Auto => {
-                if let Some(adapter) = herdr_opt {
+                if let Some(adapter) = pty_opt {
                     ResolvedRuntimeBackend {
-                        active_mode: RuntimeBackendMode::Herdr,
+                        active_mode: RuntimeBackendMode::Pty,
                         fallback_triggered: false,
                         multiplexer: Some(adapter),
                         supervisor,

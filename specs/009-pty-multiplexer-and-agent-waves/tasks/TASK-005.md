@@ -13,7 +13,7 @@ test_file: crates/trustkit-orch/tests/supervisor_runtime_selector_tests.rs
 ---
 
 ## Contexto
-O ecossistema TRustKit precisa operar tanto em maquinas onde o daemon `herdr-core` esta ativo e configurado quanto em ambientes minimos de CI/CD ou estacoes sem multiplexador PTY instalado. O seletor de runtime deve inspecionar as condicoes locais e selecionar o backend mais adequado com fallback gracioso.
+O ecossistema TRustKit precisa operar tanto em maquinas onde o daemon `multiplexador PTY` esta ativo e configurado quanto em ambientes minimos de CI/CD ou estacoes sem multiplexador PTY instalado. O seletor de runtime deve inspecionar as condicoes locais e selecionar o backend mais adequado com fallback gracioso.
 
 ## Escopo
 Implementar em `crates/trustkit-orch/src/supervisor_runtime_selector.rs`:
@@ -22,11 +22,11 @@ Implementar em `crates/trustkit-orch/src/supervisor_runtime_selector.rs`:
   - `resolve_backend(requested: RuntimeBackendMode) -> Result<ResolvedRuntimeBackend, DomainViolation>`.
 - `ResolvedRuntimeBackend`:
   - Contem a referencia abstrata ou adapter configurado (`TerminalMultiplexerPort`).
-  - Flag indicando se houve fallback de `Herdr` para `Native`.
+  - Flag indicando se houve fallback de `Pty` para `Native`.
   - Registro de telemetria emitindo sequencia `OSC 7501` informando o backend ativo.
 - Fallback deterministico:
-  - Se `requested == Auto`: tenta conectar ao socket Unix do `herdr-core`; caso indisponivel, seleciona `Native` sem gerar erro.
-  - Se `requested == Herdr`: falha explicitamente se o daemon nao estiver alcancavel, emitindo orientacao clara de como iniciar o `herdr-core`.
+  - Se `requested == Auto`: tenta conectar ao socket Unix do `multiplexador PTY`; caso indisponivel, seleciona `Native` sem gerar erro.
+  - Se `requested == Pty`: falha explicitamente se o daemon nao estiver alcancavel, emitindo orientacao clara de como iniciar o `multiplexador PTY`.
   - Se `requested == Native`: utiliza diretamente o `AsyncExecutionSupervisor` baseado em pipes de processo.
 
 ### Fora do escopo
@@ -42,7 +42,7 @@ Implementar em `crates/trustkit-orch/src/supervisor_runtime_selector.rs`:
 
 ## Criterio de Aceite
 - [ ] **Dado** o modo `RuntimeBackendMode::Auto` com socket ausente, **quando** resolvido o backend, **entao** seleciona `Native` com flag de fallback ativa e veredito de sucesso.
-- [ ] **Dado** o modo `RuntimeBackendMode::Herdr` com socket ausente, **quando** resolvido, **entao** retorna `DomainViolation::InfrastructureBoundaryFault` com mensagem de orientacao de remediacao.
+- [ ] **Dado** o modo `RuntimeBackendMode::Pty` com socket ausente, **quando** resolvido, **entao** retorna `DomainViolation::InfrastructureBoundaryFault` com mensagem de orientacao de remediacao.
 
 ## Notas Tecnicas
 - Seguir a arquitetura de portas e adaptadores de `crates/trustkit-orch/`.
