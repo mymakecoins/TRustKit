@@ -5,6 +5,7 @@ pub mod certification_reporter;
 pub mod mcp_graph_dispatch;
 pub mod mcp_server;
 pub mod mcp_spec_dispatch;
+pub mod mcp_terminal_dispatch;
 pub mod pty_socket_adapter;
 pub mod supervisor_runtime_selector;
 pub mod terminal_output_sanitizer;
