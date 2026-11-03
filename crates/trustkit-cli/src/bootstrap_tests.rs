@@ -196,6 +196,8 @@ fn test_dispatch_cli_routes_gates_4_5_6_to_full_concurrent() {
         command: Command::Wave(WaveArgs {
             action: WaveSubcommand::Run(WaveRunArgs {
                 wave: 1,
+                runtime: "auto".to_string(),
+                agent_cmd: "".to_string(),
                 json: true,
             }),
         }),
