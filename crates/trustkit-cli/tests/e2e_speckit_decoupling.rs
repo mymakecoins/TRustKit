@@ -104,7 +104,12 @@ fn test_e2e_native_specification_and_speckit_independence_lifecycle() {
     assert!(!prompt_out.contains(": null"));
     let prompt_json: Value = serde_json::from_str(&prompt_out).expect("json");
     assert_eq!(prompt_json["verdict"], "PASS");
-    assert!(prompt_json["scaffold_markdown"].as_str().unwrap().contains("## 1. Product Trio"));
+    assert!(
+        prompt_json["scaffold_markdown"]
+            .as_str()
+            .unwrap()
+            .contains("## 1. Product Trio")
+    );
 
     // 3. Gravacao do spec.md com especificacao nativa
     let spec_file = spec_dir.join("spec.md");

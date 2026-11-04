@@ -60,9 +60,9 @@ impl AstAuditorPort for TreeSitterAstAuditorAdapter {
                     || seal.file_path.ends_with(file_path)
             });
 
-            let test_violations =
-                self.test_auditor
-                    .audit_file(file_path, &content, matching_seal);
+            let test_violations = self
+                .test_auditor
+                .audit_file(file_path, &content, matching_seal);
             all_violations.extend(test_violations);
         }
 

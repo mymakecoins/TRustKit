@@ -8,9 +8,7 @@ use std::path::PathBuf;
 use tempfile::tempdir;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixListener;
-use trustkit_core::entities::{
-    AgentSemanticState, BlockReasonKind, MultiplexedTerminalRequest,
-};
+use trustkit_core::entities::{AgentSemanticState, BlockReasonKind, MultiplexedTerminalRequest};
 use trustkit_core::ports::TerminalMultiplexerPort;
 use trustkit_orch::PtySocketAdapter;
 

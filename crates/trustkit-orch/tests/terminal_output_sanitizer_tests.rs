@@ -43,7 +43,8 @@ fn test_redact_secrets() {
 
 #[test]
 fn test_sanitize_terminal_buffer_pipeline() {
-    let raw = "\x1b[32m✔\x1b[0m Done 🚀\nghp_1234567890abcdef1234567890\nCo-Authored-By: AI\nAll good.\n";
+    let raw =
+        "\x1b[32m✔\x1b[0m Done 🚀\nghp_1234567890abcdef1234567890\nCo-Authored-By: AI\nAll good.\n";
     let sanitized = TerminalOutputSanitizer::sanitize(raw);
     assert!(!sanitized.contains('🚀'));
     assert!(!sanitized.contains("Co-Authored-By"));

@@ -69,7 +69,10 @@ pub fn execute_with_repo(
 }
 
 fn clean_tags(raw: &[String]) -> Vec<String> {
-    raw.iter().map(|t| t.trim().to_string()).filter(|t| !t.is_empty()).collect()
+    raw.iter()
+        .map(|t| t.trim().to_string())
+        .filter(|t| !t.is_empty())
+        .collect()
 }
 
 fn handle_write(
@@ -77,10 +80,27 @@ fn handle_write(
     json_mode: bool,
     repo: &dyn KnowledgeRepositoryPort,
 ) -> Result<DomainOutcome, DomainViolation> {
-    let ts = format!("{}", SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs());
-    let doc = KnowledgeDocument::new(&args.slug, &args.title, clean_tags(&args.tags), &args.content, ts, String::new());
-    let KnowledgeWriteOutcome::Success { slug, file_path, blake3_digest, indexed_links_count } =
-        repo.write_document(&doc)?;
+    let ts = format!(
+        "{}",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    );
+    let doc = KnowledgeDocument::new(
+        &args.slug,
+        &args.title,
+        clean_tags(&args.tags),
+        &args.content,
+        ts,
+        String::new(),
+    );
+    let KnowledgeWriteOutcome::Success {
+        slug,
+        file_path,
+        blake3_digest,
+        indexed_links_count,
+    } = repo.write_document(&doc)?;
 
     if json_mode {
         let payload = JsonMemoryWriteResponse {
@@ -91,9 +111,14 @@ fn handle_write(
             blake3_digest,
             indexed_links_count,
         };
-        println!("{}", serde_json::to_string_pretty(&payload).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
     } else {
-        println!("[PASS] Knowledge document written: {slug} ({file_path}) [BLAKE3: {blake3_digest}] (links: {indexed_links_count})");
+        println!(
+            "[PASS] Knowledge document written: {slug} ({file_path}) [BLAKE3: {blake3_digest}] (links: {indexed_links_count})"
+        );
     }
     Ok(DomainOutcome::Success)
 }
@@ -107,7 +132,11 @@ fn handle_read(
         KnowledgeLookupOutcome::Found(doc) => {
             let mut adjacent_links = Vec::new();
             for l in repo.query_adjacent_links(&doc.slug)? {
-                let other = if l.source_slug == doc.slug { l.target_slug } else { l.source_slug };
+                let other = if l.source_slug == doc.slug {
+                    l.target_slug
+                } else {
+                    l.source_slug
+                };
                 if !other.is_empty() && other != doc.slug && !adjacent_links.contains(&other) {
                     adjacent_links.push(other);
                 }
@@ -122,16 +151,29 @@ fn handle_read(
                         "blake3_digest": doc.blake3_digest, "adjacent_links": adjacent_links,
                     }
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).unwrap_or_default());
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&payload).unwrap_or_default()
+                );
             } else {
-                println!("[PASS] Knowledge Document: {}\nTitle: {}\nTags: {}\nUpdated: {}\n\n{}", doc.slug, doc.title, doc.tags.join(", "), doc.updated_at, doc.body_markdown);
+                println!(
+                    "[PASS] Knowledge Document: {}\nTitle: {}\nTags: {}\nUpdated: {}\n\n{}",
+                    doc.slug,
+                    doc.title,
+                    doc.tags.join(", "),
+                    doc.updated_at,
+                    doc.body_markdown
+                );
             }
         }
         KnowledgeLookupOutcome::DocumentNotFound => {
             if json_mode {
                 println!("{}", serde_json::to_string_pretty(&json!({"verdict": "PASS", "outcome": "DOCUMENT_NOT_FOUND", "slug": args.slug})).unwrap_or_default());
             } else {
-                println!("[PASS] [DOCUMENT_NOT_FOUND] No document for slug: {}", args.slug);
+                println!(
+                    "[PASS] [DOCUMENT_NOT_FOUND] No document for slug: {}",
+                    args.slug
+                );
             }
         }
     }
@@ -143,25 +185,38 @@ fn handle_search(
     json_mode: bool,
     repo: &dyn KnowledgeRepositoryPort,
 ) -> Result<DomainOutcome, DomainViolation> {
-    let query = KnowledgeSearchQuery::new(&args.query, args.limit).with_tags(clean_tags(&args.tags));
+    let query =
+        KnowledgeSearchQuery::new(&args.query, args.limit).with_tags(clean_tags(&args.tags));
     let outcome = repo.search_documents(&query)?;
     let hits: Vec<JsonMemorySearchHit> = outcome
         .as_slice()
         .iter()
         .map(|h| JsonMemorySearchHit {
-            slug: h.slug.clone(), title: h.title.clone(), bm25_score: h.bm25_score,
-            snippet: h.snippet.clone(), adjacent_links: h.adjacent_links.clone(),
+            slug: h.slug.clone(),
+            title: h.title.clone(),
+            bm25_score: h.bm25_score,
+            snippet: h.snippet.clone(),
+            adjacent_links: h.adjacent_links.clone(),
         })
         .collect();
 
     if json_mode {
         let payload = json!({"verdict": "PASS", "outcome": outcome.variant_label(), "query": args.query, "hits": hits});
-        println!("{}", serde_json::to_string_pretty(&payload).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
     } else if matches!(outcome, KnowledgeSearchOutcome::EmptyKnowledgeList) {
-        println!("[PASS] [EMPTY_KNOWLEDGE_LIST] No hits for query: {}", args.query);
+        println!(
+            "[PASS] [EMPTY_KNOWLEDGE_LIST] No hits for query: {}",
+            args.query
+        );
     } else {
         for h in &hits {
-            println!("[PASS] {} ({:.4}) - {}: {}", h.slug, h.bm25_score, h.title, h.snippet);
+            println!(
+                "[PASS] {} ({:.4}) - {}: {}",
+                h.slug, h.bm25_score, h.title, h.snippet
+            );
         }
     }
     Ok(DomainOutcome::Success)
@@ -179,12 +234,23 @@ fn handle_list(
         .filter(|d| req_tags.iter().all(|req| d.tags.iter().any(|t| t.eq_ignore_ascii_case(req))))
         .map(|d| json!({"slug": d.slug, "title": d.title, "tags": d.tags, "updated_at": d.updated_at, "blake3_digest": d.blake3_digest}))
         .collect();
-    let outcome_label = if docs.is_empty() { "EMPTY_KNOWLEDGE_LIST" } else { "RESULTS" };
+    let outcome_label = if docs.is_empty() {
+        "EMPTY_KNOWLEDGE_LIST"
+    } else {
+        "RESULTS"
+    };
     if json_mode {
         let payload = json!({"verdict": "PASS", "outcome": outcome_label, "total": docs.len(), "documents": docs});
-        println!("{}", serde_json::to_string_pretty(&payload).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
     } else {
-        println!("[PASS] [{}] {} knowledge documents", outcome_label, docs.len());
+        println!(
+            "[PASS] [{}] {} knowledge documents",
+            outcome_label,
+            docs.len()
+        );
     }
     Ok(DomainOutcome::Success)
 }
@@ -197,9 +263,15 @@ fn handle_rebuild(
     let s = repo.rebuild_index()?;
     if json_mode {
         let payload = json!({"verdict": "PASS", "outcome": "REBUILT", "notes_restored": s.notes_restored, "links_restored": s.links_restored, "duration_ms": s.duration_ms});
-        println!("{}", serde_json::to_string_pretty(&payload).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
     } else {
-        println!("[PASS] Knowledge index rebuilt: {} notes and {} links restored in {}ms", s.notes_restored, s.links_restored, s.duration_ms);
+        println!(
+            "[PASS] Knowledge index rebuilt: {} notes and {} links restored in {}ms",
+            s.notes_restored, s.links_restored, s.duration_ms
+        );
     }
     Ok(DomainOutcome::Success)
 }

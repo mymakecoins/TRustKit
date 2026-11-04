@@ -4,9 +4,7 @@
 // Constitutional Principle IV: Zero Panic.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
-use crate::entities::{
-    EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
-};
+use crate::entities::{EvidenceKind, ExecutionEvidence, GateStage, GateVerdict};
 use crate::errors::DomainViolation;
 use crate::ports::{CycleEvidenceRepositoryPort, WorktreeIsolationPort};
 use crate::special_cases::{ActiveCycleLookup, SpecLockState, WorktreeAllocation};
@@ -52,8 +50,12 @@ pub fn validate_commit_message(msg: &str) -> Result<(), DomainViolation> {
         return Err(DomainViolation::AstIntegrityOrInvariantViolation {
             invariant_id: "RN-013".to_string(),
             intercepted_command: "git commit".to_string(),
-            reason: format!("Invalid commit type '{}'. Must be one of {:?}", commit_type, valid_types),
-            remediation: "Use valid conventional commit prefix like 'feat', 'fix', 'test'".to_string(),
+            reason: format!(
+                "Invalid commit type '{}'. Must be one of {:?}",
+                commit_type, valid_types
+            ),
+            remediation: "Use valid conventional commit prefix like 'feat', 'fix', 'test'"
+                .to_string(),
         });
     }
 
@@ -63,7 +65,8 @@ pub fn validate_commit_message(msg: &str) -> Result<(), DomainViolation> {
             invariant_id: "RN-013".to_string(),
             intercepted_command: "git commit".to_string(),
             reason: "Commit description must start with issue number '#<id>'".to_string(),
-            remediation: "Include issue number right after prefix, e.g. 'feat: #45 ...'".to_string(),
+            remediation: "Include issue number right after prefix, e.g. 'feat: #45 ...'"
+                .to_string(),
         });
     }
 
@@ -114,9 +117,13 @@ pub fn execute(
     let mut executed_reports = Vec::with_capacity(wave_tasks.len());
 
     for mut task in wave_tasks {
-        let allocation = worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
+        let allocation =
+            worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
         let worktree_path = match &allocation {
-            WorktreeAllocation::Provisioned { worktree_path, branch_name } => {
+            WorktreeAllocation::Provisioned {
+                worktree_path,
+                branch_name,
+            } => {
                 task.allocate_worktree(worktree_path, branch_name)?;
                 worktree_path.clone()
             }
@@ -148,7 +155,11 @@ pub fn execute(
         };
         repo.append_evidence(&prov_evidence)?;
 
-        let merged_sha = worktree_port.merge_and_prune_worktree(&task.task_id, &worktree_path, &cycle.work_branch)?;
+        let merged_sha = worktree_port.merge_and_prune_worktree(
+            &task.task_id,
+            &worktree_path,
+            &cycle.work_branch,
+        )?;
         task.merge_and_prune_worktree(&merged_sha)?;
         repo.update_task_worktree(&cycle.cycle_id, &task.task_id, &task.worktree_allocation)?;
 
@@ -162,7 +173,10 @@ pub fn execute(
             executed_command: format!("git merge --ff-only {}", merged_sha),
             exit_code: 0,
             duration_ms: 10,
-            sanitized_stdout_tail: format!("Merged and pruned worktree {} -> {}", worktree_path, merged_sha),
+            sanitized_stdout_tail: format!(
+                "Merged and pruned worktree {} -> {}",
+                worktree_path, merged_sha
+            ),
             sanitized_stderr_tail: "".to_string(),
             output_blake3_digest: "".to_string(),
             verdict: GateVerdict::Pass,

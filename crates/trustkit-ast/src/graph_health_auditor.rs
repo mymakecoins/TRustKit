@@ -19,7 +19,9 @@ use crate::graph_context_slicer::GraphContextSlicer;
 pub struct GraphHealthAuditor;
 
 impl GraphHealthAuditor {
-    pub const fn new() -> Self { Self }
+    pub const fn new() -> Self {
+        Self
+    }
 
     pub fn compute_cohesion_scores(
         &self,
@@ -35,8 +37,14 @@ impl GraphHealthAuditor {
         let mut total_counts: HashMap<String, usize> = HashMap::new();
 
         for edge in edges {
-            let s_layer = node_layer.get(edge.source_id.as_str()).copied().unwrap_or("");
-            let t_layer = node_layer.get(edge.target_id.as_str()).copied().unwrap_or("");
+            let s_layer = node_layer
+                .get(edge.source_id.as_str())
+                .copied()
+                .unwrap_or("");
+            let t_layer = node_layer
+                .get(edge.target_id.as_str())
+                .copied()
+                .unwrap_or("");
 
             if !s_layer.is_empty() {
                 *total_counts.entry(s_layer.to_string()).or_default() += 1;
@@ -52,7 +60,11 @@ impl GraphHealthAuditor {
         let mut result = BTreeMap::new();
         for (layer, total) in total_counts {
             let internal = internal_counts.get(&layer).copied().unwrap_or(0);
-            let ratio = if total > 0 { internal as f64 / total as f64 } else { 1.0 };
+            let ratio = if total > 0 {
+                internal as f64 / total as f64
+            } else {
+                1.0
+            };
             result.insert(layer, ratio);
         }
         result
@@ -104,12 +116,18 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
             let s_str: String;
             let s_l = match layers.get(s_id) {
                 Some(&l) => l,
-                None => { s_str = detect_layer(s_id); &s_str }
+                None => {
+                    s_str = detect_layer(s_id);
+                    &s_str
+                }
             };
             let t_str: String;
             let t_l = match layers.get(t_id) {
                 Some(&l) => l,
-                None => { t_str = detect_layer(t_id); &t_str }
+                None => {
+                    t_str = detect_layer(t_id);
+                    &t_str
+                }
             };
 
             if let Some(r) = check_hexagonal_violation(s_l, t_l, t_id) {
@@ -120,12 +138,15 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
         let collapsed: usize = counts.values().filter(|&&c| c > 1).map(|c| c - 1).sum();
 
         // Sort nodes by degree first, then collect neighbors only for top God Nodes
-        let mut node_indices: Vec<(&str, usize, usize, usize)> = nodes.iter().map(|n| {
-            let id = n.node_id.as_str();
-            let in_d = in_deg.get(id).copied().unwrap_or(0);
-            let out_d = out_deg.get(id).copied().unwrap_or(0);
-            (id, in_d, out_d, in_d + out_d)
-        }).collect();
+        let mut node_indices: Vec<(&str, usize, usize, usize)> = nodes
+            .iter()
+            .map(|n| {
+                let id = n.node_id.as_str();
+                let in_d = in_deg.get(id).copied().unwrap_or(0);
+                let out_d = out_deg.get(id).copied().unwrap_or(0);
+                (id, in_d, out_d, in_d + out_d)
+            })
+            .collect();
 
         node_indices.sort_by(|a, b| b.3.cmp(&a.3).then_with(|| a.0.cmp(b.0)));
         let limit = if top_god_nodes == 0 { 5 } else { top_god_nodes };
@@ -144,13 +165,17 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
             }
         }
 
-        let gods: Vec<GodNodeMetric> = node_indices.into_iter().map(|(id, in_d, out_d, _)| {
-            let mut coupled: Vec<String> = god_neighbors.get(id)
-                .map(|set| set.iter().map(|&s| s.to_string()).collect())
-                .unwrap_or_default();
-            coupled.sort();
-            GodNodeMetric::new(id, in_d, out_d, coupled)
-        }).collect();
+        let gods: Vec<GodNodeMetric> = node_indices
+            .into_iter()
+            .map(|(id, in_d, out_d, _)| {
+                let mut coupled: Vec<String> = god_neighbors
+                    .get(id)
+                    .map(|set| set.iter().map(|&s| s.to_string()).collect())
+                    .unwrap_or_default();
+                coupled.sort();
+                GodNodeMetric::new(id, in_d, out_d, coupled)
+            })
+            .collect();
 
         let verdict = if !dangling.is_empty() || !loops.is_empty() || !surprising.is_empty() {
             GraphHealthVerdict::DegradedWarning
@@ -183,7 +208,9 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
         }
         let mut adj: HashMap<&str, Vec<&str>> = HashMap::new();
         for e in edges {
-            adj.entry(e.source_id.as_str()).or_default().push(e.target_id.as_str());
+            adj.entry(e.source_id.as_str())
+                .or_default()
+                .push(e.target_id.as_str());
         }
         let mut queue = VecDeque::new();
         let mut parent = HashMap::new();
@@ -224,23 +251,36 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
         max_line_budget: usize,
     ) -> Result<GraphTraversalOutcome, DomainViolation> {
         Ok(GraphContextSlicer::new().slice_graph(
-            nodes, edges, root_file, mode, max_hops, max_line_budget,
+            nodes,
+            edges,
+            root_file,
+            mode,
+            max_hops,
+            max_line_budget,
         ))
     }
 }
 
 fn check_hexagonal_violation(s_layer: &str, t_layer: &str, t_id: &str) -> Option<String> {
     if s_layer == "CORE" && t_layer != "CORE" && t_layer != "SPEC" {
-        return Some(format!("Violacao hexagonal: CORE nao pode depender da camada externa '{t_layer}'"));
+        return Some(format!(
+            "Violacao hexagonal: CORE nao pode depender da camada externa '{t_layer}'"
+        ));
     }
     if t_layer == "CLI" && s_layer != "CLI" {
-        return Some(format!("Violacao hexagonal: camada interna '{s_layer}' nao pode depender de CLI"));
+        return Some(format!(
+            "Violacao hexagonal: camada interna '{s_layer}' nao pode depender de CLI"
+        ));
     }
     if s_layer == "DB" && t_layer != "DB" && t_layer != "CORE" {
-        return Some(format!("Violacao hexagonal: DB so pode depender de CORE, mas dependeu de '{t_layer}'"));
+        return Some(format!(
+            "Violacao hexagonal: DB so pode depender de CORE, mas dependeu de '{t_layer}'"
+        ));
     }
     if matches!(s_layer, "CORE" | "AST" | "DB" | "ORCH" | "GH" | "CLI") && t_layer == "WIKI" {
-        return Some(format!("Violacao de fronteira: codigo em '{s_layer}' nao pode importar wiki '{t_id}'"));
+        return Some(format!(
+            "Violacao de fronteira: codigo em '{s_layer}' nao pode importar wiki '{t_id}'"
+        ));
     }
     None
 }

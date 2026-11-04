@@ -43,7 +43,8 @@ impl ComposeSpecContextRequest {
                 invariant_id: "RN-002".to_string(),
                 intercepted_command: "spec context compose".to_string(),
                 reason: "ComposeSpecContextRequest idea cannot be empty".to_string(),
-                remediation: "Provide a descriptive feature idea for context extraction".to_string(),
+                remediation: "Provide a descriptive feature idea for context extraction"
+                    .to_string(),
             });
         }
         let cap = if max_snippets == 0 { 5 } else { max_snippets };
@@ -121,7 +122,10 @@ pub fn execute(
     if !ast_slices.is_empty() {
         summary.push_str("\nFatias de Codigo AST:\n");
         for ast in &ast_slices {
-            summary.push_str(&format!("Arquivo: {}\n{}\n", ast.file_path, ast.sliced_code));
+            summary.push_str(&format!(
+                "Arquivo: {}\n{}\n",
+                ast.file_path, ast.sliced_code
+            ));
         }
     }
 

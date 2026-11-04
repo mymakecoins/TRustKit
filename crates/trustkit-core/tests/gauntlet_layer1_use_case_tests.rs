@@ -3,8 +3,8 @@
 
 use std::sync::Mutex;
 use trustkit_core::entities::{
-    ArtifactSeal, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage,
-    GateVerdict, MethodologyProfile, SddCycle, TaskNode, WaveSchedule,
+    ArtifactSeal, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
+    MethodologyProfile, SddCycle, TaskNode, WaveSchedule,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
@@ -12,9 +12,7 @@ use trustkit_core::ports::{
     SupervisedExecutionOutcome, SupervisedExecutionRequest, VisualEvidencePort,
 };
 use trustkit_core::special_cases::{ActiveCycleLookup, IssueLinkage, SpecLockState};
-use trustkit_core::use_cases::run_gauntlet_layer1::{
-    self, RunGauntletLayer1Request,
-};
+use trustkit_core::use_cases::run_gauntlet_layer1::{self, RunGauntletLayer1Request};
 use trustkit_core::use_cases::trip_circuit_breaker::{self, TripCircuitBreakerRequest};
 
 struct InMemoryGauntletRepo {
@@ -36,8 +34,12 @@ impl CycleEvidenceRepositoryPort for InMemoryGauntletRepo {
         }
     }
 
-    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> { Ok(1) }
-    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> { Ok(vec![]) }
+    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> {
+        Ok(1)
+    }
+    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+        Ok(vec![])
+    }
 
     fn append_evidence(&self, evidence: &ExecutionEvidence) -> Result<u64, DomainViolation> {
         let mut list = self.evidences.lock().unwrap();
@@ -45,14 +47,36 @@ impl CycleEvidenceRepositoryPort for InMemoryGauntletRepo {
         Ok(list.len() as u64)
     }
 
-    fn list_evidences_for_cycle(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_evidences_for_cycle(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(self.evidences.lock().unwrap().clone())
     }
 
-    fn update_cycle_spec_lock(&self, _cycle_id: &str, _digest: &str, _state: &str) -> Result<(), DomainViolation> { Ok(()) }
-    fn save_atomic_tasks(&self, _c: &str, _t: &[TaskNode], _w: &WaveSchedule) -> Result<(), DomainViolation> { Ok(()) }
+    fn update_cycle_spec_lock(
+        &self,
+        _cycle_id: &str,
+        _digest: &str,
+        _state: &str,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn save_atomic_tasks(
+        &self,
+        _c: &str,
+        _t: &[TaskNode],
+        _w: &WaveSchedule,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
 
-    fn update_cycle_status(&self, _cycle_id: &str, status: CycleStatus, gauntlet_attempt: u8) -> Result<(), DomainViolation> {
+    fn update_cycle_status(
+        &self,
+        _cycle_id: &str,
+        status: CycleStatus,
+        gauntlet_attempt: u8,
+    ) -> Result<(), DomainViolation> {
         let mut c = self.cycle.lock().unwrap();
         if let Some(cycle) = c.as_mut() {
             cycle.lifecycle_status = status;
@@ -61,7 +85,11 @@ impl CycleEvidenceRepositoryPort for InMemoryGauntletRepo {
         Ok(())
     }
 
-    fn advance_cycle_gate(&self, _cycle_id: &str, next_gate: GateStage) -> Result<(), DomainViolation> {
+    fn advance_cycle_gate(
+        &self,
+        _cycle_id: &str,
+        next_gate: GateStage,
+    ) -> Result<(), DomainViolation> {
         let mut c = self.cycle.lock().unwrap();
         if let Some(cycle) = c.as_mut() {
             cycle.current_gate = next_gate;
@@ -76,14 +104,21 @@ struct MockSupervisor {
 }
 
 impl AsyncExecutionSupervisorPort for MockSupervisor {
-    fn execute_supervised(&self, request: &SupervisedExecutionRequest) -> Result<SupervisedExecutionOutcome, DomainViolation> {
+    fn execute_supervised(
+        &self,
+        request: &SupervisedExecutionRequest,
+    ) -> Result<SupervisedExecutionOutcome, DomainViolation> {
         self.calls.lock().unwrap().push(request.command.clone());
         let fails = self.playwright_fails && request.args.contains(&"playwright".to_string());
         Ok(SupervisedExecutionOutcome {
             exit_code: if fails { 1 } else { 0 },
             duration_ms: 100,
             stdout_tail: "output".to_string(),
-            stderr_tail: if fails { "Playwright snapshot assertion mismatch".to_string() } else { "".to_string() },
+            stderr_tail: if fails {
+                "Playwright snapshot assertion mismatch".to_string()
+            } else {
+                "".to_string()
+            },
             output_blake3_digest: "hash".to_string(),
         })
     }
@@ -94,7 +129,11 @@ struct MockVisualPort {
 }
 
 impl VisualEvidencePort for MockVisualPort {
-    fn restore_foreign_screenshots(&self, active_issue_prefix: &str, _evidence_dir: &str) -> Result<ForeignScreenshotInspection, DomainViolation> {
+    fn restore_foreign_screenshots(
+        &self,
+        active_issue_prefix: &str,
+        _evidence_dir: &str,
+    ) -> Result<ForeignScreenshotInspection, DomainViolation> {
         *self.restored_called.lock().unwrap() = true;
         Ok(ForeignScreenshotInspection {
             active_issue_prefix: active_issue_prefix.to_string(),
@@ -120,7 +159,10 @@ fn build_cycle_for_gauntlet(attempt: u8) -> SddCycle {
         gauntlet_attempt: attempt,
         spec_dir: "specs".to_string(),
         spec_file_path: "specs/spec.md".to_string(),
-        spec_seal_state: SpecLockState::Frozen { spec_path: "p".into(), blake3_digest: "h".into() },
+        spec_seal_state: SpecLockState::Frozen {
+            spec_path: "p".into(),
+            blake3_digest: "h".into(),
+        },
         work_branch: "feat/45".to_string(),
         base_commit_sha: "sha".to_string(),
         pre_existing_dirty_files: vec![],
@@ -158,7 +200,9 @@ fn test_layer1_not_dispatched_if_layer0_failed() {
         playwright_fails: false,
         calls: Mutex::new(vec![]),
     };
-    let visual = MockVisualPort { restored_called: Mutex::new(false) };
+    let visual = MockVisualPort {
+        restored_called: Mutex::new(false),
+    };
 
     let req = RunGauntletLayer1Request {
         cycle_id: "cycle-gauntlet-1".to_string(),
@@ -168,7 +212,10 @@ fn test_layer1_not_dispatched_if_layer0_failed() {
     };
 
     let res = run_gauntlet_layer1::execute(req, &repo, &supervisor, &visual);
-    assert!(matches!(res, Err(DomainViolation::CriticSwarmOrPlaywrightFailed { .. })));
+    assert!(matches!(
+        res,
+        Err(DomainViolation::CriticSwarmOrPlaywrightFailed { .. })
+    ));
     // Layer 1 critics should NOT have been called
     assert_eq!(supervisor.calls.lock().unwrap().len(), 0);
     assert!(!*visual.restored_called.lock().unwrap());
@@ -184,7 +231,9 @@ fn test_layer1_fails_when_playwright_fails_increments_attempt() {
         playwright_fails: true,
         calls: Mutex::new(vec![]),
     };
-    let visual = MockVisualPort { restored_called: Mutex::new(false) };
+    let visual = MockVisualPort {
+        restored_called: Mutex::new(false),
+    };
 
     let req = RunGauntletLayer1Request {
         cycle_id: "cycle-gauntlet-1".to_string(),
@@ -194,8 +243,19 @@ fn test_layer1_fails_when_playwright_fails_increments_attempt() {
     };
 
     let res = run_gauntlet_layer1::execute(req, &repo, &supervisor, &visual);
-    assert!(matches!(res, Err(DomainViolation::CriticSwarmOrPlaywrightFailed { attempt: 1, .. })));
-    assert_eq!(repo.cycle.lock().unwrap().as_ref().unwrap().gauntlet_attempt, 1);
+    assert!(matches!(
+        res,
+        Err(DomainViolation::CriticSwarmOrPlaywrightFailed { attempt: 1, .. })
+    ));
+    assert_eq!(
+        repo.cycle
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .gauntlet_attempt,
+        1
+    );
     assert!(*visual.restored_called.lock().unwrap());
 }
 
@@ -210,7 +270,9 @@ fn test_circuit_breaker_tripped_at_fifth_failure() {
         playwright_fails: true,
         calls: Mutex::new(vec![]),
     };
-    let visual = MockVisualPort { restored_called: Mutex::new(false) };
+    let visual = MockVisualPort {
+        restored_called: Mutex::new(false),
+    };
 
     let req = RunGauntletLayer1Request {
         cycle_id: "cycle-gauntlet-1".to_string(),
@@ -221,13 +283,21 @@ fn test_circuit_breaker_tripped_at_fifth_failure() {
 
     let res = run_gauntlet_layer1::execute(req, &repo, &supervisor, &visual);
     match res {
-        Err(DomainViolation::CircuitBreakerTripped { consecutive_failures, .. }) => {
+        Err(DomainViolation::CircuitBreakerTripped {
+            consecutive_failures,
+            ..
+        }) => {
             assert_eq!(consecutive_failures, 5);
         }
         other => panic!("Expected CircuitBreakerTripped, got: {other:?}"),
     }
     assert_eq!(
-        repo.cycle.lock().unwrap().as_ref().unwrap().lifecycle_status,
+        repo.cycle
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .lifecycle_status,
         CycleStatus::CircuitBreakerTripped
     );
 }
@@ -242,7 +312,9 @@ fn test_unanimous_pass_clears_gauntlet_and_resets_counter() {
         playwright_fails: false,
         calls: Mutex::new(vec![]),
     };
-    let visual = MockVisualPort { restored_called: Mutex::new(false) };
+    let visual = MockVisualPort {
+        restored_called: Mutex::new(false),
+    };
 
     let req = RunGauntletLayer1Request {
         cycle_id: "cycle-gauntlet-1".to_string(),
@@ -278,7 +350,12 @@ fn test_trip_circuit_breaker_use_case() {
     assert_eq!(outcome.gauntlet_attempt, 5);
     assert!(outcome.state.is_tripped());
     assert_eq!(
-        repo.cycle.lock().unwrap().as_ref().unwrap().lifecycle_status,
+        repo.cycle
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .lifecycle_status,
         CycleStatus::CircuitBreakerTripped
     );
 }

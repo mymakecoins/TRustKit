@@ -71,7 +71,11 @@ graph TD
 "#;
     let verdict = SpecLinter::lint_markdown(invalid_spec);
     assert!(!verdict.is_clean());
-    let codes: Vec<String> = verdict.violations().iter().map(|v| v.code.clone()).collect();
+    let codes: Vec<String> = verdict
+        .violations()
+        .iter()
+        .map(|v| v.code.clone())
+        .collect();
     assert!(codes.contains(&"SPEC-001".to_string()));
     assert!(codes.contains(&"SPEC-003".to_string()));
 }
@@ -84,7 +88,11 @@ fn test_spec_linter_detects_ai_trailers_and_emojis() {
     );
     let verdict = SpecLinter::lint_markdown(&dirty_spec);
     assert!(!verdict.is_clean());
-    let codes: Vec<String> = verdict.violations().iter().map(|v| v.code.clone()).collect();
+    let codes: Vec<String> = verdict
+        .violations()
+        .iter()
+        .map(|v| v.code.clone())
+        .collect();
     assert!(codes.contains(&"SPEC-006".to_string()));
     assert!(codes.contains(&"SPEC-007".to_string()));
 }

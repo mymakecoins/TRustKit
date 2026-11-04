@@ -24,10 +24,7 @@ pub struct JsonContextSliceResponse {
     pub sliced_content: String,
 }
 
-pub fn execute(
-    args: &ContextSliceArgs,
-    json_mode: bool,
-) -> Result<DomainOutcome, DomainViolation> {
+pub fn execute(args: &ContextSliceArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     let mut targets = args.files.clone();
     if let Some(single) = &args.file
         && !targets.contains(single)
@@ -38,25 +35,37 @@ pub fn execute(
     if targets.is_empty() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "context_slice".to_string(),
-            details: "No target file specified. Provide --file <PATH> or --files <PATHS...>".to_string(),
+            details: "No target file specified. Provide --file <PATH> or --files <PATHS...>"
+                .to_string(),
         });
     }
 
     if args.mode.is_some() || args.hops.is_some() {
         let root = args.file.as_deref().unwrap_or(targets[0].as_str());
-        let mode = args.mode.as_deref().map(TraversalMode::from_str_label).unwrap_or(TraversalMode::Bfs);
+        let mode = args
+            .mode
+            .as_deref()
+            .map(TraversalMode::from_str_label)
+            .unwrap_or(TraversalMode::Bfs);
         let hops = args.hops.unwrap_or(1);
         let budget = args.budget.unwrap_or(100);
 
-        let (nodes, edges) = if let Ok(repo) = GraphSqliteRepository::open_from_root(Path::new(".")) {
-            (repo.load_nodes().unwrap_or_default(), repo.load_edges().unwrap_or_default())
+        let (nodes, edges) = if let Ok(repo) = GraphSqliteRepository::open_from_root(Path::new("."))
+        {
+            (
+                repo.load_nodes().unwrap_or_default(),
+                repo.load_edges().unwrap_or_default(),
+            )
         } else {
             (Vec::new(), Vec::new())
         };
 
-        let outcome = GraphContextSlicer::new().slice_graph(&nodes, &edges, root, mode, hops, budget);
+        let outcome =
+            GraphContextSlicer::new().slice_graph(&nodes, &edges, root, mode, hops, budget);
         let (sliced_content, visited_nodes, total_lines) = match outcome {
-            GraphTraversalOutcome::VisitedSlice(s) => (s.sliced_content, s.visited_nodes, s.consumed_lines),
+            GraphTraversalOutcome::VisitedSlice(s) => {
+                (s.sliced_content, s.visited_nodes, s.consumed_lines)
+            }
             GraphTraversalOutcome::EmptyGraphSlice => (String::new(), targets.clone(), 0),
         };
 

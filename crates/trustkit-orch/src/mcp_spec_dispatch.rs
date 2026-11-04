@@ -5,6 +5,7 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
+use crate::mcp_server::{McpTool, tool};
 use serde_json::{Map, Value, json};
 use std::fs;
 use std::sync::Arc;
@@ -12,7 +13,6 @@ use trustkit_ast::{SpecLintVerdict, SpecLinter, TreeSitterAstAuditorAdapter};
 use trustkit_core::entities::SpecScaffoldTemplate;
 use trustkit_core::ports::KnowledgeRepositoryPort;
 use trustkit_core::use_cases::compose_spec_context::{self, ComposeSpecContextRequest};
-use crate::mcp_server::{McpTool, tool};
 
 pub fn spec_tools() -> Vec<McpTool> {
     vec![
@@ -64,7 +64,8 @@ pub fn dispatch_spec_tool(
         "trustkit_spec_context" => handle_context(args, knowledge_opt),
         "trustkit_spec_lint" => handle_lint(args),
         _ => (
-            json!({ "verdict": "FAIL", "tool": name, "error": "Unsupported spec tool" }).to_string(),
+            json!({ "verdict": "FAIL", "tool": name, "error": "Unsupported spec tool" })
+                .to_string(),
             true,
         ),
     }
@@ -102,7 +103,10 @@ fn handle_context(
 ) -> (String, bool) {
     let idea = args.get("idea").and_then(Value::as_str).unwrap_or("");
     let hops = args.get("hops").and_then(Value::as_u64).unwrap_or(2) as usize;
-    let max_snippets = args.get("max_snippets").and_then(Value::as_u64).unwrap_or(5) as usize;
+    let max_snippets = args
+        .get("max_snippets")
+        .and_then(Value::as_u64)
+        .unwrap_or(5) as usize;
 
     let compose_req = match ComposeSpecContextRequest::new(idea, hops, max_snippets) {
         Ok(req) => req,

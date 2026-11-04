@@ -32,7 +32,8 @@ pub fn execute_with_db(
             if !db_path.exists() {
                 return Err(DomainViolation::InfrastructureBoundaryFault {
                     subsystem: "spec_lint".to_string(),
-                    details: "No active SDD cycle found in state.db and no --file flag provided.".to_string(),
+                    details: "No active SDD cycle found in state.db and no --file flag provided."
+                        .to_string(),
                 });
             }
             let repo = SqliteWalRepositoryAdapter::open(db_path)?;
@@ -51,7 +52,10 @@ pub fn execute_with_db(
     let content = fs::read_to_string(&target_spec_path).map_err(|err| {
         DomainViolation::InfrastructureBoundaryFault {
             subsystem: "filesystem".to_string(),
-            details: format!("Failed reading specification file '{}': {err}", target_spec_path),
+            details: format!(
+                "Failed reading specification file '{}': {err}",
+                target_spec_path
+            ),
         }
     })?;
 
@@ -101,7 +105,9 @@ pub fn execute_with_db(
                         "Specification '{}' contains invariant violations (AI trailers or emojis)",
                         target_spec_path
                     ),
-                    remediation: "Remove AI co-authorship trailers and emojis from the specification".to_string(),
+                    remediation:
+                        "Remove AI co-authorship trailers and emojis from the specification"
+                            .to_string(),
                 })
             } else {
                 Err(DomainViolation::SpecOrTraceabilityIncomplete {
@@ -110,7 +116,8 @@ pub fn execute_with_db(
                         target_spec_path,
                         violations.len()
                     ),
-                    missing_artefact: "Valid specification structure conforming to SpecLinter rules".to_string(),
+                    missing_artefact:
+                        "Valid specification structure conforming to SpecLinter rules".to_string(),
                 })
             }
         }

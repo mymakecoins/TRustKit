@@ -45,9 +45,10 @@ pub fn execute(
     let evidences = repo.list_certification_evidences(&cycle.cycle_id)?;
 
     // Check Layer 0 pass
-    let layer0_passed = evidences.iter().rev().any(|e| {
-        e.evidence_kind == EvidenceKind::AstAudit && e.verdict == GateVerdict::Pass
-    });
+    let layer0_passed = evidences
+        .iter()
+        .rev()
+        .any(|e| e.evidence_kind == EvidenceKind::AstAudit && e.verdict == GateVerdict::Pass);
 
     if !layer0_passed {
         return Err(DomainViolation::InfrastructureBoundaryFault {
@@ -67,10 +68,9 @@ pub fn execute(
     let mut critic_findings = Vec::with_capacity(critics.len());
     for kind in critics {
         let critic_role = format!("CRITIC:{}", kind.as_str());
-        let ev = evidences
-            .iter()
-            .rev()
-            .find(|e| e.actor_role == critic_role && e.evidence_kind == EvidenceKind::CriticVerdict);
+        let ev = evidences.iter().rev().find(|e| {
+            e.actor_role == critic_role && e.evidence_kind == EvidenceKind::CriticVerdict
+        });
 
         match ev {
             Some(e) if e.verdict == GateVerdict::Pass => {
@@ -83,7 +83,11 @@ pub fn execute(
             Some(e) => {
                 return Err(DomainViolation::InfrastructureBoundaryFault {
                     subsystem: "certification".to_string(),
-                    details: format!("Critic {} failed with exit code {}", kind.as_str(), e.exit_code),
+                    details: format!(
+                        "Critic {} failed with exit code {}",
+                        kind.as_str(),
+                        e.exit_code
+                    ),
                 });
             }
             None => {

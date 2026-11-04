@@ -111,7 +111,9 @@ impl SpecValidator {
 
             if let Some(ref mut sc) = current_scenario {
                 let clean_line = trimmed
-                    .trim_start_matches(|c: char| c == '-' || c == '*' || c == '`' || c.is_whitespace())
+                    .trim_start_matches(|c: char| {
+                        c == '-' || c == '*' || c == '`' || c.is_whitespace()
+                    })
                     .trim_start();
                 let lower = clean_line.to_lowercase();
 
@@ -131,7 +133,8 @@ impl SpecValidator {
                     if lower.contains("quando") || lower.contains("when") {
                         sc.push("WHEN".to_string());
                     }
-                    if lower.contains("entao") || lower.contains("então") || lower.contains("then") {
+                    if lower.contains("entao") || lower.contains("então") || lower.contains("then")
+                    {
                         sc.push("THEN".to_string());
                     }
                 }
@@ -195,7 +198,8 @@ impl SpecValidator {
                 } else {
                     for col in &cols {
                         let clean = sanitize_markdown_token(col);
-                        if clean.starts_with("RN-") && !declared_rules.contains(&clean.to_string()) {
+                        if clean.starts_with("RN-") && !declared_rules.contains(&clean.to_string())
+                        {
                             declared_rules.push(clean.to_string());
                         }
                         if clean.starts_with("RF-") && !declared_reqs.contains(&clean.to_string()) {

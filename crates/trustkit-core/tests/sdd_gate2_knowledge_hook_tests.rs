@@ -22,14 +22,23 @@ struct InMemoryKnowledgeRepo {
 
 impl InMemoryKnowledgeRepo {
     fn new() -> Self {
-        Self { docs: Mutex::new(Vec::new()), links: Mutex::new(Vec::new()) }
+        Self {
+            docs: Mutex::new(Vec::new()),
+            links: Mutex::new(Vec::new()),
+        }
     }
 
     fn extract_links(source_slug: &str, body: &str) -> Vec<WikiLink> {
         let (mut out, mut rem) = (Vec::new(), body);
         while let Some(after) = rem.find("[[").map(|s| &rem[s + 2..]) {
             let Some(end) = after.find("]]") else { break };
-            let target = after[..end].split(['|', '#']).next().unwrap_or("").trim().trim_matches('/').trim_end_matches(".md");
+            let target = after[..end]
+                .split(['|', '#'])
+                .next()
+                .unwrap_or("")
+                .trim()
+                .trim_matches('/')
+                .trim_end_matches(".md");
             if !target.is_empty() {
                 let link = WikiLink::new(source_slug, target);
                 if !out.contains(&link) {
@@ -43,7 +52,10 @@ impl InMemoryKnowledgeRepo {
 }
 
 impl KnowledgeRepositoryPort for InMemoryKnowledgeRepo {
-    fn write_document(&self, document: &KnowledgeDocument) -> Result<KnowledgeWriteOutcome, DomainViolation> {
+    fn write_document(
+        &self,
+        document: &KnowledgeDocument,
+    ) -> Result<KnowledgeWriteOutcome, DomainViolation> {
         let clean_slug = KnowledgeDocument::validate_slug(&document.slug)?;
         let digest = if document.blake3_digest.is_empty() {
             "a1b2c3d4e5f60123456789abcdef0123456789abcdef0123456789abcdef0123".to_string()
@@ -80,17 +92,38 @@ impl KnowledgeRepositoryPort for InMemoryKnowledgeRepo {
     fn read_document(&self, slug: &str) -> Result<KnowledgeLookupOutcome, DomainViolation> {
         let clean_slug = KnowledgeDocument::validate_slug(slug)?;
         let docs = self.docs.lock().unwrap();
-        Ok(docs.iter().find(|d| d.slug == clean_slug).cloned().map_or(KnowledgeLookupOutcome::DocumentNotFound, KnowledgeLookupOutcome::Found))
+        Ok(docs.iter().find(|d| d.slug == clean_slug).cloned().map_or(
+            KnowledgeLookupOutcome::DocumentNotFound,
+            KnowledgeLookupOutcome::Found,
+        ))
     }
 
-    fn search_documents(&self, query: &KnowledgeSearchQuery) -> Result<KnowledgeSearchOutcome, DomainViolation> {
+    fn search_documents(
+        &self,
+        query: &KnowledgeSearchQuery,
+    ) -> Result<KnowledgeSearchOutcome, DomainViolation> {
         let (docs, links) = (self.docs.lock().unwrap(), self.links.lock().unwrap());
-        let terms: Vec<String> = query.query_text.split_whitespace().map(|t| t.to_ascii_lowercase()).collect();
+        let terms: Vec<String> = query
+            .query_text
+            .split_whitespace()
+            .map(|t| t.to_ascii_lowercase())
+            .collect();
         let mut hits = Vec::new();
         for doc in docs.iter() {
-            let haystack = format!("{} {} {} {}", doc.slug, doc.title, doc.tags.join(" "), doc.body_markdown).to_ascii_lowercase();
+            let haystack = format!(
+                "{} {} {} {}",
+                doc.slug,
+                doc.title,
+                doc.tags.join(" "),
+                doc.body_markdown
+            )
+            .to_ascii_lowercase();
             if terms.iter().any(|t| haystack.contains(t)) {
-                let adj = links.iter().filter(|l| l.source_slug == doc.slug).map(|l| l.target_slug.clone()).collect();
+                let adj = links
+                    .iter()
+                    .filter(|l| l.source_slug == doc.slug)
+                    .map(|l| l.target_slug.clone())
+                    .collect();
                 hits.push(KnowledgeSearchHit {
                     slug: doc.slug.clone(),
                     title: doc.title.clone(),
@@ -109,7 +142,14 @@ impl KnowledgeRepositoryPort for InMemoryKnowledgeRepo {
 
     fn query_adjacent_links(&self, slug: &str) -> Result<Vec<WikiLink>, DomainViolation> {
         let clean_slug = KnowledgeDocument::validate_slug(slug)?;
-        Ok(self.links.lock().unwrap().iter().filter(|l| l.source_slug == clean_slug || l.target_slug == clean_slug).cloned().collect())
+        Ok(self
+            .links
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.source_slug == clean_slug || l.target_slug == clean_slug)
+            .cloned()
+            .collect())
     }
 
     fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation> {
@@ -128,7 +168,8 @@ fn test_gate2_spec_lock_ingests_frozen_spec_with_tags_blake3_and_task_wikilinks(
         cycle_id: "005-project-knowledge-memory".to_string(),
         spec_file_path: "specs/005-project-knowledge-memory/spec.md".to_string(),
         spec_lock_state: "FROZEN".to_string(),
-        blake3_digest: "d40f1e6488fcb73977502a02bb9057c906e8b9ff62295af8fbc2a6f537a6d336".to_string(),
+        blake3_digest: "d40f1e6488fcb73977502a02bb9057c906e8b9ff62295af8fbc2a6f537a6d336"
+            .to_string(),
         locked_at: "2026-10-29T14:00:00Z".to_string(),
         rules_count: 3,
         requirements_count: 3,
@@ -149,28 +190,48 @@ fn test_gate2_spec_lock_ingests_frozen_spec_with_tags_blake3_and_task_wikilinks(
 "
     .to_string();
 
-    let req = IngestLockedSpecKnowledgeRequest { lock_outcome, spec_content };
+    let req = IngestLockedSpecKnowledgeRequest {
+        lock_outcome,
+        spec_content,
+    };
     let outcome = ingest_locked_spec_knowledge::execute(req, &repo)
         .expect("Gate 2 spec knowledge ingestion must succeed");
 
     assert_eq!(outcome.cycle_id, "005-project-knowledge-memory");
     assert_eq!(outcome.slug, "specs/spec-005-project-knowledge-memory");
-    assert_eq!(outcome.file_path, ".trustkit/wiki/specs/spec-005-project-knowledge-memory.md");
+    assert_eq!(
+        outcome.file_path,
+        ".trustkit/wiki/specs/spec-005-project-knowledge-memory.md"
+    );
     assert_eq!(
         outcome.task_links,
-        vec!["tasks/TASK-005".to_string(), "tasks/TASK-006".to_string(), "tasks/TASK-007".to_string()]
+        vec![
+            "tasks/TASK-005".to_string(),
+            "tasks/TASK-006".to_string(),
+            "tasks/TASK-007".to_string()
+        ]
     );
     assert_eq!(outcome.indexed_links_count, 3);
 
-    let lookup = repo.read_document("specs/spec-005-project-knowledge-memory").expect("read spec doc");
+    let lookup = repo
+        .read_document("specs/spec-005-project-knowledge-memory")
+        .expect("read spec doc");
     let doc = lookup.as_document().expect("document must exist");
-    assert_eq!(doc.tags, vec!["spec", "frozen", "005-project-knowledge-memory"]);
-    assert!(doc.body_markdown.contains("d40f1e6488fcb73977502a02bb9057c906e8b9ff62295af8fbc2a6f537a6d336"));
+    assert_eq!(
+        doc.tags,
+        vec!["spec", "frozen", "005-project-knowledge-memory"]
+    );
+    assert!(
+        doc.body_markdown
+            .contains("d40f1e6488fcb73977502a02bb9057c906e8b9ff62295af8fbc2a6f537a6d336")
+    );
     assert!(doc.body_markdown.contains("[[tasks/TASK-005]]"));
     assert!(doc.body_markdown.contains("[[tasks/TASK-006]]"));
     assert!(doc.body_markdown.contains("[[tasks/TASK-007]]"));
 
-    let search_res = repo.search_documents(&KnowledgeSearchQuery::new("RN-005 RF-021", 5)).expect("search spec");
+    let search_res = repo
+        .search_documents(&KnowledgeSearchQuery::new("RN-005 RF-021", 5))
+        .expect("search spec");
     assert!(!search_res.is_empty());
     let hit = &search_res.as_slice()[0];
     assert_eq!(hit.slug, "specs/spec-005-project-knowledge-memory");
@@ -194,7 +255,11 @@ fn test_gate2_spec_lock_rejects_unfrozen_specification() {
         e2e_tests_count: 1,
     };
 
-    let req = IngestLockedSpecKnowledgeRequest { lock_outcome, spec_content: "# Draft spec".to_string() };
-    let err = ingest_locked_spec_knowledge::execute(req, &repo).expect_err("unfrozen spec must be rejected");
+    let req = IngestLockedSpecKnowledgeRequest {
+        lock_outcome,
+        spec_content: "# Draft spec".to_string(),
+    };
+    let err = ingest_locked_spec_knowledge::execute(req, &repo)
+        .expect_err("unfrozen spec must be rejected");
     assert_eq!(err.posix_exit_code(), 2);
 }

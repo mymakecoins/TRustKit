@@ -38,7 +38,8 @@ pub fn execute_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "merge".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 

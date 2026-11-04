@@ -30,7 +30,14 @@ pub struct OpenPullRequestOutcome {
 
 fn contains_closing_keyword(text: &str) -> bool {
     let lower = text.to_lowercase();
-    let keywords = ["closes #", "close #", "fixes #", "fix #", "resolves #", "resolve #"];
+    let keywords = [
+        "closes #",
+        "close #",
+        "fixes #",
+        "fix #",
+        "resolves #",
+        "resolve #",
+    ];
     keywords.iter().any(|kw| lower.contains(kw))
 }
 
@@ -42,7 +49,8 @@ pub fn execute(
     if !req.human_authorized {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "pull_request".to_string(),
-            details: "Pull Request creation requires explicit human authorization (RN-012)".to_string(),
+            details: "Pull Request creation requires explicit human authorization (RN-012)"
+                .to_string(),
         });
     }
 

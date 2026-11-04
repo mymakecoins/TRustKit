@@ -89,7 +89,11 @@ fn test_write_and_read_document_atomic_with_blake3_and_fts5_sync() {
     let doc = KnowledgeDocument::new(
         "adrs/adr-002-storage-strategy",
         "Estrategia de Armazenamento",
-        vec!["adr".to_string(), "storage".to_string(), "sqlite".to_string()],
+        vec![
+            "adr".to_string(),
+            "storage".to_string(),
+            "sqlite".to_string(),
+        ],
         "Decisao de persistencia atomica com [[adrs/adr-001-hexagonal]].",
         "2026-10-29T12:00:00Z",
         "",
@@ -126,9 +130,7 @@ fn test_write_and_read_document_atomic_with_blake3_and_fts5_sync() {
         KnowledgeLookupOutcome::DocumentNotFound => panic!("Expected document to be found"),
     }
 
-    let missing = repo
-        .read_document("adrs/nao-existe")
-        .expect("read missing");
+    let missing = repo.read_document("adrs/nao-existe").expect("read missing");
     assert_eq!(missing, KnowledgeLookupOutcome::DocumentNotFound);
 }
 

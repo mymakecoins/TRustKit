@@ -9,7 +9,9 @@ use crate::entities::{
     StructuralNode,
 };
 use crate::errors::DomainViolation;
-use crate::ports::{KnowledgeRepositoryPort, StructuralGraphAnalyzerPort, StructuralGraphRepositoryPort};
+use crate::ports::{
+    KnowledgeRepositoryPort, StructuralGraphAnalyzerPort, StructuralGraphRepositoryPort,
+};
 use crate::use_cases::structural_graph_report::render_graph_report;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,13 +25,26 @@ pub struct BuildStructuralGraphRequest {
 }
 
 impl BuildStructuralGraphRequest {
-    pub fn new(manifests: Vec<FileGraphManifest>, force: bool, update_only: bool, now_iso: impl Into<String>) -> Self {
+    pub fn new(
+        manifests: Vec<FileGraphManifest>,
+        force: bool,
+        update_only: bool,
+        now_iso: impl Into<String>,
+    ) -> Self {
         Self {
-            manifests, force, update_only, now_iso: now_iso.into(),
-            pre_extracted_nodes: Vec::new(), pre_extracted_edges: Vec::new(),
+            manifests,
+            force,
+            update_only,
+            now_iso: now_iso.into(),
+            pre_extracted_nodes: Vec::new(),
+            pre_extracted_edges: Vec::new(),
         }
     }
-    pub fn with_pre_extracted(mut self, nodes: Vec<StructuralNode>, edges: Vec<StructuralEdge>) -> Self {
+    pub fn with_pre_extracted(
+        mut self,
+        nodes: Vec<StructuralNode>,
+        edges: Vec<StructuralEdge>,
+    ) -> Self {
         self.pre_extracted_nodes = nodes;
         self.pre_extracted_edges = edges;
         self
@@ -63,10 +78,16 @@ impl BuildStructuralGraphUseCase {
                 (graph_repo.load_nodes()?, graph_repo.load_edges()?)
             } else {
                 let (new_nodes, new_edges) = analyzer.extract_from_files(&changed)?;
-                let mut existing_nodes: Vec<StructuralNode> = graph_repo.load_nodes()?
-                    .into_iter().filter(|n| !changed.contains(&n.source_file)).collect();
-                let mut existing_edges: Vec<StructuralEdge> = graph_repo.load_edges()?
-                    .into_iter().filter(|e| !changed.contains(&e.source_file)).collect();
+                let mut existing_nodes: Vec<StructuralNode> = graph_repo
+                    .load_nodes()?
+                    .into_iter()
+                    .filter(|n| !changed.contains(&n.source_file))
+                    .collect();
+                let mut existing_edges: Vec<StructuralEdge> = graph_repo
+                    .load_edges()?
+                    .into_iter()
+                    .filter(|e| !changed.contains(&e.source_file))
+                    .collect();
                 existing_nodes.extend(new_nodes);
                 existing_edges.extend(new_edges);
                 (existing_nodes, existing_edges)
@@ -78,12 +99,16 @@ impl BuildStructuralGraphUseCase {
 
         let verdict = graph_repo.save_graph_snapshot(&nodes, &edges, &req.manifests, req.force)?;
         let health_report = analyzer.audit_graph_health(&nodes, &edges, 10)?;
-        let report_markdown = render_graph_report(&nodes, &edges, &health_report, &req.manifests, &req.now_iso);
+        let report_markdown =
+            render_graph_report(&nodes, &edges, &health_report, &req.manifests, &req.now_iso);
 
         let doc = KnowledgeDocument::new(
-            "graph/GRAPH_REPORT", "Structural Graph Report",
+            "graph/GRAPH_REPORT",
+            "Structural Graph Report",
             vec!["graph".into(), "report".into(), "structural".into()],
-            report_markdown.clone(), req.now_iso, String::new(),
+            report_markdown.clone(),
+            req.now_iso,
+            String::new(),
         );
 
         let report_path = match knowledge_repo.write_document(&doc)? {
@@ -91,8 +116,12 @@ impl BuildStructuralGraphUseCase {
         };
 
         Ok(BuildStructuralGraphOutcome {
-            total_nodes: nodes.len(), total_edges: edges.len(),
-            health_report, report_markdown, report_path, verdict,
+            total_nodes: nodes.len(),
+            total_edges: edges.len(),
+            health_report,
+            report_markdown,
+            report_path,
+            verdict,
         })
     }
 }
@@ -106,10 +135,18 @@ pub struct FindShortestGraphPathRequest {
 
 impl FindShortestGraphPathRequest {
     pub fn new(source_id: impl Into<String>, target_id: impl Into<String>) -> Self {
-        Self { source_id: source_id.into(), target_id: target_id.into(), undirected: false }
+        Self {
+            source_id: source_id.into(),
+            target_id: target_id.into(),
+            undirected: false,
+        }
     }
     pub fn undirected(source_id: impl Into<String>, target_id: impl Into<String>) -> Self {
-        Self { source_id: source_id.into(), target_id: target_id.into(), undirected: true }
+        Self {
+            source_id: source_id.into(),
+            target_id: target_id.into(),
+            undirected: true,
+        }
     }
 }
 
@@ -124,9 +161,18 @@ impl FindShortestGraphPathUseCase {
         let nodes = graph_repo.load_nodes()?;
         let mut edges = graph_repo.load_edges()?;
         if req.undirected {
-            let rev: Vec<StructuralEdge> = edges.iter().map(|e| {
-                StructuralEdge::new(&e.target_id, &e.source_id, e.relation, e.confidence, &e.source_file)
-            }).collect();
+            let rev: Vec<StructuralEdge> = edges
+                .iter()
+                .map(|e| {
+                    StructuralEdge::new(
+                        &e.target_id,
+                        &e.source_id,
+                        e.relation,
+                        e.confidence,
+                        &e.source_file,
+                    )
+                })
+                .collect();
             edges.extend(rev);
         }
         analyzer.find_shortest_path(&nodes, &edges, &req.source_id, &req.target_id)
@@ -161,9 +207,14 @@ pub enum ExplainNodeOutcome {
 }
 
 impl ExplainNodeOutcome {
-    pub const fn is_found(&self) -> bool { matches!(self, Self::Found(_)) }
+    pub const fn is_found(&self) -> bool {
+        matches!(self, Self::Found(_))
+    }
     pub const fn explanation(&self) -> Option<&NodeExplanation> {
-        match self { Self::Found(e) => Some(e), Self::NotFound { .. } => None }
+        match self {
+            Self::Found(e) => Some(e),
+            Self::NotFound { .. } => None,
+        }
     }
 }
 
@@ -173,7 +224,11 @@ pub struct ExplainGraphNodeRequest {
 }
 
 impl ExplainGraphNodeRequest {
-    pub fn new(node_id: impl Into<String>) -> Self { Self { node_id: node_id.into() } }
+    pub fn new(node_id: impl Into<String>) -> Self {
+        Self {
+            node_id: node_id.into(),
+        }
+    }
 }
 
 pub struct ExplainGraphNodeUseCase;
@@ -187,7 +242,11 @@ impl ExplainGraphNodeUseCase {
         let nodes = graph_repo.load_nodes()?;
         let target = match nodes.into_iter().find(|n| n.node_id == req.node_id) {
             Some(t) => t,
-            None => return Ok(ExplainNodeOutcome::NotFound { node_id: req.node_id }),
+            None => {
+                return Ok(ExplainNodeOutcome::NotFound {
+                    node_id: req.node_id,
+                });
+            }
         };
 
         let edges = graph_repo.load_edges()?;
@@ -198,7 +257,9 @@ impl ExplainGraphNodeUseCase {
         for e in &edges {
             if e.target_id == req.node_id {
                 in_nbrs.push(NeighborConnection {
-                    node_id: e.source_id.clone(), relation: e.relation, confidence: e.confidence,
+                    node_id: e.source_id.clone(),
+                    relation: e.relation,
+                    confidence: e.confidence,
                 });
                 if e.relation == EdgeRelationKind::WikiLinksTo || is_wiki_slug(&e.source_id) {
                     wiki_notes.push(e.source_id.clone());
@@ -206,7 +267,9 @@ impl ExplainGraphNodeUseCase {
             }
             if e.source_id == req.node_id {
                 out_nbrs.push(NeighborConnection {
-                    node_id: e.target_id.clone(), relation: e.relation, confidence: e.confidence,
+                    node_id: e.target_id.clone(),
+                    relation: e.relation,
+                    confidence: e.confidence,
                 });
                 if e.relation == EdgeRelationKind::WikiLinksTo || is_wiki_slug(&e.target_id) {
                     wiki_notes.push(e.target_id.clone());
@@ -215,20 +278,31 @@ impl ExplainGraphNodeUseCase {
         }
 
         if let Ok(links) = knowledge_repo.query_adjacent_links(&req.node_id) {
-            for l in links { wiki_notes.push(l.target_slug); }
+            for l in links {
+                wiki_notes.push(l.target_slug);
+            }
         }
         wiki_notes.sort();
         wiki_notes.dedup();
 
         Ok(ExplainNodeOutcome::Found(NodeExplanation {
-            node_id: target.node_id, label: target.label, kind: target.kind,
-            source_file: target.source_file, architectural_layer: target.architectural_layer,
-            in_degree: in_nbrs.len(), out_degree: out_nbrs.len(),
-            in_neighbors: in_nbrs, out_neighbors: out_nbrs, linked_wiki_notes: wiki_notes,
+            node_id: target.node_id,
+            label: target.label,
+            kind: target.kind,
+            source_file: target.source_file,
+            architectural_layer: target.architectural_layer,
+            in_degree: in_nbrs.len(),
+            out_degree: out_nbrs.len(),
+            in_neighbors: in_nbrs,
+            out_neighbors: out_nbrs,
+            linked_wiki_notes: wiki_notes,
         }))
     }
 }
 
 fn is_wiki_slug(id: &str) -> bool {
-    id.ends_with(".md") || id.starts_with("specs/") || id.starts_with("tasks/") || id.starts_with("adrs/")
+    id.ends_with(".md")
+        || id.starts_with("specs/")
+        || id.starts_with("tasks/")
+        || id.starts_with("adrs/")
 }

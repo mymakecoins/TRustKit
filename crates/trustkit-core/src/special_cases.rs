@@ -119,7 +119,9 @@ impl TddLifecycleState {
 
     pub fn transition_to_red(self, failing_evidence_id: u64) -> Result<Self, DomainViolation> {
         match self {
-            Self::AwaitingRedPhase => Ok(Self::RedVerified { failing_evidence_id }),
+            Self::AwaitingRedPhase => Ok(Self::RedVerified {
+                failing_evidence_id,
+            }),
             Self::RedVerified { .. } | Self::GreenVerified { .. } | Self::Committed { .. } => {
                 Err(DomainViolation::TddLifecycleViolation {
                     task_id: String::new(),
@@ -148,7 +150,10 @@ impl TddLifecycleState {
         }
     }
 
-    pub fn transition_to_committed(self, commit_sha: impl Into<String>) -> Result<Self, DomainViolation> {
+    pub fn transition_to_committed(
+        self,
+        commit_sha: impl Into<String>,
+    ) -> Result<Self, DomainViolation> {
         match self {
             Self::GreenVerified { .. } => Ok(Self::Committed {
                 commit_sha: commit_sha.into(),
@@ -231,10 +236,7 @@ impl WorktreeAllocation {
         }
     }
 
-    pub fn merge_and_prune(
-        self,
-        commit_sha: impl Into<String>,
-    ) -> Result<Self, DomainViolation> {
+    pub fn merge_and_prune(self, commit_sha: impl Into<String>) -> Result<Self, DomainViolation> {
         match self {
             Self::Provisioned { .. } => Ok(Self::MergedAndPruned {
                 commit_sha: commit_sha.into(),

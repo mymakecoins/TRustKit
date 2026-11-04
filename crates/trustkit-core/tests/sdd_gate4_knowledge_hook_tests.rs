@@ -23,14 +23,23 @@ struct InMemoryKnowledgeRepo {
 
 impl InMemoryKnowledgeRepo {
     fn new() -> Self {
-        Self { docs: Mutex::new(Vec::new()), links: Mutex::new(Vec::new()) }
+        Self {
+            docs: Mutex::new(Vec::new()),
+            links: Mutex::new(Vec::new()),
+        }
     }
 
     fn extract_links(source_slug: &str, body: &str) -> Vec<WikiLink> {
         let (mut out, mut rem) = (Vec::new(), body);
         while let Some(after) = rem.find("[[").map(|s| &rem[s + 2..]) {
             let Some(end) = after.find("]]") else { break };
-            let target = after[..end].split(['|', '#']).next().unwrap_or("").trim().trim_matches('/').trim_end_matches(".md");
+            let target = after[..end]
+                .split(['|', '#'])
+                .next()
+                .unwrap_or("")
+                .trim()
+                .trim_matches('/')
+                .trim_end_matches(".md");
             if !target.is_empty() {
                 let link = WikiLink::new(source_slug, target);
                 if !out.contains(&link) {
@@ -44,7 +53,10 @@ impl InMemoryKnowledgeRepo {
 }
 
 impl KnowledgeRepositoryPort for InMemoryKnowledgeRepo {
-    fn write_document(&self, document: &KnowledgeDocument) -> Result<KnowledgeWriteOutcome, DomainViolation> {
+    fn write_document(
+        &self,
+        document: &KnowledgeDocument,
+    ) -> Result<KnowledgeWriteOutcome, DomainViolation> {
         let clean_slug = KnowledgeDocument::validate_slug(&document.slug)?;
         let digest = if document.blake3_digest.is_empty() {
             "f0e1d2c3b4a50123456789abcdef0123456789abcdef0123456789abcdef0123".to_string()
@@ -81,17 +93,38 @@ impl KnowledgeRepositoryPort for InMemoryKnowledgeRepo {
     fn read_document(&self, slug: &str) -> Result<KnowledgeLookupOutcome, DomainViolation> {
         let clean_slug = KnowledgeDocument::validate_slug(slug)?;
         let docs = self.docs.lock().unwrap();
-        Ok(docs.iter().find(|d| d.slug == clean_slug).cloned().map_or(KnowledgeLookupOutcome::DocumentNotFound, KnowledgeLookupOutcome::Found))
+        Ok(docs.iter().find(|d| d.slug == clean_slug).cloned().map_or(
+            KnowledgeLookupOutcome::DocumentNotFound,
+            KnowledgeLookupOutcome::Found,
+        ))
     }
 
-    fn search_documents(&self, query: &KnowledgeSearchQuery) -> Result<KnowledgeSearchOutcome, DomainViolation> {
+    fn search_documents(
+        &self,
+        query: &KnowledgeSearchQuery,
+    ) -> Result<KnowledgeSearchOutcome, DomainViolation> {
         let (docs, links) = (self.docs.lock().unwrap(), self.links.lock().unwrap());
-        let terms: Vec<String> = query.query_text.split_whitespace().map(|t| t.to_ascii_lowercase()).collect();
+        let terms: Vec<String> = query
+            .query_text
+            .split_whitespace()
+            .map(|t| t.to_ascii_lowercase())
+            .collect();
         let mut hits = Vec::new();
         for doc in docs.iter() {
-            let haystack = format!("{} {} {} {}", doc.slug, doc.title, doc.tags.join(" "), doc.body_markdown).to_ascii_lowercase();
+            let haystack = format!(
+                "{} {} {} {}",
+                doc.slug,
+                doc.title,
+                doc.tags.join(" "),
+                doc.body_markdown
+            )
+            .to_ascii_lowercase();
             if terms.iter().any(|t| haystack.contains(t)) {
-                let adj = links.iter().filter(|l| l.source_slug == doc.slug).map(|l| l.target_slug.clone()).collect();
+                let adj = links
+                    .iter()
+                    .filter(|l| l.source_slug == doc.slug)
+                    .map(|l| l.target_slug.clone())
+                    .collect();
                 hits.push(KnowledgeSearchHit {
                     slug: doc.slug.clone(),
                     title: doc.title.clone(),
@@ -110,7 +143,14 @@ impl KnowledgeRepositoryPort for InMemoryKnowledgeRepo {
 
     fn query_adjacent_links(&self, slug: &str) -> Result<Vec<WikiLink>, DomainViolation> {
         let clean_slug = KnowledgeDocument::validate_slug(slug)?;
-        Ok(self.links.lock().unwrap().iter().filter(|l| l.source_slug == clean_slug || l.target_slug == clean_slug).cloned().collect())
+        Ok(self
+            .links
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.source_slug == clean_slug || l.target_slug == clean_slug)
+            .cloned()
+            .collect())
     }
 
     fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation> {
@@ -130,8 +170,11 @@ fn sample_task(state: TddLifecycleState) -> AtomicTask {
         architectural_layer: "CORE".to_string(),
         wave_index: 4,
         depends_on: vec!["TASK-004".to_string()],
-        expected_files: vec!["crates/trustkit-core/src/use_cases/ingest_completed_task_knowledge.rs".to_string()],
-        target_test_file: "crates/trustkit-core/tests/sdd_gate4_knowledge_hook_tests.rs".to_string(),
+        expected_files: vec![
+            "crates/trustkit-core/src/use_cases/ingest_completed_task_knowledge.rs".to_string(),
+        ],
+        target_test_file: "crates/trustkit-core/tests/sdd_gate4_knowledge_hook_tests.rs"
+            .to_string(),
         tdd_lifecycle_state: state,
         red_evidence_id: 11,
         green_evidence_id: 12,
@@ -143,12 +186,16 @@ fn sample_task(state: TddLifecycleState) -> AtomicTask {
 #[test]
 fn test_gate4_ingests_green_verified_task_and_makes_searchable_by_file_or_task_id() {
     let repo = InMemoryKnowledgeRepo::new();
-    let task = sample_task(TddLifecycleState::GreenVerified { red_evidence_id: 11, green_evidence_id: 12 });
+    let task = sample_task(TddLifecycleState::GreenVerified {
+        red_evidence_id: 11,
+        green_evidence_id: 12,
+    });
 
     let req = IngestCompletedTaskKnowledgeRequest {
         task,
         commit_sha: "abcdef1234567890abcdef1234567890abcdef12".to_string(),
-        red_evidence_summary: "EV-11: test failed with exit code 101 as expected in RED phase".to_string(),
+        red_evidence_summary: "EV-11: test failed with exit code 101 as expected in RED phase"
+            .to_string(),
         green_evidence_summary: "EV-12: 2 passed, 0 failed in GREEN phase".to_string(),
         now_iso: "2026-10-29T14:20:00Z".to_string(),
     };
@@ -159,22 +206,47 @@ fn test_gate4_ingests_green_verified_task_and_makes_searchable_by_file_or_task_i
     assert_eq!(outcome.task_id, "TASK-006");
     assert_eq!(outcome.slug, "tasks/TASK-006");
     assert_eq!(outcome.file_path, ".trustkit/wiki/tasks/TASK-006.md");
-    assert_eq!(outcome.spec_wikilink, "specs/spec-005-project-knowledge-memory");
+    assert_eq!(
+        outcome.spec_wikilink,
+        "specs/spec-005-project-knowledge-memory"
+    );
 
-    let lookup = repo.read_document("tasks/TASK-006").expect("read task document");
+    let lookup = repo
+        .read_document("tasks/TASK-006")
+        .expect("read task document");
     let doc = lookup.as_document().expect("task document must exist");
     assert_eq!(doc.tags, vec!["task", "tdd-verified", "CORE"]);
-    assert!(doc.body_markdown.contains("[[specs/spec-005-project-knowledge-memory]]"));
+    assert!(
+        doc.body_markdown
+            .contains("[[specs/spec-005-project-knowledge-memory]]")
+    );
     assert!(doc.body_markdown.contains("[[tasks/TASK-004]]"));
-    assert!(doc.body_markdown.contains("crates/trustkit-core/src/use_cases/ingest_completed_task_knowledge.rs"));
-    assert!(doc.body_markdown.contains("abcdef1234567890abcdef1234567890abcdef12"));
+    assert!(
+        doc.body_markdown
+            .contains("crates/trustkit-core/src/use_cases/ingest_completed_task_knowledge.rs")
+    );
+    assert!(
+        doc.body_markdown
+            .contains("abcdef1234567890abcdef1234567890abcdef12")
+    );
 
-    let by_file = repo.search_documents(&KnowledgeSearchQuery::new("ingest_completed_task_knowledge.rs", 5)).expect("search by file");
+    let by_file = repo
+        .search_documents(&KnowledgeSearchQuery::new(
+            "ingest_completed_task_knowledge.rs",
+            5,
+        ))
+        .expect("search by file");
     assert!(!by_file.is_empty());
     assert_eq!(by_file.as_slice()[0].slug, "tasks/TASK-006");
-    assert!(by_file.as_slice()[0].adjacent_links.contains(&"specs/spec-005-project-knowledge-memory".to_string()));
+    assert!(
+        by_file.as_slice()[0]
+            .adjacent_links
+            .contains(&"specs/spec-005-project-knowledge-memory".to_string())
+    );
 
-    let by_id = repo.search_documents(&KnowledgeSearchQuery::new("TASK-006", 5)).expect("search by task id");
+    let by_id = repo
+        .search_documents(&KnowledgeSearchQuery::new("TASK-006", 5))
+        .expect("search by task id");
     assert!(!by_id.is_empty());
     assert_eq!(by_id.as_slice()[0].slug, "tasks/TASK-006");
 }
@@ -182,7 +254,9 @@ fn test_gate4_ingests_green_verified_task_and_makes_searchable_by_file_or_task_i
 #[test]
 fn test_gate4_rejects_task_without_green_or_committed_verification() {
     let repo = InMemoryKnowledgeRepo::new();
-    let unverified_task = sample_task(TddLifecycleState::RedVerified { failing_evidence_id: 11 });
+    let unverified_task = sample_task(TddLifecycleState::RedVerified {
+        failing_evidence_id: 11,
+    });
 
     let req = IngestCompletedTaskKnowledgeRequest {
         task: unverified_task,

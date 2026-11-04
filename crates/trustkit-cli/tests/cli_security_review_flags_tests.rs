@@ -23,7 +23,8 @@ fn test_parse_gauntlet_run_and_done_security_review_force_execute() {
         other => panic!("Expected Gauntlet Run, got {other:?}"),
     }
 
-    let cli_done = Cli::try_parse_from(["trustkit", "done", "--security-review", "--json"]).unwrap();
+    let cli_done =
+        Cli::try_parse_from(["trustkit", "done", "--security-review", "--json"]).unwrap();
     match cli_done.command {
         Command::Done(args) => {
             assert!(args.security_review);

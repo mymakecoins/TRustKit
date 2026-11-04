@@ -115,6 +115,9 @@ mod tests {
         };
 
         let res = synchronizer.create_pull_request(&details);
-        assert!(matches!(res, Err(DomainViolation::AstIntegrityOrInvariantViolation { .. })));
+        assert!(matches!(
+            res,
+            Err(DomainViolation::AstIntegrityOrInvariantViolation { .. })
+        ));
     }
 }

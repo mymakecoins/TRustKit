@@ -97,9 +97,11 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         base_branch: &str,
     ) -> Result<WorktreeAllocation, DomainViolation> {
         let worktree_dir = self.repo_root.join(".trustkit").join("worktrees");
-        fs::create_dir_all(&worktree_dir).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-            subsystem: "worktree_provider".to_string(),
-            details: format!("Failed to create worktrees dir {:?}: {e}", worktree_dir),
+        fs::create_dir_all(&worktree_dir).map_err(|e| {
+            DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "worktree_provider".to_string(),
+                details: format!("Failed to create worktrees dir {:?}: {e}", worktree_dir),
+            }
         })?;
 
         let task_worktree_path = worktree_dir.join(task_id);
@@ -108,7 +110,12 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         if task_worktree_path.exists() {
             let _ = self.run_git_cmd(
                 &self.repo_root,
-                &["worktree", "remove", "--force", &task_worktree_path.to_string_lossy()],
+                &[
+                    "worktree",
+                    "remove",
+                    "--force",
+                    &task_worktree_path.to_string_lossy(),
+                ],
             );
             let _ = fs::remove_dir_all(&task_worktree_path);
         }
@@ -116,7 +123,14 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         let path_str = task_worktree_path.to_string_lossy().to_string();
         self.run_git_cmd(
             &self.repo_root,
-            &["worktree", "add", "-B", &branch_name, &path_str, base_branch],
+            &[
+                "worktree",
+                "add",
+                "-B",
+                &branch_name,
+                &path_str,
+                base_branch,
+            ],
         )?;
 
         self.link_dependencies(&task_worktree_path);
@@ -127,7 +141,10 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         })
     }
 
-    fn check_worktree_status(&self, worktree_path: &str) -> Result<WorktreeStatus, DomainViolation> {
+    fn check_worktree_status(
+        &self,
+        worktree_path: &str,
+    ) -> Result<WorktreeStatus, DomainViolation> {
         let wt_path = Path::new(worktree_path);
         if !wt_path.exists() {
             return Err(DomainViolation::InfrastructureBoundaryFault {
@@ -167,7 +184,8 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         };
 
         // Determine current checked out branch on repo_root
-        let current_branch = self.run_git_cmd(&self.repo_root, &["rev-parse", "--abbrev-ref", "HEAD"])?;
+        let current_branch =
+            self.run_git_cmd(&self.repo_root, &["rev-parse", "--abbrev-ref", "HEAD"])?;
         if current_branch == target_branch {
             let _ = self.run_git_cmd(&self.repo_root, &["merge", "--no-edit", &worktree_head]);
         } else {
@@ -181,7 +199,10 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         let merged_sha = self.run_git_cmd(&self.repo_root, &["rev-parse", target_branch])?;
 
         // Remove worktree
-        let _ = self.run_git_cmd(&self.repo_root, &["worktree", "remove", "--force", worktree_path]);
+        let _ = self.run_git_cmd(
+            &self.repo_root,
+            &["worktree", "remove", "--force", worktree_path],
+        );
         if wt_path.exists() {
             let _ = fs::remove_dir_all(wt_path);
         }
@@ -200,13 +221,33 @@ mod tests {
         let dir = tempdir().expect("tempdir");
         let path = dir.path();
 
-        Command::new("git").args(["init", "-b", "main"]).current_dir(path).output().expect("git init");
-        Command::new("git").args(["config", "user.name", "Tester"]).current_dir(path).output().expect("git user");
-        Command::new("git").args(["config", "user.email", "test@test.local"]).current_dir(path).output().expect("git email");
+        Command::new("git")
+            .args(["init", "-b", "main"])
+            .current_dir(path)
+            .output()
+            .expect("git init");
+        Command::new("git")
+            .args(["config", "user.name", "Tester"])
+            .current_dir(path)
+            .output()
+            .expect("git user");
+        Command::new("git")
+            .args(["config", "user.email", "test@test.local"])
+            .current_dir(path)
+            .output()
+            .expect("git email");
 
         fs::write(path.join("init.txt"), "init content").expect("write init");
-        Command::new("git").args(["add", "init.txt"]).current_dir(path).output().expect("git add");
-        Command::new("git").args(["commit", "-m", "init: #1 initial"]).current_dir(path).output().expect("git commit");
+        Command::new("git")
+            .args(["add", "init.txt"])
+            .current_dir(path)
+            .output()
+            .expect("git add");
+        Command::new("git")
+            .args(["commit", "-m", "init: #1 initial"])
+            .current_dir(path)
+            .output()
+            .expect("git commit");
 
         dir
     }
@@ -221,7 +262,10 @@ mod tests {
             .expect("provision worktree");
 
         let wt_path = match alloc {
-            WorktreeAllocation::Provisioned { worktree_path, branch_name } => {
+            WorktreeAllocation::Provisioned {
+                worktree_path,
+                branch_name,
+            } => {
                 assert!(worktree_path.contains("TASK-001"));
                 assert_eq!(branch_name, "worktree/TASK-001");
                 worktree_path
@@ -229,14 +273,24 @@ mod tests {
             _ => panic!("Expected Provisioned allocation"),
         };
 
-        let status = provider.check_worktree_status(&wt_path).expect("check status");
+        let status = provider
+            .check_worktree_status(&wt_path)
+            .expect("check status");
         assert!(status.is_clean);
         assert_eq!(status.branch_name, "worktree/TASK-001");
 
         // Make a commit in the worktree
         fs::write(Path::new(&wt_path).join("task.txt"), "task content").expect("write task.txt");
-        Command::new("git").args(["add", "task.txt"]).current_dir(&wt_path).output().expect("git add");
-        Command::new("git").args(["commit", "-m", "feat: #1 task"]).current_dir(&wt_path).output().expect("git commit");
+        Command::new("git")
+            .args(["add", "task.txt"])
+            .current_dir(&wt_path)
+            .output()
+            .expect("git add");
+        Command::new("git")
+            .args(["commit", "-m", "feat: #1 task"])
+            .current_dir(&wt_path)
+            .output()
+            .expect("git commit");
 
         let merged_sha = provider
             .merge_and_prune_worktree("TASK-001", &wt_path, "main")

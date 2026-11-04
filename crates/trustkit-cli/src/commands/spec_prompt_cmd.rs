@@ -28,11 +28,8 @@ pub fn execute_from_root(
 
     let context_summary = if let Ok(repo) = KnowledgeWikiFsRepository::open_from_root(root) {
         let slicer = TreeSitterAstAuditorAdapter::new();
-        let compose_req = ComposeSpecContextRequest::new(
-            domain_req.idea.clone(),
-            domain_req.context_hops,
-            5,
-        )?;
+        let compose_req =
+            ComposeSpecContextRequest::new(domain_req.idea.clone(), domain_req.context_hops, 5)?;
         match compose_spec_context::execute(compose_req, &repo, &slicer) {
             Ok(outcome) => outcome.aggregated_context,
             Err(_) => "Contexto nao pode ser extraido da memoria.".to_string(),

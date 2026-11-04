@@ -31,7 +31,10 @@ pub fn save_artifact_seal(conn: &Connection, seal: &ArtifactSeal) -> Result<u64,
     Ok(conn.last_insert_rowid() as u64)
 }
 
-pub fn list_artifact_seals(conn: &Connection, cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+pub fn list_artifact_seals(
+    conn: &Connection,
+    cycle_id: &str,
+) -> Result<Vec<ArtifactSeal>, DomainViolation> {
     let mut stmt = conn.prepare(
         "SELECT seal_id, cycle_id, file_path, artifact_category, blake3_digest, ast_assertion_count, contract_unlock_state, unlock_justification
          FROM artifact_seals WHERE cycle_id = ?1 ORDER BY seal_id ASC"
@@ -42,12 +45,11 @@ pub fn list_artifact_seals(conn: &Connection, cycle_id: &str) -> Result<Vec<Arti
             subsystem: "sqlite_adapter".into(),
             details: format!("Query seals failed: {e}"),
         })?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| {
-        DomainViolation::InfrastructureBoundaryFault {
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
             details: format!("Seal row error: {e}"),
-        }
-    })
+        })
 }
 
 pub fn append_evidence(conn: &Connection, ev: &ExecutionEvidence) -> Result<u64, DomainViolation> {
@@ -93,12 +95,11 @@ pub fn list_evidences_for_cycle(
             subsystem: "sqlite_adapter".into(),
             details: format!("Query evidences failed: {e}"),
         })?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| {
-        DomainViolation::InfrastructureBoundaryFault {
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
             details: format!("Evidence row error: {e}"),
-        }
-    })
+        })
 }
 
 pub fn list_certification_evidences(
@@ -118,10 +119,9 @@ pub fn list_certification_evidences(
             subsystem: "sqlite_adapter".into(),
             details: format!("Query certification evidences failed: {e}"),
         })?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| {
-        DomainViolation::InfrastructureBoundaryFault {
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
             details: format!("Certification evidence row error: {e}"),
-        }
-    })
+        })
 }

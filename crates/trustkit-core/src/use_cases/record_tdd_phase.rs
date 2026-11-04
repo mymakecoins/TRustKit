@@ -8,7 +8,9 @@ use crate::entities::{
     EvidenceKind, ExecutionEvidence, GateStage, GateVerdict, TddExecutionProof, TddPhase,
 };
 use crate::errors::DomainViolation;
-use crate::ports::{AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SupervisedExecutionRequest};
+use crate::ports::{
+    AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SupervisedExecutionRequest,
+};
 use crate::special_cases::TddLifecycleState;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,7 +43,10 @@ pub fn execute(
         .find_atomic_task(&req.cycle_id, &req.task_id)?
         .ok_or_else(|| DomainViolation::TddLifecycleViolation {
             task_id: req.task_id.clone(),
-            reason: format!("Atomic task '{}' not found in cycle '{}'", req.task_id, req.cycle_id),
+            reason: format!(
+                "Atomic task '{}' not found in cycle '{}'",
+                req.task_id, req.cycle_id
+            ),
         })?;
 
     // Pre-validation: MissingRedPhaseProof check (RN-002) before executing green command
@@ -88,7 +93,12 @@ pub fn execute(
     };
 
     let evidence_id = repo.append_evidence(&evidence)?;
-    let proof = TddExecutionProof::new(req.phase, outcome.exit_code, outcome.duration_ms, evidence_id);
+    let proof = TddExecutionProof::new(
+        req.phase,
+        outcome.exit_code,
+        outcome.duration_ms,
+        evidence_id,
+    );
 
     match req.phase {
         TddPhase::Red => task.advance_red_phase(&proof)?,

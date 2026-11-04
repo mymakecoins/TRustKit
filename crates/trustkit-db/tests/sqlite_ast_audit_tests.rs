@@ -53,7 +53,8 @@ fn test_persist_ast_audit_evidence_roundtrip() {
         duration_ms: 3,
         sanitized_stdout_tail: "AstAuditVerdict::CleanPass".to_string(),
         sanitized_stderr_tail: "".to_string(),
-        output_blake3_digest: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".to_string(),
+        output_blake3_digest: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            .to_string(),
         verdict: GateVerdict::Pass,
         recorded_at: "2026-10-28T12:00:00Z".to_string(),
     };
@@ -82,7 +83,8 @@ fn test_persist_ast_assertion_count_in_artifact_seal() {
         cycle_id: "cycle-ast-1".to_string(),
         file_path: "tests/auth_test.rs".to_string(),
         artifact_category: ArtifactCategory::PreExistingTest,
-        blake3_digest: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210".to_string(),
+        blake3_digest: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+            .to_string(),
         ast_assertion_count: 42,
         contract_unlock_state: ContractUnlockState::Sealed,
     };

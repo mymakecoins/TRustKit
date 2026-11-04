@@ -36,7 +36,10 @@ impl VisualEvidenceGuard {
             });
         }
 
-        if !trimmed.starts_with("<img") || !trimmed.contains("src=\"https://github.com/") || !trimmed.contains("raw=true") {
+        if !trimmed.starts_with("<img")
+            || !trimmed.contains("src=\"https://github.com/")
+            || !trimmed.contains("raw=true")
+        {
             return Err(DomainViolation::AstIntegrityOrInvariantViolation {
                 invariant_id: "RN-008".to_string(),
                 intercepted_command: "validate_screenshot_html_tag".to_string(),
@@ -56,7 +59,10 @@ impl VisualEvidenceGuard {
             || lower.ends_with(".webp")
             || lower.ends_with(".svg");
 
-        is_image && (lower.contains("evidence") || lower.contains("screenshot") || lower.contains("docs/specs"))
+        is_image
+            && (lower.contains("evidence")
+                || lower.contains("screenshot")
+                || lower.contains("docs/specs"))
     }
 }
 
@@ -146,9 +152,21 @@ mod tests {
         let dir = tempdir().expect("tempdir");
         let path = dir.path();
 
-        Command::new("git").args(["init", "-b", "main"]).current_dir(path).output().expect("git init");
-        Command::new("git").args(["config", "user.name", "Tester"]).current_dir(path).output().expect("git user");
-        Command::new("git").args(["config", "user.email", "test@test.local"]).current_dir(path).output().expect("git email");
+        Command::new("git")
+            .args(["init", "-b", "main"])
+            .current_dir(path)
+            .output()
+            .expect("git init");
+        Command::new("git")
+            .args(["config", "user.name", "Tester"])
+            .current_dir(path)
+            .output()
+            .expect("git user");
+        Command::new("git")
+            .args(["config", "user.email", "test@test.local"])
+            .current_dir(path)
+            .output()
+            .expect("git email");
 
         let foreign_dir = path.join("docs/specs/issue-12-202610281200/tests/evidence");
         fs::create_dir_all(&foreign_dir).expect("create foreign dir");
@@ -160,8 +178,16 @@ mod tests {
         let active_file = active_dir.join("01-worktree.png");
         fs::write(&active_file, b"original-screenshot-issue-45").expect("write active");
 
-        Command::new("git").args(["add", "."]).current_dir(path).output().expect("git add");
-        Command::new("git").args(["commit", "-m", "init: #0 evidences"]).current_dir(path).output().expect("git commit");
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .expect("git add");
+        Command::new("git")
+            .args(["commit", "-m", "init: #0 evidences"])
+            .current_dir(path)
+            .output()
+            .expect("git commit");
 
         (dir, foreign_file, active_file)
     }
@@ -176,7 +202,10 @@ mod tests {
         fs::write(&active_file, b"valid-new-evidence-45").expect("update active");
 
         let inspection = guard
-            .restore_foreign_screenshots("issue-45", "docs/specs/issue-45-202610281300/tests/evidence")
+            .restore_foreign_screenshots(
+                "issue-45",
+                "docs/specs/issue-45-202610281300/tests/evidence",
+            )
             .expect("inspection success");
 
         assert_eq!(inspection.foreign_screenshots_detected.len(), 1);
@@ -197,10 +226,12 @@ mod tests {
         let valid = r#"<img src="https://github.com/org/repo/blob/develop/docs/evidence/shot.png?raw=true" alt="shot" width="100%" />"#;
         assert!(VisualEvidenceGuard::validate_screenshot_html_tag(valid).is_ok());
 
-        let forbidden_raw = r#"<img src="https://raw.githubusercontent.com/org/repo/develop/evidence/shot.png" />"#;
+        let forbidden_raw =
+            r#"<img src="https://raw.githubusercontent.com/org/repo/develop/evidence/shot.png" />"#;
         assert!(VisualEvidenceGuard::validate_screenshot_html_tag(forbidden_raw).is_err());
 
-        let missing_raw_query = r#"<img src="https://github.com/org/repo/blob/develop/evidence/shot.png" />"#;
+        let missing_raw_query =
+            r#"<img src="https://github.com/org/repo/blob/develop/evidence/shot.png" />"#;
         assert!(VisualEvidenceGuard::validate_screenshot_html_tag(missing_raw_query).is_err());
     }
 }

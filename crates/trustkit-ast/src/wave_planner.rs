@@ -27,7 +27,11 @@ pub struct ConfiguredWavePlanner {
 
 impl ConfiguredWavePlanner {
     pub fn plan_waves(&self, tasks: &[TaskNode]) -> Result<WaveSchedule, DomainViolation> {
-        WaveExecutionPlanner::plan_with_options(tasks, &self.structural_edges, self.god_node_threshold)
+        WaveExecutionPlanner::plan_with_options(
+            tasks,
+            &self.structural_edges,
+            self.god_node_threshold,
+        )
     }
 }
 impl WaveExecutionPlannerPort for ConfiguredWavePlanner {
@@ -37,14 +41,25 @@ impl WaveExecutionPlannerPort for ConfiguredWavePlanner {
 }
 
 impl WaveExecutionPlanner {
-    pub const fn new() -> Self { Self }
-
-    pub fn with_edges(edges: Vec<StructuralEdge>) -> ConfiguredWavePlanner {
-        ConfiguredWavePlanner { structural_edges: edges, god_node_threshold: 3 }
+    pub const fn new() -> Self {
+        Self
     }
 
-    pub fn with_edges_and_threshold(edges: Vec<StructuralEdge>, god_node_threshold: usize) -> ConfiguredWavePlanner {
-        ConfiguredWavePlanner { structural_edges: edges, god_node_threshold }
+    pub fn with_edges(edges: Vec<StructuralEdge>) -> ConfiguredWavePlanner {
+        ConfiguredWavePlanner {
+            structural_edges: edges,
+            god_node_threshold: 3,
+        }
+    }
+
+    pub fn with_edges_and_threshold(
+        edges: Vec<StructuralEdge>,
+        god_node_threshold: usize,
+    ) -> ConfiguredWavePlanner {
+        ConfiguredWavePlanner {
+            structural_edges: edges,
+            god_node_threshold,
+        }
     }
 
     pub fn parse_tasks_dir(dir_path: &Path) -> Result<Vec<TaskNode>, DomainViolation> {

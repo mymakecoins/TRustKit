@@ -40,8 +40,7 @@ fn test_fts5_bm25_search_ranks_relevance_and_populates_adjacent_links() {
         "hash_003",
     );
 
-    repo.upsert_knowledge_index(&doc1, &[])
-        .expect("index doc1");
+    repo.upsert_knowledge_index(&doc1, &[]).expect("index doc1");
     repo.upsert_knowledge_index(
         &doc2,
         &[WikiLink::new(
@@ -137,8 +136,11 @@ fn test_fts5_upsert_and_remove_updates_index_and_links() {
         "2026-10-29T10:00:00Z",
         "hash_v1",
     );
-    repo.upsert_knowledge_index(&doc_v1, &[WikiLink::new("tasks/TASK-003", "specs/spec-005")])
-        .expect("index v1");
+    repo.upsert_knowledge_index(
+        &doc_v1,
+        &[WikiLink::new("tasks/TASK-003", "specs/spec-005")],
+    )
+    .expect("index v1");
 
     let doc_v2 = KnowledgeDocument::new(
         "tasks/TASK-003",
@@ -148,8 +150,7 @@ fn test_fts5_upsert_and_remove_updates_index_and_links() {
         "2026-10-29T10:20:00Z",
         "hash_v2",
     );
-    repo.upsert_knowledge_index(&doc_v2, &[])
-        .expect("index v2");
+    repo.upsert_knowledge_index(&doc_v2, &[]).expect("index v2");
 
     let old_search = repo
         .search_knowledge_fts5(&KnowledgeSearchQuery::new("alfa", 5))

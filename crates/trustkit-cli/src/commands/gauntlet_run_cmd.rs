@@ -33,7 +33,9 @@ pub struct StdioInteractivePrompt;
 impl InteractivePromptPort for StdioInteractivePrompt {
     fn prompt_security_review_confirmation(&self) -> Result<bool, DomainViolation> {
         println!("[trustkit] -------------------------------------------------------------");
-        println!("[trustkit] Deseja executar a revisao de seguranca especializada (security-review)");
+        println!(
+            "[trustkit] Deseja executar a revisao de seguranca especializada (security-review)"
+        );
         print!("[trustkit] no diff desta entrega antes da certificacao final? [s/N]: ");
         let _ = io::stdout().flush();
 
@@ -66,7 +68,11 @@ impl InteractivePromptPort for StdioInteractivePrompt {
         let stdin = io::stdin();
         let _ = stdin.lock().read_line(&mut line);
         let trimmed = line.trim().to_lowercase();
-        Ok(trimmed.is_empty() || trimmed == "s" || trimmed == "sim" || trimmed == "y" || trimmed == "yes")
+        Ok(trimmed.is_empty()
+            || trimmed == "s"
+            || trimmed == "sim"
+            || trimmed == "y"
+            || trimmed == "yes")
     }
 }
 
@@ -132,7 +138,8 @@ pub fn execute_with_prompt(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "gauntlet_run".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 
@@ -213,7 +220,11 @@ pub fn execute_with_prompt(
         }
     }
 
-    let critics_passed = outcome.findings.iter().filter(|f| f.verdict.is_pass()).count();
+    let critics_passed = outcome
+        .findings
+        .iter()
+        .filter(|f| f.verdict.is_pass())
+        .count();
     let critics_total = outcome.findings.len();
 
     let response = JsonGauntletRunResponse {

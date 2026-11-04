@@ -38,7 +38,8 @@ pub fn execute_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "pull_request".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 
@@ -54,10 +55,7 @@ pub fn execute_with_db(
     };
 
     let board_gateway = ProjectBoardSynchronizer::new();
-    let base_branch = args
-        .target
-        .clone()
-        .unwrap_or_else(|| "develop".to_string());
+    let base_branch = args.target.clone().unwrap_or_else(|| "develop".to_string());
     let now_iso = current_timestamp_iso();
 
     let (title, custom_body) = match &active_cycle.issue_linkage {

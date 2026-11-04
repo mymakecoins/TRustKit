@@ -55,5 +55,9 @@ fn test_slice_respects_line_budget() {
 
     let result = slicer.slice_code("src/items.rs", &source, &req);
     assert!(result.total_lines <= 16);
-    assert!(result.sliced_content.contains("// [Context truncated to stay within budget]"));
+    assert!(
+        result
+            .sliced_content
+            .contains("// [Context truncated to stay within budget]")
+    );
 }

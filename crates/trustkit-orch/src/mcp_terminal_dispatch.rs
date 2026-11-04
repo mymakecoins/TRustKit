@@ -5,10 +5,10 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
-use serde_json::{Map, Value, json};
 use crate::mcp_server::{McpTool, tool};
 use crate::pty_socket_adapter::PtySocketAdapter;
 use crate::terminal_output_sanitizer::TerminalOutputSanitizer;
+use serde_json::{Map, Value, json};
 
 pub fn terminal_tools() -> Vec<McpTool> {
     vec![
@@ -77,7 +77,9 @@ pub fn dispatch_terminal_tool(name: &str, args: &Map<String, Value>) -> (String,
                     "2026-11-03",
                 );
                 use trustkit_core::ports::TerminalMultiplexerPort;
-                adapter.read_terminal_buffer(&handle, lines).unwrap_or_default()
+                adapter
+                    .read_terminal_buffer(&handle, lines)
+                    .unwrap_or_default()
             } else {
                 format!("Mock buffer for {task_id}: awaiting commands\n")
             };
@@ -117,6 +119,10 @@ pub fn dispatch_terminal_tool(name: &str, args: &Map<String, Value>) -> (String,
             });
             (resp.to_string(), false)
         }
-        _ => (json!({ "verdict": "FAIL", "error": format!("Unknown terminal tool: {name}") }).to_string(), true),
+        _ => (
+            json!({ "verdict": "FAIL", "error": format!("Unknown terminal tool: {name}") })
+                .to_string(),
+            true,
+        ),
     }
 }

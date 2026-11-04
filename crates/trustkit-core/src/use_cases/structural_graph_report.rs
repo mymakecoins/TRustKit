@@ -3,8 +3,8 @@
 // Constitutional Principle II: Absolute Prohibition of NULL & Emojis.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
-use std::collections::{BTreeMap, HashMap};
 use crate::entities::{FileGraphManifest, GraphHealthReport, StructuralEdge, StructuralNode};
+use std::collections::{BTreeMap, HashMap};
 
 pub fn render_graph_report(
     nodes: &[StructuralNode],
@@ -19,7 +19,10 @@ pub fn render_graph_report(
     out.push_str(&format!("- Total Nodes: {}\n", nodes.len()));
     out.push_str(&format!("- Total Edges: {}\n", edges.len()));
     out.push_str(&format!("- Manifested Files: {}\n", manifests.len()));
-    out.push_str(&format!("- Health Verdict: {}\n\n", health.verdict.as_str()));
+    out.push_str(&format!(
+        "- Health Verdict: {}\n\n",
+        health.verdict.as_str()
+    ));
 
     // 1. God Nodes
     out.push_str("## God Nodes\n\n");
@@ -79,10 +82,22 @@ pub fn render_graph_report(
     out.push_str("## Graph Health Audit\n\n");
     out.push_str(&format!("- Total Nodes: {}\n", health.total_nodes));
     out.push_str(&format!("- Total Edges: {}\n", health.total_edges));
-    out.push_str(&format!("- Dangling Edges Count: {}\n", health.dangling_edges.len()));
-    out.push_str(&format!("- Self-Loop Edges Count: {}\n", health.self_loop_edges.len()));
-    out.push_str(&format!("- Collapsed Edges Count: {}\n", health.collapsed_edges_count));
-    out.push_str(&format!("- Shrink-Guard Triggered: {}\n", health.shrink_guard_triggered));
+    out.push_str(&format!(
+        "- Dangling Edges Count: {}\n",
+        health.dangling_edges.len()
+    ));
+    out.push_str(&format!(
+        "- Self-Loop Edges Count: {}\n",
+        health.self_loop_edges.len()
+    ));
+    out.push_str(&format!(
+        "- Collapsed Edges Count: {}\n",
+        health.collapsed_edges_count
+    ));
+    out.push_str(&format!(
+        "- Shrink-Guard Triggered: {}\n",
+        health.shrink_guard_triggered
+    ));
     out.push_str(&format!("- Audit Verdict: {}\n", health.verdict.as_str()));
 
     out
@@ -101,8 +116,14 @@ pub fn compute_module_cohesion(
     let mut total_counts: HashMap<String, usize> = HashMap::new();
 
     for edge in edges {
-        let s_layer = node_layer.get(edge.source_id.as_str()).copied().unwrap_or("");
-        let t_layer = node_layer.get(edge.target_id.as_str()).copied().unwrap_or("");
+        let s_layer = node_layer
+            .get(edge.source_id.as_str())
+            .copied()
+            .unwrap_or("");
+        let t_layer = node_layer
+            .get(edge.target_id.as_str())
+            .copied()
+            .unwrap_or("");
 
         if !s_layer.is_empty() {
             *total_counts.entry(s_layer.to_string()).or_default() += 1;
@@ -118,7 +139,11 @@ pub fn compute_module_cohesion(
     let mut result = BTreeMap::new();
     for (layer, total) in total_counts {
         let internal = internal_counts.get(&layer).copied().unwrap_or(0);
-        let ratio = if total > 0 { internal as f64 / total as f64 } else { 1.0 };
+        let ratio = if total > 0 {
+            internal as f64 / total as f64
+        } else {
+            1.0
+        };
         result.insert(layer, (internal, total, ratio));
     }
     result

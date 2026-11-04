@@ -27,7 +27,8 @@ pub fn execute_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "doctor".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 
@@ -37,13 +38,14 @@ pub fn execute_with_db(
         None => {
             return Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "doctor".to_string(),
-                details: "No active or recorded SDD cycle found. Run 'trustkit init' first.".to_string(),
+                details: "No active or recorded SDD cycle found. Run 'trustkit init' first."
+                    .to_string(),
             });
         }
     };
 
-    let is_tripped = cycle.lifecycle_status == CycleStatus::CircuitBreakerTripped
-        || cycle.gauntlet_attempt >= 5;
+    let is_tripped =
+        cycle.lifecycle_status == CycleStatus::CircuitBreakerTripped || cycle.gauntlet_attempt >= 5;
 
     let evidences = repo.list_evidences_for_cycle(&cycle.cycle_id)?;
     let mut diagnostics = Vec::new();

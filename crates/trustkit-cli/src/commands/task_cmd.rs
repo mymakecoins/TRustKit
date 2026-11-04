@@ -90,7 +90,8 @@ pub fn execute_review_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "task_review".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 
@@ -148,7 +149,8 @@ pub fn execute_test_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "task_test".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 
@@ -207,7 +209,8 @@ pub fn execute_complete_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "task_complete".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 

@@ -6,14 +6,15 @@ use trustkit_cli::cli_contract::Cli;
 
 #[test]
 fn test_audit_security_standard_profile_with_gitignored_dir_passes() {
-    let temp_dir = std::env::temp_dir().join(format!(
-        "trustkit_audit_sec_pass_{}",
-        std::process::id()
-    ));
+    let temp_dir =
+        std::env::temp_dir().join(format!("trustkit_audit_sec_pass_{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&temp_dir);
     std::fs::create_dir_all(&temp_dir).expect("temp dir should be created");
-    std::fs::write(temp_dir.join(".gitignore"), ".trustkit/\nreports-ignored/\n")
-        .expect(".gitignore should be written");
+    std::fs::write(
+        temp_dir.join(".gitignore"),
+        ".trustkit/\nreports-ignored/\n",
+    )
+    .expect(".gitignore should be written");
 
     let out_dir = temp_dir.join("reports-ignored").join("sec-run");
     let scope_str = temp_dir.to_string_lossy().to_string();
@@ -50,10 +51,8 @@ fn test_audit_security_standard_profile_with_gitignored_dir_passes() {
 
 #[test]
 fn test_audit_security_rejects_unignored_output_dir_inside_repo() {
-    let temp_dir = std::env::temp_dir().join(format!(
-        "trustkit_audit_sec_reject_{}",
-        std::process::id()
-    ));
+    let temp_dir =
+        std::env::temp_dir().join(format!("trustkit_audit_sec_reject_{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&temp_dir);
     std::fs::create_dir_all(&temp_dir).expect("temp dir should be created");
     std::fs::write(temp_dir.join(".gitignore"), "target/\n").expect(".gitignore should be written");

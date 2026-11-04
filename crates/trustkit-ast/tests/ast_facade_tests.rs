@@ -19,7 +19,9 @@ fn test_facade_audit_source_tree_clean_pass() {
 
     let adapter = TreeSitterAstAuditorAdapter::new();
     let files = vec![file_path.to_str().unwrap().to_string()];
-    let verdict = adapter.audit_source_tree(&files, &[]).expect("Audit failed");
+    let verdict = adapter
+        .audit_source_tree(&files, &[])
+        .expect("Audit failed");
 
     assert!(verdict.is_pass());
     assert!(verdict.violations().is_empty());
@@ -34,12 +36,18 @@ fn test_facade_audit_source_tree_with_emoji_violation() {
 
     let adapter = TreeSitterAstAuditorAdapter::new();
     let files = vec![file_path.to_str().unwrap().to_string()];
-    let verdict = adapter.audit_source_tree(&files, &[]).expect("Audit failed");
+    let verdict = adapter
+        .audit_source_tree(&files, &[])
+        .expect("Audit failed");
 
     assert!(!verdict.is_pass());
     let violations = verdict.violations();
     assert!(!violations.is_empty());
-    assert!(violations.iter().any(|v| matches!(v, AstViolation::ForbiddenEmoji { .. })));
+    assert!(
+        violations
+            .iter()
+            .any(|v| matches!(v, AstViolation::ForbiddenEmoji { .. }))
+    );
 }
 
 #[test]

@@ -162,7 +162,10 @@ pub struct HookArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum HookSubcommand {
-    #[command(name = "pre-tool", about = "Intercept and evaluate shell commands before execution")]
+    #[command(
+        name = "pre-tool",
+        about = "Intercept and evaluate shell commands before execution"
+    )]
     PreTool(PreToolArgs),
 }
 
@@ -182,13 +185,25 @@ pub struct SpecArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum SpecSubcommand {
-    #[command(name = "prompt", about = "Generate structured spec prompt and skeleton for a feature idea")]
+    #[command(
+        name = "prompt",
+        about = "Generate structured spec prompt and skeleton for a feature idea"
+    )]
     Prompt(SpecPromptArgs),
-    #[command(name = "lint", about = "Validate specification markdown against structural and constitutional invariants")]
+    #[command(
+        name = "lint",
+        about = "Validate specification markdown against structural and constitutional invariants"
+    )]
     Lint(SpecLintArgs),
-    #[command(name = "init", about = "Initialize a Spec V2 skeleton from upstream PRD or ADR")]
+    #[command(
+        name = "init",
+        about = "Initialize a Spec V2 skeleton from upstream PRD or ADR"
+    )]
     Init(SpecInitArgs),
-    #[command(name = "lock", about = "Validate and cryptographically seal specification at Gate 2")]
+    #[command(
+        name = "lock",
+        about = "Validate and cryptographically seal specification at Gate 2"
+    )]
     Lock(SpecLockArgs),
 }
 
@@ -239,4 +254,3 @@ mod tests;
 #[cfg(test)]
 #[path = "cli_contract_help_tests.rs"]
 mod help_tests;
-

@@ -248,7 +248,13 @@ fn test_e2e_gate5_gauntlet_and_circuit_breaker() {
     let mut ast_cmd = Command::cargo_bin("trustkit").expect("trustkit");
     ast_cmd
         .current_dir(base_dir)
-        .args(["gauntlet", "ast-audit", "--files", clean_file.to_str().unwrap(), "--json"])
+        .args([
+            "gauntlet",
+            "ast-audit",
+            "--files",
+            clean_file.to_str().unwrap(),
+            "--json",
+        ])
         .assert()
         .success()
         .code(0);
@@ -358,7 +364,11 @@ fn test_e2e_gate6_done_merge_pr() {
 
     // 3. Executar trustkit pr --target develop (sob demanda)
     let mock_bin = setup_mock_gh(base_dir);
-    let path_env = format!("{}:{}", mock_bin.display(), std::env::var("PATH").unwrap_or_default());
+    let path_env = format!(
+        "{}:{}",
+        mock_bin.display(),
+        std::env::var("PATH").unwrap_or_default()
+    );
 
     let mut pr_cmd = Command::cargo_bin("trustkit").expect("trustkit");
     let pr_assert = pr_cmd
@@ -396,7 +406,13 @@ fn test_e2e_semantic_failure_exit_codes() {
     let mut ast_cmd = Command::cargo_bin("trustkit").expect("trustkit");
     ast_cmd
         .current_dir(base_dir)
-        .args(["gauntlet", "ast-audit", "--files", bad_file.to_str().unwrap(), "--json"])
+        .args([
+            "gauntlet",
+            "ast-audit",
+            "--files",
+            bad_file.to_str().unwrap(),
+            "--json",
+        ])
         .assert()
         .failure()
         .code(4);

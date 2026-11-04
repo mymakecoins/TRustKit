@@ -17,9 +17,15 @@ pub struct TaskArgs {
 pub enum TaskSubcommand {
     #[command(name = "test", about = "Execute test with TDD phase verification")]
     Test(TaskTestArgs),
-    #[command(name = "review", about = "Run multi-angle semantic code review on task diff (Gate 4 Refactor)")]
+    #[command(
+        name = "review",
+        about = "Run multi-angle semantic code review on task diff (Gate 4 Refactor)"
+    )]
     Review(TaskReviewArgs),
-    #[command(name = "complete", about = "Complete atomic task after TDD verification")]
+    #[command(
+        name = "complete",
+        about = "Complete atomic task after TDD verification"
+    )]
     Complete(TaskCompleteArgs),
 }
 
@@ -95,7 +101,11 @@ pub struct TaskCompleteArgs {
     #[arg(help = "Atomic task identifier (e.g. TASK-001)")]
     pub task_id: String,
 
-    #[arg(long, value_enum, help = "Optional multi-angle code review effort level before completion")]
+    #[arg(
+        long,
+        value_enum,
+        help = "Optional multi-angle code review effort level before completion"
+    )]
     pub code_review: Option<CodeReviewEffortArg>,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -107,10 +117,18 @@ pub struct WaveRunArgs {
     #[arg(long, help = "Topological execution wave index number")]
     pub wave: u32,
 
-    #[arg(long, default_value = "auto", help = "Runtime execution backend (auto, pty, native)")]
+    #[arg(
+        long,
+        default_value = "auto",
+        help = "Runtime execution backend (auto, pty, native)"
+    )]
     pub runtime: String,
 
-    #[arg(long, default_value = "", help = "Optional builder agent command to execute in terminal")]
+    #[arg(
+        long,
+        default_value = "",
+        help = "Optional builder agent command to execute in terminal"
+    )]
     pub agent_cmd: String,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -119,10 +137,18 @@ pub struct WaveRunArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct GauntletRunArgs {
-    #[arg(long, conflicts_with = "skip_security_review", help = "Force execution of specialized AppSec diff review (security-review)")]
+    #[arg(
+        long,
+        conflicts_with = "skip_security_review",
+        help = "Force execution of specialized AppSec diff review (security-review)"
+    )]
     pub security_review: bool,
 
-    #[arg(long, conflicts_with = "security_review", help = "Explicitly skip specialized AppSec diff review without prompting")]
+    #[arg(
+        long,
+        conflicts_with = "security_review",
+        help = "Explicitly skip specialized AppSec diff review without prompting"
+    )]
     pub skip_security_review: bool,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -149,10 +175,18 @@ pub struct DoctorArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct DoneArgs {
-    #[arg(long, conflicts_with = "skip_security_review", help = "Force execution of specialized AppSec diff review (security-review)")]
+    #[arg(
+        long,
+        conflicts_with = "skip_security_review",
+        help = "Force execution of specialized AppSec diff review (security-review)"
+    )]
     pub security_review: bool,
 
-    #[arg(long, conflicts_with = "security_review", help = "Explicitly skip specialized AppSec diff review without prompting")]
+    #[arg(
+        long,
+        conflicts_with = "security_review",
+        help = "Explicitly skip specialized AppSec diff review without prompting"
+    )]
     pub skip_security_review: bool,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -182,7 +216,10 @@ pub struct MergeArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct PrArgs {
-    #[arg(long, help = "Target branch for the pull request (defaults to develop)")]
+    #[arg(
+        long,
+        help = "Target branch for the pull request (defaults to develop)"
+    )]
     pub target: Option<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -197,7 +234,10 @@ pub struct McpArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
 pub enum McpSubcommand {
-    #[command(name = "serve", about = "Start TRustKit Model Context Protocol server over stdio")]
+    #[command(
+        name = "serve",
+        about = "Start TRustKit Model Context Protocol server over stdio"
+    )]
     Serve(McpServeArgs),
 }
 
@@ -242,7 +282,10 @@ pub struct AuditSecurityArgs {
     #[arg(long, help = "Target repository or directory scope path")]
     pub scope: Option<String>,
 
-    #[arg(long, help = "External or git-ignored directory for audit ledger artifacts")]
+    #[arg(
+        long,
+        help = "External or git-ignored directory for audit ledger artifacts"
+    )]
     pub output_dir: Option<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]

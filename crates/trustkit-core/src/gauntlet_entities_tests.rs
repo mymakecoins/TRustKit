@@ -9,8 +9,14 @@ use crate::special_cases::CircuitBreakerState;
 fn test_tdd_phase_representation_and_parsing() {
     assert_eq!(TddPhase::Red.as_str(), "RED");
     assert_eq!(TddPhase::Green.as_str(), "GREEN");
-    assert_eq!(TddPhase::from_str_case_insensitive("red"), Some(TddPhase::Red));
-    assert_eq!(TddPhase::from_str_case_insensitive(" GREEN "), Some(TddPhase::Green));
+    assert_eq!(
+        TddPhase::from_str_case_insensitive("red"),
+        Some(TddPhase::Red)
+    );
+    assert_eq!(
+        TddPhase::from_str_case_insensitive(" GREEN "),
+        Some(TddPhase::Green)
+    );
     assert_eq!(TddPhase::from_str_case_insensitive("invalid"), None);
 }
 
@@ -32,10 +38,26 @@ fn test_tdd_execution_proof_validations() {
 #[test]
 fn test_critic_kind_and_verdict() {
     let critics = [
-        (CriticKind::DomainAdversarial, "DOMAIN_ADVERSARIAL", "Domain/Adversarial Critic"),
-        (CriticKind::ContractCompliance, "CONTRACT_COMPLIANCE", "Contract Compliance Critic"),
-        (CriticKind::StaticSecurity, "STATIC_SECURITY", "Static Security Critic"),
-        (CriticKind::PlaywrightVisual, "PLAYWRIGHT_VISUAL", "Playwright Visual Critic"),
+        (
+            CriticKind::DomainAdversarial,
+            "DOMAIN_ADVERSARIAL",
+            "Domain/Adversarial Critic",
+        ),
+        (
+            CriticKind::ContractCompliance,
+            "CONTRACT_COMPLIANCE",
+            "Contract Compliance Critic",
+        ),
+        (
+            CriticKind::StaticSecurity,
+            "STATIC_SECURITY",
+            "Static Security Critic",
+        ),
+        (
+            CriticKind::PlaywrightVisual,
+            "PLAYWRIGHT_VISUAL",
+            "Playwright Visual Critic",
+        ),
     ];
     for (critic, label, display) in critics {
         assert_eq!(critic.as_str(), label);

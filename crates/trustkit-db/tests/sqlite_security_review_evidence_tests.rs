@@ -62,8 +62,8 @@ fn test_sqlite_persists_code_review_and_security_review_evidences_without_null()
         executed_command: "trustkit security-review --skip (DEVELOPER_PROMPT_OPT_OUT)".to_string(),
         exit_code: 0,
         duration_ms: 1,
-        sanitized_stdout_tail: "SecurityReviewVerdict::SkippedByDeveloper (DEVELOPER_PROMPT_OPT_OUT)"
-            .to_string(),
+        sanitized_stdout_tail:
+            "SecurityReviewVerdict::SkippedByDeveloper (DEVELOPER_PROMPT_OPT_OUT)".to_string(),
         sanitized_stderr_tail: "".to_string(),
         output_blake3_digest: "b".repeat(64),
         verdict: GateVerdict::Pass,
@@ -87,7 +87,10 @@ fn test_sqlite_persists_code_review_and_security_review_evidences_without_null()
         reason: SecuritySkipReason::DeveloperPromptOptOut,
     };
     assert_eq!(
-        format!("- **Specialized Security Review:** {}", verdict.report_status_line()),
+        format!(
+            "- **Specialized Security Review:** {}",
+            verdict.report_status_line()
+        ),
         "- **Specialized Security Review:** SKIPPED (Opt-out pelo desenvolvedor)"
     );
 }

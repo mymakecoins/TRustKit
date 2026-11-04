@@ -5,8 +5,8 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
 use crate::entities::{
-    CodeReviewEffortLevel, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
-    ReviewSeverity, SemanticReviewFinding,
+    CodeReviewEffortLevel, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict, ReviewSeverity,
+    SemanticReviewFinding,
 };
 use crate::errors::DomainViolation;
 use crate::ports::{CycleEvidenceRepositoryPort, SemanticCodeReviewerPort};

@@ -39,10 +39,15 @@ pub fn execute(
 
     let cb_state = cycle.record_gauntlet_failure(&req.diagnostic_reason);
 
-    repo.update_cycle_status(&cycle.cycle_id, cycle.lifecycle_status, cycle.gauntlet_attempt)?;
+    repo.update_cycle_status(
+        &cycle.cycle_id,
+        cycle.lifecycle_status,
+        cycle.gauntlet_attempt,
+    )?;
 
     let remediation_hint = if cb_state.is_tripped() {
-        "Circuit breaker tripped after 5 consecutive failures. Run 'trustkit doctor' to diagnose.".to_string()
+        "Circuit breaker tripped after 5 consecutive failures. Run 'trustkit doctor' to diagnose."
+            .to_string()
     } else {
         format!("Failure recorded. Attempt {}/5.", cycle.gauntlet_attempt)
     };

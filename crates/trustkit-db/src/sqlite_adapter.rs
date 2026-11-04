@@ -40,7 +40,9 @@ impl SqliteWalRepositoryAdapter {
         })
     }
 
-    pub(crate) fn lock_conn(&self) -> Result<std::sync::MutexGuard<'_, Connection>, DomainViolation> {
+    pub(crate) fn lock_conn(
+        &self,
+    ) -> Result<std::sync::MutexGuard<'_, Connection>, DomainViolation> {
         self.conn
             .lock()
             .map_err(|_| DomainViolation::InfrastructureBoundaryFault {
@@ -54,7 +56,11 @@ impl SqliteWalRepositoryAdapter {
         task_ops::list_atomic_tasks(&conn, cycle_id)
     }
 
-    pub fn find_atomic_task(&self, cycle_id: &str, task_id: &str) -> Result<Option<AtomicTask>, DomainViolation> {
+    pub fn find_atomic_task(
+        &self,
+        cycle_id: &str,
+        task_id: &str,
+    ) -> Result<Option<AtomicTask>, DomainViolation> {
         let conn = self.lock_conn()?;
         task_ops::find_atomic_task(&conn, cycle_id, task_id)
     }

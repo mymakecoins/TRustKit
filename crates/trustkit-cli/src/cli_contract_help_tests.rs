@@ -20,20 +20,37 @@ fn is_emoji(ch: char) -> bool {
 
 fn assert_clean_help(text: &str) {
     for ch in text.chars() {
-        assert!(!is_emoji(ch), "Forbidden emoji '{ch}' found in help output: {text}");
+        assert!(
+            !is_emoji(ch),
+            "Forbidden emoji '{ch}' found in help output: {text}"
+        );
     }
     let lower = text.to_lowercase();
-    assert!(!lower.contains("co-authored-by: claude"), "AI trailer found in help");
-    assert!(!lower.contains("co-authored-by: anthropic"), "AI trailer found in help");
-    assert!(!lower.contains("claude-session"), "AI trailer found in help");
-    assert!(!lower.contains("generated with"), "AI trailer found in help");
+    assert!(
+        !lower.contains("co-authored-by: claude"),
+        "AI trailer found in help"
+    );
+    assert!(
+        !lower.contains("co-authored-by: anthropic"),
+        "AI trailer found in help"
+    );
+    assert!(
+        !lower.contains("claude-session"),
+        "AI trailer found in help"
+    );
+    assert!(
+        !lower.contains("generated with"),
+        "AI trailer found in help"
+    );
 }
 
 #[test]
 fn test_all_subcommands_help_zero_emojis() {
     let mut root_cmd = Cli::command();
     let mut help_buf = Vec::new();
-    root_cmd.write_help(&mut help_buf).expect("root help should render");
+    root_cmd
+        .write_help(&mut help_buf)
+        .expect("root help should render");
     let root_help = String::from_utf8(help_buf).expect("utf-8 help");
     assert_clean_help(&root_help);
 
@@ -71,7 +88,7 @@ fn test_all_subcommands_help_zero_emojis() {
 #[test]
 fn test_agent_mode_env_override() {
     let previous = std::env::var("TRUSTKIT_AGENT_MODE").ok();
-    
+
     // SAFETY: Single-threaded test setting environment variable for verification.
     unsafe {
         std::env::set_var("TRUSTKIT_AGENT_MODE", "1");
