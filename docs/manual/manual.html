@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRustKit — Manual do Usuario</title>
+  <style>
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "JetBrains Mono", "SF Mono", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      
+      --bg-primary: #0f141c;
+      --bg-secondary: #161f2e;
+      --bg-tertiary: #1e293b;
+      --bg-card: #151d2a;
+      --border-color: #26354a;
+      --border-light: #334460;
+      
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent-primary: #38bdf8;
+      --accent-hover: #0284c7;
+      --accent-subtle: rgba(56, 189, 248, 0.12);
+      
+      --badge-pass-bg: #064e3b;
+      --badge-pass-text: #34d399;
+      --badge-warn-bg: #78350f;
+      --badge-warn-text: #fbbf24;
+      --badge-fail-bg: #7f1d1d;
+      --badge-fail-text: #f87171;
+      --badge-info-bg: #1e3a8a;
+      --badge-info-text: #60a5fa;
+
+      --sidebar-width: 320px;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --bg-tertiary: #e2e8f0;
+      --bg-card: #ffffff;
+      --border-color: #cbd5e1;
+      --border-light: #94a3b8;
+      
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      
+      --accent-primary: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-subtle: rgba(2, 132, 199, 0.1);
+      
+      --badge-pass-bg: #d1fae5;
+      --badge-pass-text: #065f46;
+      --badge-warn-bg: #fef3c7;
+      --badge-warn-text: #92400e;
+      --badge-fail-bg: #fee2e2;
+      --badge-fail-text: #991b1b;
+      --badge-info-bg: #dbeafe;
+      --badge-info-text: #1e40af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Barra Lateral Fixada (Sidebar) */
+    #sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      font-size: 0.78rem;
+      background-color: var(--accent-subtle);
+      color: var(--accent-primary);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .brand-sub {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .search-box-container {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 0.94rem;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      outline: none;
+      font-family: var(--font-sans);
+      transition: border-color 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+    }
+
+    .sidebar-nav ul {
+      list-style: none;
+    }
+
+    .nav-group-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 18px 8px 8px 8px;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.96rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--accent-subtle);
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+    }
+
+    .btn-toggle-theme {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-toggle-theme:hover {
+      background-color: var(--border-light);
+    }
+
+    /* Conteudo Principal */
+    #main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 45px 65px;
+      max-width: 1240px;
+    }
+
+    .mobile-nav-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--accent-primary);
+      color: #ffffff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 30px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    /* Elementos de Documentacao */
+    .hero-banner {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 34px;
+      margin-bottom: 40px;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.22;
+      margin-bottom: 14px;
+    }
+
+    .hero-tagline {
+      font-size: 1.18rem;
+      color: var(--accent-primary);
+      font-family: var(--font-mono);
+      margin-bottom: 18px;
+    }
+
+    .hero-desc {
+      font-size: 1.12rem;
+      color: var(--text-secondary);
+      max-width: 950px;
+      line-height: 1.7;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    .meta-badge {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      font-size: 0.86rem;
+    }
+
+    h2 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 52px;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h3 {
+      font-size: 1.42rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 32px;
+      margin-bottom: 14px;
+    }
+
+    h4 {
+      font-size: 1.18rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 1.08rem;
+      line-height: 1.68;
+    }
+
+    ul, ol {
+      margin-left: 28px;
+      margin-bottom: 18px;
+      color: var(--text-secondary);
+      font-size: 1.08rem;
+      line-height: 1.68;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+
+    /* Cards e Callouts */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 20px;
+      margin: 24px 0;
+    }
+
+    .info-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .info-card:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-2px);
+    }
+
+    .info-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .info-card-title {
+      font-size: 1.14rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .callout {
+      border-left: 4px solid var(--accent-primary);
+      background-color: var(--accent-subtle);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      font-size: 1.02rem;
+      line-height: 1.65;
+    }
+
+    .callout.alert {
+      border-left-color: var(--badge-warn-text);
+      background-color: rgba(251, 191, 36, 0.08);
+    }
+
+    .callout.danger {
+      border-left-color: var(--badge-fail-text);
+      background-color: rgba(248, 113, 113, 0.08);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+      font-size: 1.08rem;
+    }
+
+    /* Blocos de Codigo e Terminal */
+    .code-container {
+      position: relative;
+      margin: 18px 0;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background-color: var(--bg-tertiary);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .btn-copy {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy:hover {
+      background-color: var(--accent-primary);
+      color: #ffffff;
+      border-color: var(--accent-primary);
+    }
+
+    pre {
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.96rem;
+      color: #e2e8f0;
+      line-height: 1.55;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.92em;
+      background-color: var(--bg-tertiary);
+      padding: 3px 7px;
+      border-radius: 4px;
+      color: var(--accent-primary);
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Tabelas */
+    .table-container {
+      overflow-x: auto;
+      margin: 22px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: var(--bg-secondary);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.98rem;
+    }
+
+    th {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 1rem;
+    }
+
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Badges Status */
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .badge-pass { background-color: var(--badge-pass-bg); color: var(--badge-pass-text); }
+    .badge-warn { background-color: var(--badge-warn-bg); color: var(--badge-warn-text); }
+    .badge-fail { background-color: var(--badge-fail-bg); color: var(--badge-fail-text); }
+    .badge-info { background-color: var(--badge-info-bg); color: var(--badge-info-text); }
+
+    /* Accordion FAQ */
+    details {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    summary {
+      padding: 16px 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+      background-color: var(--bg-card);
+      outline: none;
+      font-size: 1.08rem;
+      transition: background-color 0.15s ease;
+    }
+
+    summary:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    details[open] summary {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .faq-content {
+      padding: 18px 22px;
+      font-size: 1.04rem;
+      line-height: 1.68;
+      color: var(--text-secondary);
+    }
+
+    /* Responsividade */
+    @media (max-width: 900px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+      #sidebar.open {
+        transform: translateX(0);
+      }
+      #main-content {
+        margin-left: 0;
+        padding: 24px 20px;
+      }
+      .mobile-nav-toggle {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Lateral de Navegacao (Sidebar) -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-title">
+        TRustKit
+        <span class="brand-badge">v1.0.0</span>
+      </div>
+      <div class="brand-sub">Manual do Usuario &middot; SDD Rust</div>
+    </div>
+
+    <div class="search-box-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="Filtrar topicos e comandos...">
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul id="navList">
+        <li class="nav-group-title">Introducao</li>
+        <li><a href="#visao-geral" class="nav-link">1. Visao Geral</a></li>
+        <li><a href="#principios" class="nav-link">1.4 Principios de Governanca</a></li>
+
+        <li class="nav-group-title">Comecando</li>
+        <li><a href="#primeiros-passos" class="nav-link">2. Primeiros Passos</a></li>
+        <li><a href="#modos-operacao" class="nav-link">2.3 Modos Humano e Agente</a></li>
+        <li><a href="#status-sessao" class="nav-link">2.4 Status do Sistema</a></li>
+        <li><a href="#adocao-projetos" class="nav-link">2.5 Adoção em Projetos</a></li>
+
+        <li class="nav-group-title">Os 7 Gates do SDD</li>
+        <li><a href="#gate-0" class="nav-link">Gate 0: Inicializacao & Contexto</a></li>
+        <li><a href="#gate-1-2" class="nav-link">Gates 1 & 2: Spec V2 & Selo</a></li>
+        <li><a href="#gate-3" class="nav-link">Gate 3: Ondas DAG de Tarefas</a></li>
+        <li><a href="#gate-4" class="nav-link">Gate 4: Worktrees & TDD Estrito</a></li>
+        <li><a href="#gate-5" class="nav-link">Gate 5: Gauntlet Loop V2</a></li>
+        <li><a href="#gate-6" class="nav-link">Gate 6: Certificacao & Merge</a></li>
+
+        <li class="nav-group-title">Recursos Avancados</li>
+        <li><a href="#memoria-perene" class="nav-link">Memoria Perene (Wiki FTS5)</a></li>
+        <li><a href="#grafo-estrutural" class="nav-link">Grafo Estrutural AST</a></li>
+        <li><a href="#fatiamento-contexto" class="nav-link">Fatiador de Contexto</a></li>
+        <li><a href="#fast-hooks" class="nav-link">Fast Hooks de Protecao</a></li>
+        <li><a href="#servidor-mcp" class="nav-link">Servidor MCP Nativo</a></li>
+        <li><a href="#auditoria-security" class="nav-link">Auditoria Pre-Release</a></li>
+
+        <li class="nav-group-title">Suporte & Referencia</li>
+        <li><a href="#faq" class="nav-link">Perguntas Frequentes (FAQ)</a></li>
+        <li><a href="#troubleshooting" class="nav-link">Solucao de Problemas</a></li>
+        <li><a href="#glossario" class="nav-link">Glossario de Negocio</a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>Tema Visual:</span>
+      <button id="themeToggleBtn" class="btn-toggle-theme">Alternar Claro/Escuro</button>
+    </div>
+  </aside>
+
+  <!-- Botao de alternancia em dispositivos moveis -->
+  <button id="mobileNavToggle" class="mobile-nav-toggle">Menu</button>
+
+  <!-- Area de Conteudo Principal -->
+  <main id="main-content">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <div class="hero-tagline">"True Rust performance for trusted, spec-driven agentic execution."</div>
+      <h1 class="hero-title">Manual Oficial de Uso do TRustKit</h1>
+      <p class="hero-desc">
+        Guia operacional completo para desenvolvedores, arquitetos, lideres tecnicos e operadores agênticos.
+        Aprenda a orquestrar os 7 Gates do Spec-Driven Development (SDD), isolamento em Git Worktrees,
+        auditoria sintatica de Camada 0 e certificacao com Event Sourcing no SQLite WAL.
+      </p>
+      <div class="meta-bar">
+        <span class="meta-badge">Versao: 1.0.0</span>
+        <span class="meta-badge">Binario: trustkit</span>
+        <span class="meta-badge">Linguagem: Rust Nativo (6 Crates)</span>
+        <span class="meta-badge">Latencia AST: &lt; 3ms</span>
+        <span class="meta-badge">Invariantes: 16 Regras</span>
+      </div>
+    </header>
+
+    <!-- 1. Visao Geral & Boas-Vindas -->
+    <section id="visao-geral">
+      <h2>1. Visao Geral & Boas-Vindas</h2>
+      <p>
+        O <strong>TRustKit</strong> e uma plataforma deterministica voltada para fluxos de desenvolvimento orientados a especificacoes (Spec-Driven Development — SDD).
+        Construido em Rust de alto rendimento, ele substitui rotinas interpretadas lentas por validacoes compiladas ultrarrapidas que executam em 1 a 3 milissegundos.
+      </p>
+
+      <div class="card-grid">
+        <div class="info-card">
+          <div class="info-card-header">
+            <span class="info-card-title">Velocidade Instantanea</span>
+            <span class="badge badge-pass">&lt; 3ms</span>
+          </div>
+          <p>Validacao sintatica em microssegundos com parsers AST nativos do Tree-Sitter, sem cold-starts de runtime.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span class="info-card-title">Zero Alucinacao</span>
+            <span class="badge badge-info">Deterministico</span>
+          </div>
+          <p>Verificacao mecanica de fechamento de matrizes, integridade de testes e regras sintaticas sem depender de probabilidade de LLMs.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span class="info-card-title">Paralelismo Seguro</span>
+            <span class="badge badge-pass">Git Worktrees</span>
+          </div>
+          <p>Execucao simultanea de tarefas em arvores de trabalho isoladas via Copy-on-Write (reflink), prevenindo corrupcao de indice.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span class="info-card-title">Auditoria Imutavel</span>
+            <span class="badge badge-info">SQLite WAL</span>
+          </div>
+          <p>Persistencia transacional imutavel (.trustkit/state.db) com selos criptograficos BLAKE3 de cada transicao de estado.</p>
+        </div>
+      </div>
+
+      <h3>1.3 O Paradigma Hybrid Rust Core + Thin Skill</h3>
+      <p>
+        O TRustKit opera sob uma composicao equilibrada:
+      </p>
+      <ul>
+        <li><strong>Thin Skill Declarativa (Prompt):</strong> Guia instrucional enxuta em Markdown que reside na memoria do agente/desenvolvedor para raciocinio de negocio sem sobrecarregar a janela de tokens.</li>
+        <li><strong>Native Rust Core (Binario trustkit):</strong> Motor compilado responsavel por 100% das mutacoes fisicas de arquivos, git, verificacoes de TDD e hashes criptograficos.</li>
+      </ul>
+
+      <div id="principios" class="callout alert">
+        <div class="callout-title">Principios Constitucionais de Governanca</div>
+        <p>
+          1. <strong>Sem Codigo Sem Spec Congelada:</strong> Nenhum commit de tarefa e autorizado sem selo BLAKE3 na especificacao.<br>
+          2. <strong>Evidencia sobre Assercao:</strong> Testes sao homologados por comprovacao de saida de terminal e codigos POSIX reais.<br>
+          3. <strong>Anti-Cheat de Testes:</strong> Expressamente proibido remover, enfraquecer assercoes ou pular testes (.skip).<br>
+          4. <strong>Proibicao Absoluta de Emojis:</strong> Qualquer emoji em codigo, spec ou commit provoca reprovacao imediata.<br>
+          5. <strong>Pull Request Sob Demanda:</strong> PRs sao abertos exclusivamente quando o desenvolvedor humano solicita.<br>
+          6. <strong>Sem Trailers de IA:</strong> Vetado o uso de 'Co-Authored-By: Claude' ou rodapes gerados automaticamente.
+        </p>
+      </div>
+    </section>
+
+    <!-- 2. Primeiros Passos -->
+    <section id="primeiros-passos">
+      <h2>2. Primeiros Passos</h2>
+      <p>Configure e verifique o funcionamento do binario <code>trustkit</code> antes de iniciar suas demandas.</p>
+
+      <h3>2.1 Compilacao e Instalacao</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Terminal (Bash)</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <pre><code># Compilar o workspace em modo release
+cargo build --workspace --release
+
+# Opcional: criar atalho global no sistema
+sudo ln -sf "$(pwd)/target/release/trustkit" /usr/local/bin/trustkit
+
+# Checar versao instalada
+trustkit --version</code></pre>
+      </div>
+
+      <h3 id="modos-operacao">2.3 Modos de Operacao: Humano vs Agente</h3>
+      <p>O TRustKit suporta nativamente dois formatos de saida ergonomicos:</p>
+      <ul>
+        <li><strong>Modo Humano (Padrao):</strong> Apresenta tabelas limpas, texto legivel e prefixos padronizados como <code>[PASS]</code>, <code>[FAIL]</code>, <code>[GATE-0]</code> a <code>[GATE-6]</code>.</li>
+        <li><strong>Modo Agente (Flag <code>--json</code> ou <code>TRUSTKIT_AGENT_MODE=1</code>):</strong> Retorna dados em JSON minificado, sem formatacao ANSI e <strong>sem valores nulos (null)</strong>, otimizando o consumo de tokens.</li>
+      </ul>
+
+      <h3 id="status-sessao">2.4 Consultando o Status da Sessao</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Terminal (Bash)</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <pre><code>trustkit status</code></pre>
+      </div>
+      <div class="code-container">
+        <div class="code-header"><span>Saida Esperada (Modo Humano)</span></div>
+        <pre><code>[STATUS] Ciclo Atual: issue-45-202611041030
+[STATUS] Gate Atual: GATE_1_SPECIFICATION
+[STATUS] Estado da Spec: DRAFT_UNVERIFIED
+[STATUS] Invariantes: 16 de 16 Ativas
+[STATUS] Banco SQLite WAL: .trustkit/state.db (Ok)</code></pre>
+      </div>
+
+      <div id="adocao-projetos">
+        <h3>2.5 Guia de Adocao: Novo Projeto vs Projeto em Andamento</h3>
+        <p>
+          O TRustKit e agnostico quanto a maturidade do repositorio: ele pode tanto fundar a governanca de um projeto do absoluto zero (Greenfield) quanto assumir o controle deterministico de uma aplicacao existente em producao (Brownfield).
+        </p>
+
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="info-card-header">
+              <span class="info-card-title">Cenario A: Projeto Novo</span>
+              <span class="badge badge-pass">Greenfield</span>
+            </div>
+            <p>Repositorio vazio, sem codigo pre-existente. O TRustKit estabelece o commit raiz, o banco transacional e a primeira especificacao selada.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-header">
+              <span class="info-card-title">Cenario B: Projeto Existente</span>
+              <span class="badge badge-info">Brownfield</span>
+            </div>
+            <p>Repositorio com codigo e historico ativos. O TRustKit preserva modificacoes pendentes, mapeia o grafo estrutural via AST e cataloga God Nodes.</p>
+          </div>
+        </div>
+
+        <h4>Cenario A: Como Configurar o TRustKit em um Projeto Novo (Sem Codigo)</h4>
+        <p>Siga o passo a passo para criar e blindar um repositorio do zero:</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 1 e 2: Criar pasta, inicializar Git e commit raiz</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Criar diretorio e acessar
+mkdir meu-novo-sistema && cd meu-novo-sistema
+
+# 2. Inicializar o Git com branch develop e commit base inicial
+# (O GitInspector do TRustKit exige a existencia de um commit HEAD valido)
+git init -b develop
+git commit --allow-empty -m "chore: initial repository bootstrap"</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 3: Criar o .gitignore do ecossistema TRustKit</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># TRustKit: arquivos de sessao local, worktrees efemeras e relatorios
+.trustkit/state.db*
+.trustkit/worktrees/
+.trustkit/audits/
+
+# ATENCAO: A pasta da base wiki DEVE ser versionada no Git!
+!.trustkit/wiki/</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 4: Criar configuracao de governanca (trustkit.toml)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>[governance.gauntlet]
+# Politica de revisao de seguranca do diff: "prompt", "always" ou "disabled"
+security_review_mode = "prompt"
+min_confidence_threshold = 8</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 5: Disparar o primeiro ciclo (Gate 0)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Se vinculado a uma issue do GitHub Projects:
+trustkit init --issue 1
+
+# Ou para ciclo exclusivamente local:
+trustkit init</code></pre>
+        </div>
+
+        <p>
+          Ao executar o <code>init</code>, o TRustKit provisiona a pasta <code>.trustkit/</code>, cria o banco transacional SQLite WAL em <code>.trustkit/state.db</code> com todas as migrations aplicadas e cria a pasta <code>docs/specs/&lt;ciclo&gt;/</code>.
+        </p>
+
+        <h4>Cenario B: Como Implantar o TRustKit em um Projeto em Andamento (Brownfield / Legado)</h4>
+        <p>Para repositorios em producao com codigo existente (Rust, TypeScript, JavaScript, Python, etc.):</p>
+
+        <ol>
+          <li>
+            <strong>Verificar status da arvore Git:</strong> O TRustKit tolera modificacoes locais sem comitar, registrando-as como <code>pre_existing_dirty_files</code> sem disparar <code>git stash</code> destrutivo. Apenas certifique-se de que a branch atual esta checkoutada (evite <em>detached HEAD</em>).
+          </li>
+          <li>
+            <strong>Adicionar as regras no <code>.gitignore</code>:</strong> Adicione <code>.trustkit/state.db*</code> e <code>.trustkit/worktrees/</code> preservando <code>!.trustkit/wiki/</code>.
+          </li>
+        </ol>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 3: Inicializar ciclo na demanda atual</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Inicializa na issue ativa ou importando um PRD existente
+trustkit init --issue 45 --from-prd docs/PRD_TRustKit.md</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 4: Gerar o Grafo Estrutural Imediato do Legado</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Mapeia dependencias e emite .trustkit/wiki/graph/GRAPH_REPORT.md
+trustkit graph build
+
+# Diagnostica a saude do sistema e aponta os maiores God Nodes existentes
+trustkit graph health --top-god-nodes 10</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 5: Ingerir notas de arquitetura na Memoria Perene</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Registrar visao arquitetural do sistema legado
+trustkit memory write --slug "arquitetura-legada" --title "Visao Geral do Legado" --tags "overview,brownfield" --body "Visao dos modulos e servicos..."
+
+# Reconstruir indice SQLite FTS5 BM25
+trustkit memory rebuild</code></pre>
+        </div>
+
+        <p>
+          Com o grafo e a memoria populados, o <strong>fatiador de contexto</strong> (<code>trustkit context slice</code>) e o <strong>gerador de spec</strong> (<code>trustkit spec prompt</code>) conseguem navegar cirurgicamente pelo codigo legado, evitando alucinacoes sobre arquivos existentes.
+        </p>
+      </div>
+    </section>
+
+    <!-- 3. A Jornada dos 7 Gates -->
+    <section id="guia-operacional">
+      <h2>3. Guia Operacional Passo a Passo (Os 7 Gates do SDD)</h2>
+      <p>Conheca o roteiro pratico para construir e entregar uma funcionalidade com qualidade absoluta.</p>
+
+      <!-- Gate 0 -->
+      <div id="gate-0">
+        <h3>Gate 0: Inicializacao do Ciclo e Setup de Contexto</h3>
+        <p>Prepara a arvore de trabalho, valida a conta do GitHub e registra a sessao transacional.</p>
+        
+        <div class="code-container">
+          <div class="code-header">
+            <span>Iniciar ciclo com Issue vinculada</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Inicializa o ciclo vinculado a issue 45
+trustkit init --issue 45
+
+# Ou inicializa importando regras de um documento PRD funcional
+trustkit init --issue 45 --from-prd docs/PRD_TRustKit.md</code></pre>
+        </div>
+
+        <p><strong>Acoes executadas automaticamente pelo comando:</strong></p>
+        <ol>
+          <li>Valida credenciais do GitHub CLI e assegura que a conta corporativa esteja ativa.</li>
+          <li>Inspeciona o Git e protege arquivos modificados pre-existentes contra perda acidental.</li>
+          <li>Cria a pasta isolada de especificacao: <code>docs/specs/issue-45-AAAAMMDDHHMM/</code>.</li>
+          <li>Transiciona o card para 'In progress' no GitHub Projects.</li>
+          <li>Abre a sessao auditavel no SQLite WAL (<code>.trustkit/state.db</code>).</li>
+        </ol>
+      </div>
+
+      <!-- Gate 1 & 2 -->
+      <div id="gate-1-2">
+        <h3>Gates 1 & 2: Especificacao V2, Linter e Selo Criptografico BLAKE3</h3>
+        <p>Garante que todos os requisitos funcionais e fluxos de tela estejam blindados antes de programar.</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 1: Gerar o prompt e esqueleto da Spec</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit spec prompt --idea "Autenticacao MFA via TOTP com codigos de recuperacao" --budget 4000</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 2: Executar Linter Estatico Pre-Lock (&lt; 3ms)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit spec lint</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 3: Congelar a especificacao (Gate 2)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit spec lock</code></pre>
+        </div>
+
+        <div class="callout">
+          <div class="callout-title">Fechamento da Matriz de Rastreabilidade</div>
+          O comando <code>spec lock</code> valida matematicamente que cada Regra de Negocio (RN) possui correspondencia com um Requisito Funcional (RF), uma Tarefa (TASK), um Teste E2E e uma captura de tela (Screenshot). Se houver regras orfas, o congelamento e barrado.
+        </div>
+      </div>
+
+      <!-- Gate 3 -->
+      <div id="gate-3">
+        <h3>Gate 3: Decomposicao Atomica e Planejamento de Ondas (DAG)</h3>
+        <p>Valida os arquivos de tarefa em <code>tasks/TASK-NNN.md</code> e organiza a ordem de execucao sem conflitos.</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Compilar DAG e Planejar Ondas</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit wave plan</code></pre>
+        </div>
+        <p>O planejador analisa dependencias declaradas e assegura que tarefas que modifiquem os mesmos arquivos fiquem em ondas separadas.</p>
+      </div>
+
+      <!-- Gate 4 -->
+      <div id="gate-4">
+        <h3>Gate 4: Execucao em Git Worktrees e TDD Mecanico (RED -> GREEN -> REFACTOR)</h3>
+        <p>Implementa cada tarefa com protecao física de arvore e exigencia de prova de falha previa.</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>1. Despachar onda de trabalho</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit wave run --wave 1</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>2. Comprovar Fase RED (Falha do teste)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit task test TASK-001 --phase red</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>3. Implementar codigo e comprovar Fase GREEN (Sucesso do teste)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit task test TASK-001 --phase green</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>4. Revisao Semantica de Codigo (Refactor) e Conclusao</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Revisao semantica multi-angulo
+trustkit task review TASK-001 --effort medium
+
+# Homologar e comitar a tarefa
+trustkit task complete TASK-001</code></pre>
+        </div>
+      </div>
+
+      <!-- Gate 5 -->
+      <div id="gate-5">
+        <h3>Gate 5: Gauntlet Loop V2 e Revisao de Seguranca</h3>
+        <p>Auditoria profunda dividida em duas camadas deterministas com suporte a revisao de seguranca de aplicacao.</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Camada 0: AST Audit em Microssegundos</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit gauntlet ast-audit</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Camada 1: Gauntlet Swarm, Playwright E2E e Security Review</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Execucao padrao com pergunta interativa de seguranca
+trustkit gauntlet run
+
+# Ou forçando a execucao da revisao de seguranca do diff
+trustkit gauntlet run --security-review
+
+# Ou dispensando explicitamente a revisao de seguranca
+trustkit gauntlet run --skip-security-review</code></pre>
+        </div>
+
+        <div class="callout alert">
+          <div class="callout-title">Disjuntor de Seguranca (Circuit Breaker)</div>
+          Caso a bateria do Gauntlet seja reprovada por 5 vezes consecutivas, o sistema aciona o disjuntor para evitar loops infinitos. Para investigar as causas, utilize <code>trustkit doctor</code>.
+        </div>
+      </div>
+
+      <!-- Gate 6 -->
+      <div id="gate-6">
+        <h3>Gate 6: Certificacao Oficial, Merge e Pull Request</h3>
+        <p>Finaliza o ciclo gerando o dossie de evidencias e realizando a integracao controlada.</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>1. Certificar e gerar gauntlet-report.md</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit done</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>2. Realizar o merge deterministico para branch alvo</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit merge --target develop</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>3. Abrir Pull Request sob demanda humana</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit pr --target develop</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Recursos Avancados -->
+    <section id="recursos-avancados">
+      <h2>4. Recursos Avancados e Modulos Especializados</h2>
+
+      <div id="memoria-perene">
+        <h3>4.1 Memoria Perene do Projeto (<code>trustkit memory</code>)</h3>
+        <p>Gerencia a base de documentacao viva estruturada em Markdown sob <code>.trustkit/wiki/</code>, com indexacao FTS5 BM25 e suporte a <code>[[wikilinks]]</code>.</p>
+        
+        <div class="code-container">
+          <div class="code-header"><span>Comandos de Memoria</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+          <pre><code># Buscar documentos por termo semantico
+trustkit memory search --query "diretrizes de testes" --limit 5
+
+# Ler uma nota de documentacao
+trustkit memory read --slug "architecture-decision-001"
+
+# Registrar nova nota na memoria perene
+trustkit memory write --slug "padroes-auth" --title "Padroes Auth" --tags "auth,jwt" --body "Texto..."
+
+# Listar todas as notas cadastradas
+trustkit memory list
+
+# Reconstruir o indice FTS5 a partir dos arquivos
+trustkit memory rebuild</code></pre>
+        </div>
+      </div>
+
+      <div id="grafo-estrutural">
+        <h3>4.2 Inteligencia de Grafo Estrutural (<code>trustkit graph</code>)</h3>
+        <p>Mapeia dependencias sintaticas de codigo (funcoes, imports, structs) e notas wiki com deteccao automatica de componentes hiperacoplados (God Nodes).</p>
+        
+        <div class="code-container">
+          <div class="code-header"><span>Comandos de Grafo</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+          <pre><code># Construir ou atualizar o grafo estrutural (emite GRAPH_REPORT.md)
+trustkit graph build
+
+# Diagnosticar a saude do grafo e componentes criticos
+trustkit graph health --top-god-nodes 5
+
+# Encontrar menor caminho de chamadas entre dois simbolos via BFS
+trustkit graph path --source "crates/trustkit-core::SddCycle" --target "crates/trustkit-db::SqliteWalRepositoryAdapter"
+
+# Explicar relacoes e dependencias de um componente
+trustkit graph explain --node "crates/trustkit-core/src/entities.rs::SddCycle"</code></pre>
+        </div>
+      </div>
+
+      <div id="fatiamento-contexto">
+        <h3>4.3 Fatiamento Cirurgico de Contexto (<code>trustkit context</code>)</h3>
+        <p>Extrai apenas as assinaturas, interfaces e tipos necessarios para alimentar prompts de IA sem exceder janelas de contexto.</p>
+        
+        <div class="code-container">
+          <div class="code-header"><span>Exemplos de Fatiamento</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+          <pre><code># Fatiamento classico por arquivo com orcamento de tokens
+trustkit context slice --file crates/trustkit-core/src/lib.rs --budget 500
+
+# Fatiamento multi-hop guiado pelo grafo estrutural (BFS)
+trustkit context slice --file crates/trustkit-core/src/entities.rs --hops 2 --strategy bfs --budget 800</code></pre>
+        </div>
+      </div>
+
+      <div id="fast-hooks">
+        <h3>4.4 Protecao Proativa com Fast Hooks (<code>trustkit hook</code>)</h3>
+        <p>Interceptador de chamadas shell que atua em menos de 3 milissegundos para barrar acoes proibidas.</p>
+        
+        <div class="code-container">
+          <div class="code-header"><span>Execucao de Hook</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+          <pre><code>trustkit hook pre-tool --command "git add ."</code></pre>
+        </div>
+        <p>Comandos destrutivos como <code>git stash</code>, <code>git reset --hard</code> ou commits contendo emojis sao interceptados antes da execucao.</p>
+      </div>
+
+      <div id="servidor-mcp">
+        <h3>4.5 Servidor Nativo MCP (<code>trustkit mcp</code>)</h3>
+        <p>Disponibiliza ferramentas deterministas via Model Context Protocol para clientes compativeis (Claude Code, Cursor, Antigravity).</p>
+        
+        <div class="code-container">
+          <div class="code-header"><span>Inicializar Servidor MCP</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+          <pre><code>trustkit mcp</code></pre>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Ferramenta MCP</th>
+                <th>Finalidade Operacional</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>trustkit_cycle_status</code></td>
+                <td>Consulta o status do ciclo ativo, gate atual e invariantes.</td>
+              </tr>
+              <tr>
+                <td><code>trustkit_spec_lint</code></td>
+                <td>Executa linter estatico imediato na especificacao em markdown.</td>
+              </tr>
+              <tr>
+                <td><code>trustkit_context_slice</code></td>
+                <td>Extrai trechos cirurgicos de codigo com limite de tokens.</td>
+              </tr>
+              <tr>
+                <td><code>trustkit_memory_search</code></td>
+                <td>Busca textual na memoria perene via SQLite FTS5 BM25.</td>
+              </tr>
+              <tr>
+                <td><code>trustkit_graph_query</code></td>
+                <td>Consulta nos, arestas e chamadas do grafo estrutural.</td>
+              </tr>
+              <tr>
+                <td><code>trustkit_graph_health</code></td>
+                <td>Avalia a integridade do grafo e acoplamentos excessivos.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="auditoria-security">
+        <h3>4.6 Auditoria Global Pre-Release (<code>trustkit audit security</code>)</h3>
+        <p>Executa a bateria de auditoria de seguranca em 6 fases para homologacao de versoes estaveis.</p>
+        
+        <div class="code-container">
+          <div class="code-header"><span>Auditoria de Seguranca Global</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+          <pre><code>trustkit audit security --profile standard --scope . --output-dir .trustkit/audits/security</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. FAQ -->
+    <section id="faq">
+      <h2>5. Perguntas Frequentes (FAQ)</h2>
+
+      <details>
+        <summary>O que acontece se eu precisar alterar uma regra de negocio apos o Gate 2?</summary>
+        <div class="faq-content">
+          Uma vez selada a especificacao, qualquer mudanca manual em <code>spec.md</code> viola a assinatura BLAKE3 e impede novos commits. Para atualizar requisitos, execute uma revisao formal que atualize os hashes e valide a Matriz de Rastreabilidade.
+        </div>
+      </details>
+
+      <details>
+        <summary>Posso rodar tarefas em paralelo sem risco de conflito no Git?</summary>
+        <div class="faq-content">
+          Sim. O comando <code>wave run</code> cria arvores de trabalho fisicamente isoladas (Git Worktrees efemeras). Cada tarefa possui seu proprio diretorio de trabalho, prevenindo conflitos em <code>.git/index</code> ou dependencias.
+        </div>
+      </details>
+
+      <details>
+        <summary>Por que o Pull Request nao abre automaticamente ao final do Gate 6?</summary>
+        <div class="faq-content">
+          A Invariante #12 proibe a abertura autonoma de Pull Requests. A decisao de submeter o trabalho para integracao em branches estaveis pertence exclusivamente ao desenvolvedor humano responsavel via comando <code>trustkit pr</code>.
+        </div>
+      </details>
+
+      <details>
+        <summary>Como o TRustKit se comporta se nao houver uma issue no GitHub?</summary>
+        <div class="faq-content">
+          O sistema opera no padrao de Caso Especial (<code>UnlinkedLocalCycle</code>). Voce podera executar todos os 7 gates e testes localmente sem qualquer bloqueio ou chamada de rede desnecessaria.
+        </div>
+      </details>
+    </section>
+
+    <!-- 6. Solucao de Problemas -->
+    <section id="troubleshooting">
+      <h2>6. Guia de Solucao de Problemas (Troubleshooting)</h2>
+
+      <h3>6.1 Codigos de Saida Semanticos (POSIX)</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Codigo</th>
+              <th>Identificador</th>
+              <th>Causa</th>
+              <th>Acao Recomendada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-pass">0</span></td>
+              <td><code>CleanPass</code></td>
+              <td>Operacao concluida com aprovacao.</td>
+              <td>Avancar para o proximo gate do ciclo.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fail">1</span></td>
+              <td><code>InfrastructureBoundaryFault</code></td>
+              <td>Erro de I/O em disco, SQLite WAL ou Git.</td>
+              <td>Verificar permissoes de escrita e espaco em disco.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fail">2</span></td>
+              <td><code>SpecOrTraceabilityIncomplete</code></td>
+              <td>Spec incompleta ou lacuna na matriz.</td>
+              <td>Executar <code>trustkit spec lint</code> e cobrir regras orfas.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fail">3</span></td>
+              <td><code>TddLifecycleViolation</code></td>
+              <td>Tentativa de GREEN sem RED comprovado.</td>
+              <td>Executar o teste falhando com <code>--phase red</code> antes.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fail">4</span></td>
+              <td><code>AstIntegrityOrInvariantViolation</code></td>
+              <td>Emojis, trailers IA ou alteracao de testes.</td>
+              <td>Executar <code>trustkit gauntlet ast-audit</code> para diagnostico.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fail">5</span></td>
+              <td><code>CriticSwarmOrPlaywrightFailed</code></td>
+              <td>Falha de compilacao, linter ou E2E.</td>
+              <td>Inspecionar relatorio de testes e corrigir falhas de codigo.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warn">6</span></td>
+              <td><code>CircuitBreakerTripped</code></td>
+              <td>Disjuntor disparado apos 5 falhas seguidas.</td>
+              <td>Executar <code>trustkit doctor</code> e corrigir as causas apontadas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>6.2 Diagnostico com o Assistente Doutor</h3>
+      <p>Caso o ciclo seja interrompido ou ocorram falhas acumuladas, invoque o diagnosticador:</p>
+      <div class="code-container">
+        <div class="code-header"><span>Executar Diagnostico</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
+        <pre><code>trustkit doctor</code></pre>
+      </div>
+    </section>
+
+    <!-- 7. Glossario -->
+    <section id="glossario">
+      <h2>7. Glossario de Termos e Linguagem Ubiqua</h2>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Termo Ubiquo</th>
+              <th>Definicao no TRustKit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>SddCycle</strong></td>
+              <td>Instancia de execucao isolada e auditavel correspondente a entrega de uma funcionalidade.</td>
+            </tr>
+            <tr>
+              <td><strong>GateStage</strong></td>
+              <td>Cada um dos 7 marcos deterministas que governam a progressao do ciclo de desenvolvimento.</td>
+            </tr>
+            <tr>
+              <td><strong>ArtifactSeal</strong></td>
+              <td>Selo criptografico BLAKE3 que assegura a integridade imutavel da especificacao no Gate 2.</td>
+            </tr>
+            <tr>
+              <td><strong>TraceabilityLink</strong></td>
+              <td>Amarra verificavel entre Regra de Negocio, Requisito Funcional, Tarefa, Teste E2E e Screenshot.</td>
+            </tr>
+            <tr>
+              <td><strong>AtomicTask</strong></td>
+              <td>Unidade minima de implementacao restrita a uma camada arquitetural e sujeita ao ciclo TDD.</td>
+            </tr>
+            <tr>
+              <td><strong>ExecutionWave</strong></td>
+              <td>Conjunto de tarefas independentes entre si despachadas simultaneamente em Git Worktrees.</td>
+            </tr>
+            <tr>
+              <td><strong>CircuitBreaker</strong></td>
+              <td>Disjuntor de seguranca acionado apos a 5ª reprovacao consecutiva na esteira do Gauntlet.</td>
+            </tr>
+            <tr>
+              <td><strong>Modo Agente</strong></td>
+              <td>Execucao do CLI via flag <code>--json</code> com saida estritamente livre de campos nulos (null).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Gerenciamento de Tema (Dark / Light)
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    let currentTheme = localStorage.getItem('trustkit-manual-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      localStorage.setItem('trustkit-manual-theme', currentTheme);
+    });
+
+    // Copiar codigo para a area de transferencia
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-container').querySelector('pre code');
+      if (!codeBlock) return;
+      navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = 'Copiado!';
+        setTimeout(() => {
+          btn.innerText = originalText;
+        }, 1800);
+      });
+    }
+
+    // Busca e Filtro em Tempo Real
+    const searchInput = document.getElementById('searchInput');
+    const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+    const navGroups = document.querySelectorAll('.sidebar-nav .nav-group-title');
+
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+
+      navLinks.forEach(link => {
+        const text = link.textContent.toLowerCase();
+        const parentLi = link.parentElement;
+        if (text.includes(term) || term === '') {
+          parentLi.style.display = 'block';
+        } else {
+          parentLi.style.display = 'none';
+        }
+      });
+
+      // Ocultar titulos de grupo vazios
+      navGroups.forEach(group => {
+        let nextEl = group.nextElementSibling;
+        let hasVisible = false;
+        while (nextEl && !nextEl.classList.contains('nav-group-title')) {
+          if (nextEl.style.display !== 'none') {
+            hasVisible = true;
+            break;
+          }
+          nextEl = nextEl.nextElementSibling;
+        }
+        group.style.display = (hasVisible || term === '') ? 'block' : 'none';
+      });
+    });
+
+    // Toggle Mobile Drawer
+    const mobileToggle = document.getElementById('mobileNavToggle');
+    const sidebar = document.getElementById('sidebar');
+
+    mobileToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      mobileToggle.innerText = sidebar.classList.contains('open') ? 'Fechar' : 'Menu';
+    });
+
+    // Fechar drawer ao clicar em um link (mobile)
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 900) {
+          sidebar.classList.remove('open');
+          mobileToggle.innerText = 'Menu';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
