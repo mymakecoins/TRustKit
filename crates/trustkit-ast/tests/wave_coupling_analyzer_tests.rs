@@ -5,9 +5,7 @@
 
 use trustkit_ast::wave_coupling_analyzer::WaveCouplingAnalyzer;
 use trustkit_ast::wave_planner::WaveExecutionPlanner;
-use trustkit_core::entities::{
-    EdgeConfidence, EdgeRelationKind, StructuralEdge, TaskNode,
-};
+use trustkit_core::entities::{EdgeConfidence, EdgeRelationKind, StructuralEdge, TaskNode};
 
 fn make_task(id: &str, layer: &str, deps: &[&str], files: &[&str]) -> TaskNode {
     TaskNode {
@@ -23,8 +21,18 @@ fn make_task(id: &str, layer: &str, deps: &[&str], files: &[&str]) -> TaskNode {
 #[test]
 fn test_wave_planner_serializes_ast_coupled_tasks() {
     let tasks = vec![
-        make_task("TASK-001", "CORE", &[], &["crates/trustkit-core/src/ports.rs"]),
-        make_task("TASK-002", "AST", &[], &["crates/trustkit-ast/src/ast_adapter.rs"]),
+        make_task(
+            "TASK-001",
+            "CORE",
+            &[],
+            &["crates/trustkit-core/src/ports.rs"],
+        ),
+        make_task(
+            "TASK-002",
+            "AST",
+            &[],
+            &["crates/trustkit-ast/src/ast_adapter.rs"],
+        ),
     ];
 
     let edges = vec![StructuralEdge::new(
@@ -54,8 +62,20 @@ fn test_wave_planner_parallel_when_ast_independent() {
 
     // Edges exist, but neither connects alpha to beta
     let edges = vec![
-        StructuralEdge::new("crates/alpha.rs", "crates/gamma.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "crates/alpha.rs"),
-        StructuralEdge::new("crates/beta.rs", "crates/delta.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "crates/beta.rs"),
+        StructuralEdge::new(
+            "crates/alpha.rs",
+            "crates/gamma.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/alpha.rs",
+        ),
+        StructuralEdge::new(
+            "crates/beta.rs",
+            "crates/delta.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/beta.rs",
+        ),
     ];
 
     let planner = WaveExecutionPlanner::with_edges(edges);
@@ -78,9 +98,27 @@ fn test_wave_planner_serializes_god_node_colliding_tasks() {
 
     // god_node.rs imports multiple contracts (high degree), consuming both contract_a and contract_b
     let edges = vec![
-        StructuralEdge::new("crates/god_node.rs", "crates/contract_a.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "crates/god_node.rs"),
-        StructuralEdge::new("crates/god_node.rs", "crates/contract_b.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "crates/god_node.rs"),
-        StructuralEdge::new("crates/god_node.rs", "crates/contract_c.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "crates/god_node.rs"),
+        StructuralEdge::new(
+            "crates/god_node.rs",
+            "crates/contract_a.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/god_node.rs",
+        ),
+        StructuralEdge::new(
+            "crates/god_node.rs",
+            "crates/contract_b.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/god_node.rs",
+        ),
+        StructuralEdge::new(
+            "crates/god_node.rs",
+            "crates/contract_c.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/god_node.rs",
+        ),
     ];
 
     // With god_node_threshold = 3, god_node has total_degree 3 (or out/in degree >= 3)

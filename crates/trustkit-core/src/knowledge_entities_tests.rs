@@ -92,7 +92,11 @@ fn test_knowledge_document_preserves_attributes_without_nulls() {
     let doc = KnowledgeDocument::new(
         "adrs/adr-002-storage-strategy",
         "Estrategia de Armazenamento",
-        vec!["adr".to_string(), "storage".to_string(), "sqlite".to_string()],
+        vec![
+            "adr".to_string(),
+            "storage".to_string(),
+            "sqlite".to_string(),
+        ],
         "Decisao de persistencia usando [[adrs/adr-001-architecture]].",
         "2026-10-29T10:00:00Z",
         "blake3_digest_hex_002",

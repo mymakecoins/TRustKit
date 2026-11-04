@@ -1,6 +1,6 @@
 use super::*;
 use crate::cli_contract::{
-    DoctorArgs, DoneArgs, InitArgs, MergeArgs, PreToolArgs, PrArgs, SpecInitArgs, SpecLockArgs,
+    DoctorArgs, DoneArgs, InitArgs, MergeArgs, PrArgs, PreToolArgs, SpecInitArgs, SpecLockArgs,
     StatusArgs, TaskArgs, TaskSubcommand, TaskTestArgs, TddPhaseArg, WavePlanArgs, WaveRunArgs,
 };
 use tempfile::tempdir;
@@ -156,8 +156,20 @@ fn test_full_concurrent_bootstrap_adapter_graph_assembly() {
     let container = bootstrap.unwrap();
     // Validate all 6 concrete adapters are initialized and accessible
     assert!(container.repo.find_active_cycle().is_ok());
-    assert!(!container.worktree_provider.repo_root().as_os_str().is_empty());
-    assert!(!container.visual_evidence_guard.repo_root().as_os_str().is_empty());
+    assert!(
+        !container
+            .worktree_provider
+            .repo_root()
+            .as_os_str()
+            .is_empty()
+    );
+    assert!(
+        !container
+            .visual_evidence_guard
+            .repo_root()
+            .as_os_str()
+            .is_empty()
+    );
     let _ = container.supervisor;
 }
 

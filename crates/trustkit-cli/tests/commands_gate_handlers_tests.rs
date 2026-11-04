@@ -251,13 +251,10 @@ fn test_task_complete_advances_to_committed() {
         .expect("find")
         .expect("some");
     task.advance_red_phase(&red_proof).expect("advance red");
-    task.advance_green_phase(&green_proof).expect("advance green");
-    repo.update_task_tdd_phase(
-        "cycle-gate-handlers",
-        "TASK-001",
-        &task.tdd_lifecycle_state,
-    )
-    .expect("update");
+    task.advance_green_phase(&green_proof)
+        .expect("advance green");
+    repo.update_task_tdd_phase("cycle-gate-handlers", "TASK-001", &task.tdd_lifecycle_state)
+        .expect("update");
 
     let args = TaskCompleteArgs {
         task_id: "TASK-001".to_string(),
@@ -300,4 +297,3 @@ fn test_gauntlet_run_without_layer0_clean_pass_fails_with_exit_code_5() {
     let output_str = String::from_utf8_lossy(&stderr_output);
     assert!(output_str.contains("CRITIC_SWARM_OR_PLAYWRIGHT_FAILED"));
 }
-

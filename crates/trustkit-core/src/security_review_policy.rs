@@ -25,7 +25,10 @@ impl Default for SecurityReviewPolicyConfig {
 }
 
 impl SecurityReviewPolicyConfig {
-    pub fn new(mode: SecurityReviewMode, min_confidence_threshold: u8) -> Result<Self, DomainViolation> {
+    pub fn new(
+        mode: SecurityReviewMode,
+        min_confidence_threshold: u8,
+    ) -> Result<Self, DomainViolation> {
         if !(8..=10).contains(&min_confidence_threshold) {
             return Err(DomainViolation::AstIntegrityOrInvariantViolation {
                 invariant_id: "RN-002".to_string(),
@@ -34,7 +37,8 @@ impl SecurityReviewPolicyConfig {
                     "min_confidence_threshold {} is out of allowed range 8..=10",
                     min_confidence_threshold
                 ),
-                remediation: "Set min_confidence_threshold between 8 and 10 in trustkit.toml.".to_string(),
+                remediation: "Set min_confidence_threshold between 8 and 10 in trustkit.toml."
+                    .to_string(),
             });
         }
         Ok(Self {
@@ -56,12 +60,10 @@ pub fn parse_security_review_policy(
             continue;
         }
 
-        let clean = trimmed
-            .trim_matches(|c: char| c == ',' || c == '{' || c == '}' || c.is_whitespace());
+        let clean =
+            trimmed.trim_matches(|c: char| c == ',' || c == '{' || c == '}' || c.is_whitespace());
 
-        let kv = clean
-            .split_once('=')
-            .or_else(|| clean.split_once(':'));
+        let kv = clean.split_once('=').or_else(|| clean.split_once(':'));
 
         let Some((raw_key, raw_val)) = kv else {
             continue;

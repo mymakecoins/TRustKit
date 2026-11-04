@@ -61,7 +61,10 @@ pub fn save_atomic_tasks(
     Ok(())
 }
 
-pub fn list_atomic_tasks(conn: &Connection, cycle_id: &str) -> Result<Vec<AtomicTask>, DomainViolation> {
+pub fn list_atomic_tasks(
+    conn: &Connection,
+    cycle_id: &str,
+) -> Result<Vec<AtomicTask>, DomainViolation> {
     let mut stmt = conn
         .prepare(
             "SELECT cycle_id, task_id, title, architectural_layer, wave_index,
@@ -80,12 +83,11 @@ pub fn list_atomic_tasks(conn: &Connection, cycle_id: &str) -> Result<Vec<Atomic
             subsystem: "sqlite_adapter".into(),
             details: format!("Query failed: {e}"),
         })?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(|e| {
-        DomainViolation::InfrastructureBoundaryFault {
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
             details: format!("Row error: {e}"),
-        }
-    })
+        })
 }
 
 pub fn find_atomic_task(
@@ -105,19 +107,24 @@ pub fn find_atomic_task(
             subsystem: "sqlite_adapter".into(),
             details: format!("Prepare failed: {e}"),
         })?;
-    let mut rows = stmt
-        .query(params![cycle_id, task_id])
-        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+    let mut rows = stmt.query(params![cycle_id, task_id]).map_err(|e| {
+        DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
             details: format!("Query failed: {e}"),
-        })?;
-    if let Some(r) = rows.next().map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "sqlite_adapter".into(),
-        details: format!("Row error: {e}"),
-    })? {
-        let task = map_row_to_atomic_task(r).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+        }
+    })?;
+    if let Some(r) = rows
+        .next()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
-            details: format!("Map atomic task error: {e}"),
+            details: format!("Row error: {e}"),
+        })?
+    {
+        let task = map_row_to_atomic_task(r).map_err(|e| {
+            DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "sqlite_adapter".into(),
+                details: format!("Map atomic task error: {e}"),
+            }
         })?;
         Ok(Some(task))
     } else {
@@ -178,9 +185,10 @@ pub fn update_task_worktree(
 ) -> Result<(), DomainViolation> {
     let (alloc_str, commit_sha) = match allocation {
         WorktreeAllocation::NotProvisioned => ("NOT_PROVISIONED".to_string(), None),
-        WorktreeAllocation::Provisioned { worktree_path, branch_name } => {
-            (format!("PROVISIONED:{worktree_path}:{branch_name}"), None)
-        }
+        WorktreeAllocation::Provisioned {
+            worktree_path,
+            branch_name,
+        } => (format!("PROVISIONED:{worktree_path}:{branch_name}"), None),
         WorktreeAllocation::MergedAndPruned { commit_sha } => {
             (format!("MERGED:{commit_sha}"), Some(commit_sha.as_str()))
         }
@@ -199,7 +207,8 @@ pub fn update_task_worktree(
              WHERE cycle_id = ?2 AND task_id = ?3",
             params![alloc_str, cycle_id, task_id],
         ),
-    }.map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+    }
+    .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
         subsystem: "sqlite_adapter".into(),
         details: format!("Update task worktree failed: {e}"),
     })?;

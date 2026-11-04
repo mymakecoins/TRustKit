@@ -73,18 +73,24 @@ pub fn find_active_cycle(conn: &Connection) -> Result<ActiveCycleLookup, DomainV
                 spec_lock_state, spec_blake3_digest, work_branch, base_commit_sha, pre_existing_dirty_json, created_at, updated_at
          FROM sdd_cycles WHERE lifecycle_status IN ('ACTIVE', 'CERTIFIED', 'MERGED') ORDER BY created_at DESC LIMIT 1"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault { subsystem: "sqlite_adapter".into(), details: format!("Prepare failed: {e}") })?;
-    let mut rows = stmt.query([]).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "sqlite_adapter".into(),
-        details: format!("Query failed: {e}"),
-    })?;
-    if let Some(r) = rows.next().map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "sqlite_adapter".into(),
-        details: format!("Row fetch failed: {e}"),
-    })? {
-        let cycle = map_row_to_cycle(r).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+    let mut rows = stmt
+        .query([])
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
-            details: format!("Map cycle error: {e}"),
+            details: format!("Query failed: {e}"),
         })?;
+    if let Some(r) = rows
+        .next()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "sqlite_adapter".into(),
+            details: format!("Row fetch failed: {e}"),
+        })?
+    {
+        let cycle =
+            map_row_to_cycle(r).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "sqlite_adapter".into(),
+                details: format!("Map cycle error: {e}"),
+            })?;
         Ok(ActiveCycleLookup::Found(Box::new(cycle)))
     } else {
         Ok(ActiveCycleLookup::NoActiveCycle)
@@ -98,18 +104,24 @@ pub fn find_latest_cycle(conn: &Connection) -> Result<Option<SddCycle>, DomainVi
                 spec_lock_state, spec_blake3_digest, work_branch, base_commit_sha, pre_existing_dirty_json, created_at, updated_at
          FROM sdd_cycles ORDER BY created_at DESC LIMIT 1"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault { subsystem: "sqlite_adapter".into(), details: format!("Prepare failed: {e}") })?;
-    let mut rows = stmt.query([]).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "sqlite_adapter".into(),
-        details: format!("Query failed: {e}"),
-    })?;
-    if let Some(r) = rows.next().map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "sqlite_adapter".into(),
-        details: format!("Row fetch failed: {e}"),
-    })? {
-        let cycle = map_row_to_cycle(r).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+    let mut rows = stmt
+        .query([])
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "sqlite_adapter".into(),
-            details: format!("Map cycle error: {e}"),
+            details: format!("Query failed: {e}"),
         })?;
+    if let Some(r) = rows
+        .next()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "sqlite_adapter".into(),
+            details: format!("Row fetch failed: {e}"),
+        })?
+    {
+        let cycle =
+            map_row_to_cycle(r).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "sqlite_adapter".into(),
+                details: format!("Map cycle error: {e}"),
+            })?;
         Ok(Some(cycle))
     } else {
         Ok(None)

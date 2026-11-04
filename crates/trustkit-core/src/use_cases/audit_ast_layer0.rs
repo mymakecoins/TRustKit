@@ -4,9 +4,7 @@
 // Constitutional Principle IV: Zero Panic.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
-use crate::entities::{
-    AstAuditVerdict, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
-};
+use crate::entities::{AstAuditVerdict, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict};
 use crate::errors::DomainViolation;
 use crate::ports::{AstAuditorPort, CycleEvidenceRepositoryPort};
 
@@ -43,7 +41,10 @@ pub fn execute(
     let sanitized_stdout = if verdict.is_pass() {
         "AstAuditVerdict::CleanPass".to_string()
     } else {
-        format!("AstAuditVerdict::Rejected ({} violations)", total_violations)
+        format!(
+            "AstAuditVerdict::Rejected ({} violations)",
+            total_violations
+        )
     };
 
     let evidence = ExecutionEvidence {

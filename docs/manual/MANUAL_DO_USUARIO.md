@@ -649,6 +649,12 @@ trustkit hook pre-tool --command "git add ."
 * Pushes diretos para branches protegidas (`develop`, `staging`, `main`)
 * Commits que contenham emojis ou referencias como `Co-Authored-By: Claude`
 
+#### Integracao com Agent Harness (Nivel de Maturidade L4 - 100% no harness-score)
+O TRustKit opera com o nivel maximo de maturidade agêntica (**L4 · Self-correcting**), conectando:
+* **Gate Hook (`PreToolUse`):** `skills/trustkit-sdd/scripts/trustkit-pre-tool.sh` amarrado em `.claude/settings.json`, interceptando comandos de terminal antes da execucao.
+* **Feedback Hook (`PostToolUse`):** `skills/trustkit-sdd/scripts/trustkit-post-tool.sh` validando formatacao e integridade apos operacoes de edicao.
+* **Diagrama Interativo:** Consulte a arquitetura completa do loop agêntico em `docs/diagrams/06-trustkit-agent-harness.html`.
+
 ---
 
 ### 4.5 Servidor Nativo MCP (`trustkit mcp`)

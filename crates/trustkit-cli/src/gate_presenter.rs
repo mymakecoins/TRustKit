@@ -129,7 +129,12 @@ impl GatePresenter {
         } else {
             format!(
                 "[{}] Task {} test --phase {} finished with exit code {} in {}ms (evidence: #{})",
-                res.verdict, res.task_id, res.phase, res.exit_code, res.duration_ms, res.evidence_id
+                res.verdict,
+                res.task_id,
+                res.phase,
+                res.exit_code,
+                res.duration_ms,
+                res.evidence_id
             )
         }
     }
@@ -138,7 +143,10 @@ impl GatePresenter {
         if json_mode {
             serde_json::to_string(res).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
-            format!("[{}] Task {} completed -> {}", res.verdict, res.task_id, res.new_state)
+            format!(
+                "[{}] Task {} completed -> {}",
+                res.verdict, res.task_id, res.new_state
+            )
         }
     }
 
@@ -148,7 +156,11 @@ impl GatePresenter {
         } else {
             format!(
                 "[{}] Wave {} executed: {}/{} tasks passed in {}ms",
-                res.verdict, res.wave_index, res.successful_tasks.len(), res.total_tasks, res.duration_ms
+                res.verdict,
+                res.wave_index,
+                res.successful_tasks.len(),
+                res.total_tasks,
+                res.duration_ms
             )
         }
     }
@@ -210,7 +222,12 @@ impl GatePresenter {
         } else {
             format!(
                 "[{}] Pull Request #{} opened for cycle {} -> {}\nURL: {}\nBoard column: {}",
-                res.verdict, res.pr_number, res.cycle_id, res.target_branch, res.pr_url, res.board_column
+                res.verdict,
+                res.pr_number,
+                res.cycle_id,
+                res.target_branch,
+                res.pr_url,
+                res.board_column
             )
         }
     }
@@ -221,7 +238,11 @@ impl GatePresenter {
         } else {
             format!(
                 "[{}] Spec Prompt Generated (~{} tokens)\n\n--- INSTRUCOES CONSTITUCIONAIS ---\n{}\n\n--- CONTEXTO ---\n{}\n\n--- ESQUELETO SPEC.MD ---\n{}",
-                res.verdict, res.token_estimate, res.system_instructions, res.context_summary, res.scaffold_markdown
+                res.verdict,
+                res.token_estimate,
+                res.system_instructions,
+                res.context_summary,
+                res.scaffold_markdown
             )
         }
     }
@@ -253,7 +274,10 @@ impl GatePresenter {
         if json_mode {
             serde_json::to_string(res).unwrap_or_else(|_| "{\"status\":\"FAIL\"}".to_string())
         } else {
-            format!("[PASS] MCP Server {} v{} listening on {}", res.server_name, res.version, res.transport)
+            format!(
+                "[PASS] MCP Server {} v{} listening on {}",
+                res.server_name, res.version, res.transport
+            )
         }
     }
 }

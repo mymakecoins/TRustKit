@@ -43,8 +43,10 @@ fn test_spec_prompt_request_validation_rejects_zero_token_budget() {
 
 #[test]
 fn test_spec_scaffold_template_contains_all_mandatory_sections() {
-    let skeleton =
-        SpecScaffoldTemplate::generate_markdown_skeleton("009-sample-feature", "Minha ideia inovadora");
+    let skeleton = SpecScaffoldTemplate::generate_markdown_skeleton(
+        "009-sample-feature",
+        "Minha ideia inovadora",
+    );
     assert!(skeleton.contains("# Especificacao: 009-sample-feature"));
     assert!(skeleton.contains("## 1. Product Trio"));
     assert!(skeleton.contains("## 2. Diagrama de Fluxo (Mermaid)"));

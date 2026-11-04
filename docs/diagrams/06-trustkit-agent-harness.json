@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TRustKit Agentic Harness & Governance Loop",
+    "subtitle": "L4 Self-Correcting Maturity: Context guides, pre/post hooks, AST sensors, and deterministic native enforcement",
+    "output": "06-trustkit-agent-harness.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "agent-interception",
+        "label": "Interception & Gates",
+        "focus": ["agent_env", "context_layer", "gate_hook"],
+        "note": "Agents guided by scoped rules and intercepted before dangerous tool calls."
+      },
+      {
+        "id": "native-enforcement",
+        "label": "Rust Engine Verification",
+        "focus": ["gate_hook", "rust_core", "ast_sentinel", "sensors_ci"],
+        "note": "Native Rust binary verifying invariants, Tree-Sitter AST, and Clippy linter."
+      },
+      {
+        "id": "feedback-sealing",
+        "label": "Feedback & Cryptographic Audit",
+        "focus": ["rust_core", "state_audit", "feedback_hook", "agent_env"],
+        "note": "Deterministic feedback delivered back to the agent and state sealed with BLAKE3."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "agent_env",
+      "type": "external",
+      "label": "Agent Environment",
+      "sublabel": "Claude / Antigravity",
+      "pos": [40, 220],
+      "size": [130, 60]
+    },
+    {
+      "id": "context_layer",
+      "type": "frontend",
+      "label": "Context & Guides",
+      "sublabel": "AGENTS.md & Rules",
+      "pos": [260, 100],
+      "size": [130, 60]
+    },
+    {
+      "id": "gate_hook",
+      "type": "security",
+      "label": "PreTool Gate Hook",
+      "sublabel": "trustkit-pre-tool.sh",
+      "pos": [260, 220],
+      "size": [130, 60]
+    },
+    {
+      "id": "feedback_hook",
+      "type": "backend",
+      "label": "PostTool Feedback",
+      "sublabel": "trustkit-post-tool.sh",
+      "pos": [260, 340],
+      "size": [130, 60]
+    },
+    {
+      "id": "rust_core",
+      "type": "backend",
+      "label": "trustkit Core",
+      "sublabel": "Deterministic Binary",
+      "pos": [480, 220],
+      "size": [130, 60]
+    },
+    {
+      "id": "ast_sentinel",
+      "type": "security",
+      "label": "AST Tree-Sitter",
+      "sublabel": "Anti-Cheat Audit",
+      "pos": [700, 100],
+      "size": [130, 60]
+    },
+    {
+      "id": "sensors_ci",
+      "type": "cloud",
+      "label": "Sensors & CI",
+      "sublabel": "Clippy & Pre-commit",
+      "pos": [700, 220],
+      "size": [130, 60]
+    },
+    {
+      "id": "state_audit",
+      "type": "database",
+      "label": "SQLite WAL State",
+      "sublabel": "BLAKE3 Cryptographic Seal",
+      "pos": [700, 340],
+      "size": [130, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Harness Interception Layer",
+      "wraps": ["context_layer", "gate_hook", "feedback_hook"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Deterministic Rust Enforcement",
+      "wraps": ["rust_core", "ast_sentinel", "sensors_ci", "state_audit"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "agent-to-context",
+      "from": "agent_env",
+      "to": "context_layer",
+      "fromSide": "top",
+      "toSide": "left",
+      "label": "Reads guidance"
+    },
+    {
+      "id": "agent-to-gate",
+      "from": "agent_env",
+      "to": "gate_hook",
+      "label": "Intercepts tool",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate-to-core",
+      "from": "gate_hook",
+      "to": "rust_core",
+      "label": "Policy check"
+    },
+    {
+      "id": "core-to-ast",
+      "from": "rust_core",
+      "to": "ast_sentinel",
+      "fromSide": "top",
+      "toSide": "left",
+      "label": "AST audit"
+    },
+    {
+      "id": "core-to-sensors",
+      "from": "rust_core",
+      "to": "sensors_ci",
+      "label": "Sensor suite"
+    },
+    {
+      "id": "core-to-state",
+      "from": "rust_core",
+      "to": "state_audit",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "label": "BLAKE3 hash"
+    },
+    {
+      "id": "core-to-feedback",
+      "from": "rust_core",
+      "to": "feedback_hook",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "label": "Post evaluation"
+    },
+    {
+      "id": "feedback-to-agent",
+      "from": "feedback_hook",
+      "to": "agent_env",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "label": "Feedback signal"
+    }
+  ]
+}

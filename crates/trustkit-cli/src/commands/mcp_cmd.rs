@@ -37,12 +37,12 @@ pub fn execute_serve() -> Result<DomainOutcome, DomainViolation> {
     let reader = BufReader::new(stdin.lock());
     let writer = stdout.lock();
 
-    server
-        .run_stdio(reader, writer)
-        .map_err(|err| DomainViolation::InfrastructureBoundaryFault {
+    server.run_stdio(reader, writer).map_err(|err| {
+        DomainViolation::InfrastructureBoundaryFault {
             subsystem: "mcp_server".to_string(),
             details: format!("MCP server runtime error: {err}"),
-        })?;
+        }
+    })?;
 
     Ok(DomainOutcome::Success)
 }

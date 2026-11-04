@@ -20,7 +20,12 @@ impl PullRequestGateway {
     pub fn validate_invariants(details: &PullRequestDetails) -> Result<(), DomainViolation> {
         let combined = format!("{}\n{}", details.title, details.body).to_lowercase();
         let forbidden_keywords = [
-            "closes #", "close #", "fixes #", "fix #", "resolves #", "resolve #",
+            "closes #",
+            "close #",
+            "fixes #",
+            "fix #",
+            "resolves #",
+            "resolve #",
         ];
 
         for kw in &forbidden_keywords {
@@ -39,8 +44,14 @@ impl PullRequestGateway {
             return Err(DomainViolation::AstIntegrityOrInvariantViolation {
                 invariant_id: "RN-012".to_string(),
                 intercepted_command: "gh pr create".to_string(),
-                reason: format!("Pull Request must explicitly reference 'Ref #{}' (RN-012).", details.issue_number),
-                remediation: format!("Include 'Ref #{}' in PR body or description.", details.issue_number),
+                reason: format!(
+                    "Pull Request must explicitly reference 'Ref #{}' (RN-012).",
+                    details.issue_number
+                ),
+                remediation: format!(
+                    "Include 'Ref #{}' in PR body or description.",
+                    details.issue_number
+                ),
             });
         }
 
@@ -56,7 +67,10 @@ impl PullRequestGateway {
         // Verify account identity per RN-014
         let expected_identity = std::env::var("TRUSTKIT_GITHUB_USER").unwrap_or_default();
         match GitHubIdentityGuard::verify(&expected_identity)? {
-            IdentityVerification::Rejected { detected_handle, expected_handle } => {
+            IdentityVerification::Rejected {
+                detected_handle,
+                expected_handle,
+            } => {
                 return Err(DomainViolation::AstIntegrityOrInvariantViolation {
                     invariant_id: "RN-014".to_string(),
                     intercepted_command: "gh pr create".to_string(),
@@ -64,7 +78,10 @@ impl PullRequestGateway {
                         "Active GitHub account '{}' does not match required profile '{}'.",
                         detected_handle, expected_handle
                     ),
-                    remediation: format!("Run 'gh auth switch -u {}' before opening PR.", expected_handle),
+                    remediation: format!(
+                        "Run 'gh auth switch -u {}' before opening PR.",
+                        expected_handle
+                    ),
                 });
             }
             IdentityVerification::GhUnavailable { details: _ } => {
@@ -175,7 +192,10 @@ mod tests {
         };
 
         let err = PullRequestGateway::validate_invariants(&details).unwrap_err();
-        assert!(matches!(err, DomainViolation::AstIntegrityOrInvariantViolation { .. }));
+        assert!(matches!(
+            err,
+            DomainViolation::AstIntegrityOrInvariantViolation { .. }
+        ));
     }
 
     #[test]

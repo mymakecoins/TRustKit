@@ -14,10 +14,11 @@ use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
     CycleEvidenceRepositoryPort, TerminalMultiplexerPort, WorktreeIsolationPort, WorktreeStatus,
 };
-use trustkit_core::special_cases::{ActiveCycleLookup, BoardColumn, IssueLinkage, SpecLockState, TddLifecycleState, WorktreeAllocation};
-use trustkit_core::use_cases::run_interactive_wave::{
-    execute, RunInteractiveWaveRequest,
+use trustkit_core::special_cases::{
+    ActiveCycleLookup, BoardColumn, IssueLinkage, SpecLockState, TddLifecycleState,
+    WorktreeAllocation,
 };
+use trustkit_core::use_cases::run_interactive_wave::{RunInteractiveWaveRequest, execute};
 
 #[derive(Default)]
 struct MockCycleRepo {
@@ -38,22 +39,48 @@ impl CycleEvidenceRepositoryPort for MockCycleRepo {
             None => Ok(ActiveCycleLookup::NoActiveCycle),
         }
     }
-    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> { Ok(1) }
-    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> { Ok(vec![]) }
+    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> {
+        Ok(1)
+    }
+    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+        Ok(vec![])
+    }
     fn append_evidence(&self, evidence: &ExecutionEvidence) -> Result<u64, DomainViolation> {
         let mut list = self.evidences.lock().unwrap();
         list.push(evidence.clone());
         Ok(list.len() as u64)
     }
-    fn list_evidences_for_cycle(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_evidences_for_cycle(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(self.evidences.lock().unwrap().clone())
     }
-    fn update_cycle_spec_lock(&self, _cycle_id: &str, _digest: &str, _state: &str) -> Result<(), DomainViolation> { Ok(()) }
-    fn save_atomic_tasks(&self, _cycle_id: &str, _tasks: &[TaskNode], _wave_schedule: &WaveSchedule) -> Result<(), DomainViolation> { Ok(()) }
+    fn update_cycle_spec_lock(
+        &self,
+        _cycle_id: &str,
+        _digest: &str,
+        _state: &str,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn save_atomic_tasks(
+        &self,
+        _cycle_id: &str,
+        _tasks: &[TaskNode],
+        _wave_schedule: &WaveSchedule,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
     fn list_atomic_tasks(&self, _cycle_id: &str) -> Result<Vec<AtomicTask>, DomainViolation> {
         Ok(self.tasks.lock().unwrap().clone())
     }
-    fn update_task_worktree(&self, _cycle_id: &str, task_id: &str, alloc: &WorktreeAllocation) -> Result<(), DomainViolation> {
+    fn update_task_worktree(
+        &self,
+        _cycle_id: &str,
+        task_id: &str,
+        alloc: &WorktreeAllocation,
+    ) -> Result<(), DomainViolation> {
         let mut list = self.tasks.lock().unwrap();
         if let Some(t) = list.iter_mut().find(|t| t.task_id == task_id) {
             t.worktree_allocation = alloc.clone();
@@ -65,13 +92,21 @@ impl CycleEvidenceRepositoryPort for MockCycleRepo {
 struct MockWorktreePort;
 
 impl WorktreeIsolationPort for MockWorktreePort {
-    fn provision_worktree(&self, _cycle_id: &str, task_id: &str, base_branch: &str) -> Result<WorktreeAllocation, DomainViolation> {
+    fn provision_worktree(
+        &self,
+        _cycle_id: &str,
+        task_id: &str,
+        base_branch: &str,
+    ) -> Result<WorktreeAllocation, DomainViolation> {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: format!("/tmp/worktree-{}", task_id),
             branch_name: format!("{}-branch", base_branch),
         })
     }
-    fn check_worktree_status(&self, worktree_path: &str) -> Result<WorktreeStatus, DomainViolation> {
+    fn check_worktree_status(
+        &self,
+        worktree_path: &str,
+    ) -> Result<WorktreeStatus, DomainViolation> {
         Ok(WorktreeStatus {
             worktree_path: worktree_path.to_string(),
             branch_name: "branch".to_string(),
@@ -79,7 +114,12 @@ impl WorktreeIsolationPort for MockWorktreePort {
             head_commit_sha: "head123".to_string(),
         })
     }
-    fn merge_and_prune_worktree(&self, _task_id: &str, _path: &str, _target: &str) -> Result<String, DomainViolation> {
+    fn merge_and_prune_worktree(
+        &self,
+        _task_id: &str,
+        _path: &str,
+        _target: &str,
+    ) -> Result<String, DomainViolation> {
         Ok("commit-sha-123456".to_string())
     }
 }
@@ -89,7 +129,10 @@ struct MockMultiplexerPort {
 }
 
 impl TerminalMultiplexerPort for MockMultiplexerPort {
-    fn spawn_terminal(&self, request: &MultiplexedTerminalRequest) -> Result<MultiplexedTerminalHandle, DomainViolation> {
+    fn spawn_terminal(
+        &self,
+        request: &MultiplexedTerminalRequest,
+    ) -> Result<MultiplexedTerminalHandle, DomainViolation> {
         Ok(MultiplexedTerminalHandle::new(
             format!("term-{}", request.task_id),
             request.task_id.clone(),
@@ -97,14 +140,32 @@ impl TerminalMultiplexerPort for MockMultiplexerPort {
             "2026-11-03T17:00:00Z",
         ))
     }
-    fn query_terminal_state(&self, _handle: &MultiplexedTerminalHandle) -> Result<AgentSemanticState, DomainViolation> {
+    fn query_terminal_state(
+        &self,
+        _handle: &MultiplexedTerminalHandle,
+    ) -> Result<AgentSemanticState, DomainViolation> {
         Ok(self.simulated_state.clone())
     }
-    fn send_terminal_input(&self, _handle: &MultiplexedTerminalHandle, _input: &str) -> Result<(), DomainViolation> { Ok(()) }
-    fn read_terminal_buffer(&self, _handle: &MultiplexedTerminalHandle, _lines: usize) -> Result<String, DomainViolation> {
+    fn send_terminal_input(
+        &self,
+        _handle: &MultiplexedTerminalHandle,
+        _input: &str,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn read_terminal_buffer(
+        &self,
+        _handle: &MultiplexedTerminalHandle,
+        _lines: usize,
+    ) -> Result<String, DomainViolation> {
         Ok("Mock buffer output\n".to_string())
     }
-    fn terminate_terminal(&self, _handle: &MultiplexedTerminalHandle) -> Result<(), DomainViolation> { Ok(()) }
+    fn terminate_terminal(
+        &self,
+        _handle: &MultiplexedTerminalHandle,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
 }
 
 fn create_test_cycle() -> SddCycle {
@@ -175,11 +236,15 @@ fn test_run_interactive_wave_success_with_multiplexer() {
         now_iso: "2026-11-03T17:00:00Z".to_string(),
     };
 
-    let outcome = execute(req, &repo, &worktree_port, Some(&mux_port)).expect("Should execute wave");
+    let outcome =
+        execute(req, &repo, &worktree_port, Some(&mux_port)).expect("Should execute wave");
     assert_eq!(outcome.wave_index, 1);
     assert_eq!(outcome.tasks_dispatched.len(), 2);
     assert_eq!(outcome.overall_verdict, GateVerdict::Pass);
-    assert_eq!(outcome.tasks_dispatched[0].merged_commit_sha, "commit-sha-123456");
+    assert_eq!(
+        outcome.tasks_dispatched[0].merged_commit_sha,
+        "commit-sha-123456"
+    );
 }
 
 #[test]
@@ -204,7 +269,8 @@ fn test_run_interactive_wave_blocked_stops_merge() {
         now_iso: "2026-11-03T17:00:00Z".to_string(),
     };
 
-    let outcome = execute(req, &repo, &worktree_port, Some(&mux_port)).expect("Should return outcome");
+    let outcome =
+        execute(req, &repo, &worktree_port, Some(&mux_port)).expect("Should return outcome");
     assert_eq!(outcome.overall_verdict, GateVerdict::Fail);
     assert!(outcome.tasks_dispatched[0].state.is_blocked());
     assert_eq!(outcome.tasks_dispatched[0].merged_commit_sha, "");

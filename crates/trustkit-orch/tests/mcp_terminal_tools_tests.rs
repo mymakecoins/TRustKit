@@ -30,7 +30,8 @@ fn test_mcp_terminal_inspect_call() {
                 "lines": 20
             }
         }
-    })).unwrap();
+    }))
+    .unwrap();
 
     let resp = server.handle_request(&req).expect("Should handle request");
     assert!(resp.error.is_none());
@@ -53,7 +54,8 @@ fn test_mcp_terminal_send_call() {
                 "input": "y\n"
             }
         }
-    })).unwrap();
+    }))
+    .unwrap();
 
     let resp = server.handle_request(&req).expect("Should handle request");
     assert!(resp.error.is_none());

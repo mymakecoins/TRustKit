@@ -4,9 +4,9 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
+use crate::async_supervisor::redact_secrets;
 use regex::Regex;
 use std::sync::LazyLock;
-use crate::async_supervisor::redact_secrets;
 
 static ANSI_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07\x1B]*(?:\x07|\x1B\\))").unwrap()
@@ -29,9 +29,7 @@ impl TerminalOutputSanitizer {
     }
 
     pub fn purge_emojis_and_icons(text: &str) -> String {
-        text.chars()
-            .filter(|&c| !is_emoji_or_icon(c))
-            .collect()
+        text.chars().filter(|&c| !is_emoji_or_icon(c)).collect()
     }
 
     pub fn purge_ai_trailers(text: &str) -> String {

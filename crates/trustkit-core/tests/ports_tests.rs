@@ -4,12 +4,11 @@
 
 use trustkit_core::entities::{
     AstAuditVerdict, CertificationSummary, CircuitBreakerState, ContextSliceRequest,
-    ContextSliceResult, CycleStatus, ExecutionEvidence, GateStage,
-    SpecificationV2, TaskNode,
+    ContextSliceResult, CycleStatus, ExecutionEvidence, GateStage, SpecificationV2, TaskNode,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
-    AsyncExecutionSupervisorPort, AstAuditorPort, ContextSlicerPort, CycleCertificationPort,
+    AstAuditorPort, AsyncExecutionSupervisorPort, ContextSlicerPort, CycleCertificationPort,
     CycleEvidenceRepositoryPort, ForeignScreenshotInspection, ProjectBoardGatewayPort,
     PullRequestDetails, PullRequestOutcome, SupervisedExecutionOutcome, SupervisedExecutionRequest,
     VisualEvidencePort, WorktreeIsolationPort, WorktreeStatus,
@@ -178,28 +177,50 @@ impl ProjectBoardGatewayPort for MockProjectBoard {
 struct MockCycleEvidenceRepo;
 
 impl CycleEvidenceRepositoryPort for MockCycleEvidenceRepo {
-    fn save_cycle(&self, _cycle: &trustkit_core::entities::SddCycle) -> Result<(), DomainViolation> {
+    fn save_cycle(
+        &self,
+        _cycle: &trustkit_core::entities::SddCycle,
+    ) -> Result<(), DomainViolation> {
         Ok(())
     }
     fn find_active_cycle(&self) -> Result<ActiveCycleLookup, DomainViolation> {
         Ok(ActiveCycleLookup::NoActiveCycle)
     }
-    fn save_artifact_seal(&self, _seal: &trustkit_core::entities::ArtifactSeal) -> Result<u64, DomainViolation> {
+    fn save_artifact_seal(
+        &self,
+        _seal: &trustkit_core::entities::ArtifactSeal,
+    ) -> Result<u64, DomainViolation> {
         Ok(1)
     }
-    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<trustkit_core::entities::ArtifactSeal>, DomainViolation> {
+    fn list_artifact_seals(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<trustkit_core::entities::ArtifactSeal>, DomainViolation> {
         Ok(vec![])
     }
     fn append_evidence(&self, _evidence: &ExecutionEvidence) -> Result<u64, DomainViolation> {
         Ok(1)
     }
-    fn list_evidences_for_cycle(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_evidences_for_cycle(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(vec![])
     }
-    fn update_cycle_spec_lock(&self, _cycle_id: &str, _blake3_digest: &str, _locked_state: &str) -> Result<(), DomainViolation> {
+    fn update_cycle_spec_lock(
+        &self,
+        _cycle_id: &str,
+        _blake3_digest: &str,
+        _locked_state: &str,
+    ) -> Result<(), DomainViolation> {
         Ok(())
     }
-    fn save_atomic_tasks(&self, _cycle_id: &str, _tasks: &[TaskNode], _wave_schedule: &trustkit_core::entities::WaveSchedule) -> Result<(), DomainViolation> {
+    fn save_atomic_tasks(
+        &self,
+        _cycle_id: &str,
+        _tasks: &[TaskNode],
+        _wave_schedule: &trustkit_core::entities::WaveSchedule,
+    ) -> Result<(), DomainViolation> {
         Ok(())
     }
 }
@@ -221,7 +242,9 @@ fn test_mock_context_slicer_port() {
         symbol_filters: vec!["mock".to_string()],
         max_line_budget: 50,
     };
-    let res = slicer.slice_context(&req).expect("mock slice should succeed");
+    let res = slicer
+        .slice_context(&req)
+        .expect("mock slice should succeed");
     assert_eq!(res.preserved_symbols, vec!["mock".to_string()]);
     assert_eq!(res.total_lines, 1);
 }
@@ -233,7 +256,10 @@ fn test_mock_worktree_isolation_port() {
         .provision_worktree("cycle-1", "TASK-001", "develop")
         .expect("provision worktree");
     match alloc {
-        WorktreeAllocation::Provisioned { worktree_path, branch_name } => {
+        WorktreeAllocation::Provisioned {
+            worktree_path,
+            branch_name,
+        } => {
             assert_eq!(worktree_path, ".trustkit/worktrees/TASK-001");
             assert_eq!(branch_name, "task/TASK-001");
         }
@@ -289,7 +315,9 @@ fn test_mock_cycle_certification_port() {
         circuit_breaker_state: CircuitBreakerState::Closed,
         certified_at: "2026-10-28T18:00:00Z".to_string(),
     };
-    let report = cert.render_gauntlet_report(&summary, &[]).expect("render report");
+    let report = cert
+        .render_gauntlet_report(&summary, &[])
+        .expect("render report");
     assert!(report.contains("Certification Report for cycle-45"));
 
     let spec = SpecificationV2 {
@@ -303,7 +331,9 @@ fn test_mock_cycle_certification_port() {
         traceability_matrix: vec![],
         lock_state: SpecLockState::DraftUnverified,
     };
-    let comment = cert.format_issue_completion_comment(&summary, &spec).expect("format comment");
+    let comment = cert
+        .format_issue_completion_comment(&summary, &spec)
+        .expect("format comment");
     assert!(comment.contains("Cycle cycle-45 for 004-worktree-tdd completed successfully"));
 }
 
@@ -328,11 +358,23 @@ fn test_mock_project_board_create_pr() {
 #[test]
 fn test_mock_cycle_evidence_repo_defaults() {
     let repo = MockCycleEvidenceRepo;
-    assert!(repo.update_task_tdd_phase("c", "t", &TddLifecycleState::AwaitingRedPhase).is_ok());
-    assert!(repo.update_task_worktree("c", "t", &WorktreeAllocation::NotProvisioned).is_ok());
+    assert!(
+        repo.update_task_tdd_phase("c", "t", &TddLifecycleState::AwaitingRedPhase)
+            .is_ok()
+    );
+    assert!(
+        repo.update_task_worktree("c", "t", &WorktreeAllocation::NotProvisioned)
+            .is_ok()
+    );
     assert!(repo.find_atomic_task("c", "t").unwrap().is_none());
     assert!(repo.list_atomic_tasks("c").unwrap().is_empty());
-    assert!(repo.update_cycle_status("c", CycleStatus::Active, 0).is_ok());
-    assert!(repo.advance_cycle_gate("c", GateStage::Gate1SpecDrafting).is_ok());
+    assert!(
+        repo.update_cycle_status("c", CycleStatus::Active, 0)
+            .is_ok()
+    );
+    assert!(
+        repo.advance_cycle_gate("c", GateStage::Gate1SpecDrafting)
+            .is_ok()
+    );
     assert!(repo.list_certification_evidences("c").unwrap().is_empty());
 }

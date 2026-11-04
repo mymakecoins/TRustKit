@@ -91,6 +91,10 @@ fn test_compose_spec_context_success_aggregates_wiki_and_ast_snippets() {
     assert_eq!(outcome.wiki_articles.len(), 1);
     assert_eq!(outcome.wiki_articles[0].slug, "arch-core");
     assert_eq!(outcome.ast_slices.len(), 1);
-    assert!(outcome.aggregated_context.contains("=== Contexto Relevante Extraido ==="));
+    assert!(
+        outcome
+            .aggregated_context
+            .contains("=== Contexto Relevante Extraido ===")
+    );
     assert!(outcome.aggregated_context.contains("[[arch-core]]"));
 }

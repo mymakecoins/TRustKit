@@ -152,11 +152,7 @@ impl WaveCouplingAnalyzer {
             .collect()
     }
 
-    fn task_touches_god_node(
-        task: &TaskNode,
-        god_node: &str,
-        edges: &[StructuralEdge],
-    ) -> bool {
+    fn task_touches_god_node(task: &TaskNode, god_node: &str, edges: &[StructuralEdge]) -> bool {
         for file in &task.expected_files {
             if file == god_node {
                 return true;

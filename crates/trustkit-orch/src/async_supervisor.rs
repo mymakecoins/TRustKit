@@ -3,27 +3,45 @@
 // Constitutional Principle IV: Zero Panic.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
+use regex::Regex;
 use std::path::Path;
 use std::process::Stdio;
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
-use regex::Regex;
 use tokio::io::AsyncReadExt;
 use tokio::process::Command;
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
-    AsyncExecutionSupervisorPort, SupervisedExecutionRequest, SupervisedExecutionOutcome,
+    AsyncExecutionSupervisorPort, SupervisedExecutionOutcome, SupervisedExecutionRequest,
 };
 
 static SECRET_PATTERNS: LazyLock<Vec<(Regex, &'static str)>> = LazyLock::new(|| {
     vec![
-        (Regex::new(r"ghp_[A-Za-z0-9_]{10,}").unwrap(), "[REDACTED_SECRET]"),
-        (Regex::new(r"gho_[A-Za-z0-9_]{10,}").unwrap(), "[REDACTED_SECRET]"),
-        (Regex::new(r"github_pat_[A-Za-z0-9_]{10,}").unwrap(), "[REDACTED_SECRET]"),
-        (Regex::new(r"(?i)bearer\s+[A-Za-z0-9_\-\.]{15,}").unwrap(), "Bearer [REDACTED_SECRET]"),
-        (Regex::new(r"(?i)(password|token|secret)=([^&\s]+)").unwrap(), "$1=[REDACTED_SECRET]"),
         (
-            Regex::new(r"-----BEGIN [A-Z ]+ PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+ PRIVATE KEY-----").unwrap(),
+            Regex::new(r"ghp_[A-Za-z0-9_]{10,}").unwrap(),
+            "[REDACTED_SECRET]",
+        ),
+        (
+            Regex::new(r"gho_[A-Za-z0-9_]{10,}").unwrap(),
+            "[REDACTED_SECRET]",
+        ),
+        (
+            Regex::new(r"github_pat_[A-Za-z0-9_]{10,}").unwrap(),
+            "[REDACTED_SECRET]",
+        ),
+        (
+            Regex::new(r"(?i)bearer\s+[A-Za-z0-9_\-\.]{15,}").unwrap(),
+            "Bearer [REDACTED_SECRET]",
+        ),
+        (
+            Regex::new(r"(?i)(password|token|secret)=([^&\s]+)").unwrap(),
+            "$1=[REDACTED_SECRET]",
+        ),
+        (
+            Regex::new(
+                r"-----BEGIN [A-Z ]+ PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+ PRIVATE KEY-----",
+            )
+            .unwrap(),
             "[REDACTED_PRIVATE_KEY]",
         ),
     ]
@@ -50,7 +68,11 @@ impl AsyncExecutionSupervisor {
         request: &SupervisedExecutionRequest,
     ) -> Result<SupervisedExecutionOutcome, DomainViolation> {
         let start = Instant::now();
-        let timeout = Duration::from_millis(if request.timeout_ms == 0 { 60_000 } else { request.timeout_ms });
+        let timeout = Duration::from_millis(if request.timeout_ms == 0 {
+            60_000
+        } else {
+            request.timeout_ms
+        });
 
         let mut cmd = Command::new(&request.command);
         cmd.args(&request.args);
@@ -60,10 +82,12 @@ impl AsyncExecutionSupervisor {
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
 
-        let mut child = cmd.spawn().map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-            subsystem: "async_supervisor".to_string(),
-            details: format!("Failed to spawn command '{}': {e}", request.command),
-        })?;
+        let mut child = cmd
+            .spawn()
+            .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "async_supervisor".to_string(),
+                details: format!("Failed to spawn command '{}': {e}", request.command),
+            })?;
 
         let mut stdout_handle = child.stdout.take();
         let mut stderr_handle = child.stderr.take();
@@ -183,9 +207,15 @@ mod tests {
             timeout_ms: 5000,
         };
 
-        let outcome = supervisor.execute_supervised(&req).expect("execution succeeded");
+        let outcome = supervisor
+            .execute_supervised(&req)
+            .expect("execution succeeded");
         assert_eq!(outcome.exit_code, 0);
-        assert!(outcome.stdout_tail.contains("hello world [REDACTED_SECRET]"));
+        assert!(
+            outcome
+                .stdout_tail
+                .contains("hello world [REDACTED_SECRET]")
+        );
         assert_eq!(outcome.output_blake3_digest.len(), 64);
     }
 

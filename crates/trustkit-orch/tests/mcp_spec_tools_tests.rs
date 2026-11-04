@@ -134,7 +134,9 @@ fn test_mcp_spec_lint_tool_call_nominal_and_violation() {
         })),
     };
 
-    let resp_invalid = server.handle_request(&invalid_req).expect("invalid response");
+    let resp_invalid = server
+        .handle_request(&invalid_req)
+        .expect("invalid response");
     let text_invalid = resp_invalid.result.unwrap()["content"][0]["text"]
         .as_str()
         .unwrap()

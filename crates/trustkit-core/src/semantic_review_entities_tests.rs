@@ -73,7 +73,9 @@ fn test_security_review_verdict_vulnerabilities_detected_report_line() {
         file: "src/query.rs".to_string(),
         line: 15,
         severity: ReviewSeverity::High,
-        category_or_angle: AppSecCategory::InputValidationInjection.as_str().to_string(),
+        category_or_angle: AppSecCategory::InputValidationInjection
+            .as_str()
+            .to_string(),
         confidence: 9,
         summary: "SQL injection on filter param".to_string(),
         scenario: "Unsanitized input concatenated into SQL query".to_string(),

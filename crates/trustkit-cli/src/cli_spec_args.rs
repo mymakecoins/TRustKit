@@ -9,7 +9,11 @@ use clap::{Args, Subcommand};
 pub struct SpecPromptArgs {
     #[arg(long, help = "Feature idea or description in natural language")]
     pub idea: String,
-    #[arg(long, default_value = "2", help = "Number of context hops for knowledge and AST search")]
+    #[arg(
+        long,
+        default_value = "2",
+        help = "Number of context hops for knowledge and AST search"
+    )]
     pub context_hops: usize,
     #[arg(long, default_value = "4000", help = "Token budget for prompt output")]
     pub budget: usize,
@@ -19,7 +23,10 @@ pub struct SpecPromptArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct SpecLintArgs {
-    #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
+    #[arg(
+        long,
+        help = "Path to the specification file (defaults to active cycle spec)"
+    )]
     pub file: Option<String>,
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
@@ -27,7 +34,10 @@ pub struct SpecLintArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct SpecLockArgs {
-    #[arg(long, help = "Path to the specification file (defaults to active cycle spec)")]
+    #[arg(
+        long,
+        help = "Path to the specification file (defaults to active cycle spec)"
+    )]
     pub spec: Option<String>,
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
@@ -47,7 +57,10 @@ pub struct SpecInitArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct WavePlanArgs {
-    #[arg(long, help = "Path to directory containing atomic task definitions (TASK-NNN.md)")]
+    #[arg(
+        long,
+        help = "Path to directory containing atomic task definitions (TASK-NNN.md)"
+    )]
     pub tasks_dir: Option<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -110,19 +123,34 @@ pub struct GraphArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
 pub enum GraphSubcommand {
-    #[command(name = "build", about = "Build or update the AST structural graph and emit GRAPH_REPORT.md")]
+    #[command(
+        name = "build",
+        about = "Build or update the AST structural graph and emit GRAPH_REPORT.md"
+    )]
     Build(GraphBuildArgs),
-    #[command(name = "health", about = "Audit graph health, god nodes, loops and architectural boundaries")]
+    #[command(
+        name = "health",
+        about = "Audit graph health, god nodes, loops and architectural boundaries"
+    )]
     Health(GraphHealthArgs),
-    #[command(name = "path", about = "Find shortest path between two graph nodes via BFS")]
+    #[command(
+        name = "path",
+        about = "Find shortest path between two graph nodes via BFS"
+    )]
     Path(GraphPathArgs),
-    #[command(name = "explain", about = "Explain structural connections and wiki relationships for a node")]
+    #[command(
+        name = "explain",
+        about = "Explain structural connections and wiki relationships for a node"
+    )]
     Explain(GraphExplainArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct GraphBuildArgs {
-    #[arg(long, help = "Incremental scan using BLAKE3 digests, only updating changed files")]
+    #[arg(
+        long,
+        help = "Incremental scan using BLAKE3 digests, only updating changed files"
+    )]
     pub update: bool,
 
     #[arg(long, help = "Bypass Shrink-Guard if node count decreases")]
@@ -134,7 +162,11 @@ pub struct GraphBuildArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct GraphHealthArgs {
-    #[arg(long, default_value_t = 10, help = "Maximum number of God Nodes to rank")]
+    #[arg(
+        long,
+        default_value_t = 10,
+        help = "Maximum number of God Nodes to rank"
+    )]
     pub top_god_nodes: usize,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -173,15 +205,30 @@ pub struct MemoryArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
 pub enum MemorySubcommand {
-    #[command(name = "write", about = "Write and index a Markdown knowledge document into .trustkit/wiki/")]
+    #[command(
+        name = "write",
+        about = "Write and index a Markdown knowledge document into .trustkit/wiki/"
+    )]
     Write(MemoryWriteArgs),
-    #[command(name = "read", about = "Read a Markdown knowledge document by slug from .trustkit/wiki/")]
+    #[command(
+        name = "read",
+        about = "Read a Markdown knowledge document by slug from .trustkit/wiki/"
+    )]
     Read(MemoryReadArgs),
-    #[command(name = "search", about = "Search indexed knowledge documents using FTS5 BM25 ranking")]
+    #[command(
+        name = "search",
+        about = "Search indexed knowledge documents using FTS5 BM25 ranking"
+    )]
     Search(MemorySearchArgs),
-    #[command(name = "list", about = "List all Markdown knowledge documents in .trustkit/wiki/")]
+    #[command(
+        name = "list",
+        about = "List all Markdown knowledge documents in .trustkit/wiki/"
+    )]
     List(MemoryListArgs),
-    #[command(name = "rebuild", about = "Deterministically rebuild the SQLite FTS5 index and wikilink graph from .trustkit/wiki/")]
+    #[command(
+        name = "rebuild",
+        about = "Deterministically rebuild the SQLite FTS5 index and wikilink graph from .trustkit/wiki/"
+    )]
     Rebuild(MemoryRebuildArgs),
 }
 
@@ -193,10 +240,19 @@ pub struct MemoryWriteArgs {
     #[arg(long, default_value = "Untitled", help = "Document title")]
     pub title: String,
 
-    #[arg(long, value_delimiter = ',', help = "Comma-separated tags (e.g. adr,storage,sqlite)")]
+    #[arg(
+        long,
+        value_delimiter = ',',
+        help = "Comma-separated tags (e.g. adr,storage,sqlite)"
+    )]
     pub tags: Vec<String>,
 
-    #[arg(long, visible_alias = "body", default_value = "", help = "Markdown body content")]
+    #[arg(
+        long,
+        visible_alias = "body",
+        default_value = "",
+        help = "Markdown body content"
+    )]
     pub content: String,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -217,10 +273,18 @@ pub struct MemorySearchArgs {
     #[arg(help = "Lexical FTS5 search query string")]
     pub query: String,
 
-    #[arg(long, default_value_t = 10, help = "Maximum number of BM25 ranked hits to return")]
+    #[arg(
+        long,
+        default_value_t = 10,
+        help = "Maximum number of BM25 ranked hits to return"
+    )]
     pub limit: usize,
 
-    #[arg(long, value_delimiter = ',', help = "Optional comma-separated required tags filter")]
+    #[arg(
+        long,
+        value_delimiter = ',',
+        help = "Optional comma-separated required tags filter"
+    )]
     pub tags: Vec<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -229,7 +293,11 @@ pub struct MemorySearchArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct MemoryListArgs {
-    #[arg(long, value_delimiter = ',', help = "Optional comma-separated required tags filter")]
+    #[arg(
+        long,
+        value_delimiter = ',',
+        help = "Optional comma-separated required tags filter"
+    )]
     pub tags: Vec<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]

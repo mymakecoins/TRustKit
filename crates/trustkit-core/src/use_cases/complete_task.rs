@@ -32,7 +32,10 @@ pub fn execute(
         .find_atomic_task(&req.cycle_id, &req.task_id)?
         .ok_or_else(|| DomainViolation::TddLifecycleViolation {
             task_id: req.task_id.clone(),
-            reason: format!("Atomic task '{}' not found in cycle '{}'", req.task_id, req.cycle_id),
+            reason: format!(
+                "Atomic task '{}' not found in cycle '{}'",
+                req.task_id, req.cycle_id
+            ),
         })?;
 
     task.advance_committed(&req.commit_sha)?;

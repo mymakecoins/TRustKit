@@ -10,9 +10,7 @@ use crate::entities::{
     MultiplexedTerminalRequest, RuntimeBackendMode,
 };
 use crate::errors::DomainViolation;
-use crate::ports::{
-    CycleEvidenceRepositoryPort, TerminalMultiplexerPort, WorktreeIsolationPort,
-};
+use crate::ports::{CycleEvidenceRepositoryPort, TerminalMultiplexerPort, WorktreeIsolationPort};
 use crate::special_cases::{ActiveCycleLookup, SpecLockState, WorktreeAllocation};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -68,12 +66,18 @@ pub fn execute(
     }
 
     let all_tasks = repo.list_atomic_tasks(&cycle.cycle_id)?;
-    let wave_tasks: Vec<_> = all_tasks.into_iter().filter(|t| t.wave_index == req.wave_index).collect();
+    let wave_tasks: Vec<_> = all_tasks
+        .into_iter()
+        .filter(|t| t.wave_index == req.wave_index)
+        .collect();
 
     if wave_tasks.is_empty() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "run_interactive_wave".to_string(),
-            details: format!("No tasks found for wave index {} in cycle '{}'", req.wave_index, cycle.cycle_id),
+            details: format!(
+                "No tasks found for wave index {} in cycle '{}'",
+                req.wave_index, cycle.cycle_id
+            ),
         });
     }
 
@@ -81,9 +85,13 @@ pub fn execute(
     let mut all_passed = true;
 
     for mut task in wave_tasks {
-        let allocation = worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
+        let allocation =
+            worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
         let worktree_path = match &allocation {
-            WorktreeAllocation::Provisioned { worktree_path, branch_name } => {
+            WorktreeAllocation::Provisioned {
+                worktree_path,
+                branch_name,
+            } => {
                 task.allocate_worktree(worktree_path, branch_name)?;
                 worktree_path.clone()
             }
@@ -128,14 +136,24 @@ pub fn execute(
                 let current_state = mux.query_terminal_state(&handle)?;
                 (handle.terminal_id, current_state)
             } else {
-                ("native".to_string(), AgentSemanticState::Done { exit_code: 0 })
+                (
+                    "native".to_string(),
+                    AgentSemanticState::Done { exit_code: 0 },
+                )
             }
         } else {
-            ("native".to_string(), AgentSemanticState::Done { exit_code: 0 })
+            (
+                "native".to_string(),
+                AgentSemanticState::Done { exit_code: 0 },
+            )
         };
 
         let merged_sha = if state.is_done() {
-            let sha = worktree_port.merge_and_prune_worktree(&task.task_id, &worktree_path, &cycle.work_branch)?;
+            let sha = worktree_port.merge_and_prune_worktree(
+                &task.task_id,
+                &worktree_path,
+                &cycle.work_branch,
+            )?;
             task.merge_and_prune_worktree(&sha)?;
             repo.update_task_worktree(&cycle.cycle_id, &task.task_id, &task.worktree_allocation)?;
 
@@ -149,7 +167,10 @@ pub fn execute(
                 executed_command: format!("git merge --ff-only {}", sha),
                 exit_code: 0,
                 duration_ms: 10,
-                sanitized_stdout_tail: format!("Merged and pruned worktree {} -> {}", worktree_path, sha),
+                sanitized_stdout_tail: format!(
+                    "Merged and pruned worktree {} -> {}",
+                    worktree_path, sha
+                ),
                 sanitized_stderr_tail: "".to_string(),
                 output_blake3_digest: "".to_string(),
                 verdict: GateVerdict::Pass,
@@ -175,6 +196,10 @@ pub fn execute(
         cycle_id: cycle.cycle_id,
         wave_index: req.wave_index,
         tasks_dispatched: reports,
-        overall_verdict: if all_passed { GateVerdict::Pass } else { GateVerdict::Fail },
+        overall_verdict: if all_passed {
+            GateVerdict::Pass
+        } else {
+            GateVerdict::Fail
+        },
     })
 }

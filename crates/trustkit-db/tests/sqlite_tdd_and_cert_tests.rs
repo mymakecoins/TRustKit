@@ -273,7 +273,9 @@ fn test_concurrent_evidence_writes_during_gauntlet_battery() {
                     verdict: GateVerdict::Pass,
                     recorded_at: format!("2026-10-28T12:{:02}:{:02}Z", t_idx, i),
                 };
-                repo_clone.append_evidence(&ev).expect("concurrent evidence write must not fail");
+                repo_clone
+                    .append_evidence(&ev)
+                    .expect("concurrent evidence write must not fail");
             }
         }));
     }

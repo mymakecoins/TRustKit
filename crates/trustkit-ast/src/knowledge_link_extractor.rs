@@ -135,12 +135,7 @@ pub fn render_markdown_with_frontmatter(
 }
 
 pub fn render_document_markdown(doc: &KnowledgeDocument) -> String {
-    render_markdown_with_frontmatter(
-        &doc.title,
-        &doc.tags,
-        &doc.updated_at,
-        &doc.body_markdown,
-    )
+    render_markdown_with_frontmatter(&doc.title, &doc.tags, &doc.updated_at, &doc.body_markdown)
 }
 
 fn split_frontmatter_block(input: &str) -> Option<(&str, &str)> {

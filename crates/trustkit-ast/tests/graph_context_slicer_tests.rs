@@ -84,7 +84,11 @@ fn test_graph_slicer_bfs_one_hop_service_ports_entities() {
             assert_eq!(slice.visited_nodes.len(), 3);
             assert_eq!(slice.visited_nodes[0], "crates/service.rs");
             assert!(slice.visited_nodes.contains(&"crates/ports.rs".to_string()));
-            assert!(slice.visited_nodes.contains(&"crates/entities.rs".to_string()));
+            assert!(
+                slice
+                    .visited_nodes
+                    .contains(&"crates/entities.rs".to_string())
+            );
             assert!(slice.consumed_lines <= 80);
             assert!(slice.sliced_content.contains("pub struct ServiceOrder"));
             assert!(slice.sliced_content.contains("OrderRepository"));
@@ -100,16 +104,58 @@ fn test_graph_slicer_bfs_one_hop_service_ports_entities() {
 #[test]
 fn test_graph_slicer_bfs_vs_dfs_order_in_three_level_graph() {
     let nodes = vec![
-        StructuralNode::new("root.rs", "root.rs", GraphNodeKind::CodeFile, "root.rs", "CORE"),
-        StructuralNode::new("lvl1_a.rs", "lvl1_a.rs", GraphNodeKind::CodeFile, "lvl1_a.rs", "CORE"),
-        StructuralNode::new("lvl1_b.rs", "lvl1_b.rs", GraphNodeKind::CodeFile, "lvl1_b.rs", "CORE"),
-        StructuralNode::new("lvl2_a.rs", "lvl2_a.rs", GraphNodeKind::CodeFile, "lvl2_a.rs", "CORE"),
+        StructuralNode::new(
+            "root.rs",
+            "root.rs",
+            GraphNodeKind::CodeFile,
+            "root.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "lvl1_a.rs",
+            "lvl1_a.rs",
+            GraphNodeKind::CodeFile,
+            "lvl1_a.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "lvl1_b.rs",
+            "lvl1_b.rs",
+            GraphNodeKind::CodeFile,
+            "lvl1_b.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "lvl2_a.rs",
+            "lvl2_a.rs",
+            GraphNodeKind::CodeFile,
+            "lvl2_a.rs",
+            "CORE",
+        ),
     ];
 
     let edges = vec![
-        StructuralEdge::new("root.rs", "lvl1_a.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "root.rs"),
-        StructuralEdge::new("root.rs", "lvl1_b.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "root.rs"),
-        StructuralEdge::new("lvl1_a.rs", "lvl2_a.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "lvl1_a.rs"),
+        StructuralEdge::new(
+            "root.rs",
+            "lvl1_a.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "root.rs",
+        ),
+        StructuralEdge::new(
+            "root.rs",
+            "lvl1_b.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "root.rs",
+        ),
+        StructuralEdge::new(
+            "lvl1_a.rs",
+            "lvl2_a.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "lvl1_a.rs",
+        ),
     ];
 
     let mut sources = HashMap::new();
@@ -165,21 +211,57 @@ fn test_graph_slicer_bfs_vs_dfs_order_in_three_level_graph() {
 #[test]
 fn test_graph_slicer_prioritizes_extracted_over_inferred() {
     let nodes = vec![
-        StructuralNode::new("root.rs", "root.rs", GraphNodeKind::CodeFile, "root.rs", "CORE"),
-        StructuralNode::new("a_inferred.rs", "a_inferred.rs", GraphNodeKind::CodeFile, "a_inferred.rs", "CORE"),
-        StructuralNode::new("z_extracted.rs", "z_extracted.rs", GraphNodeKind::CodeFile, "z_extracted.rs", "CORE"),
+        StructuralNode::new(
+            "root.rs",
+            "root.rs",
+            GraphNodeKind::CodeFile,
+            "root.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "a_inferred.rs",
+            "a_inferred.rs",
+            GraphNodeKind::CodeFile,
+            "a_inferred.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "z_extracted.rs",
+            "z_extracted.rs",
+            GraphNodeKind::CodeFile,
+            "z_extracted.rs",
+            "CORE",
+        ),
     ];
 
     // Note: a_inferred is alphabetically earlier than z_extracted, but z_extracted is Extracted!
     let edges = vec![
-        StructuralEdge::new("root.rs", "a_inferred.rs", EdgeRelationKind::ReferencesSymbol, EdgeConfidence::Inferred, "root.rs"),
-        StructuralEdge::new("root.rs", "z_extracted.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "root.rs"),
+        StructuralEdge::new(
+            "root.rs",
+            "a_inferred.rs",
+            EdgeRelationKind::ReferencesSymbol,
+            EdgeConfidence::Inferred,
+            "root.rs",
+        ),
+        StructuralEdge::new(
+            "root.rs",
+            "z_extracted.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "root.rs",
+        ),
     ];
 
     let mut sources = HashMap::new();
     sources.insert("root.rs".to_string(), "pub struct Root;\n".to_string());
-    sources.insert("a_inferred.rs".to_string(), "pub struct Inferred;\n".to_string());
-    sources.insert("z_extracted.rs".to_string(), "pub struct Extracted;\n".to_string());
+    sources.insert(
+        "a_inferred.rs".to_string(),
+        "pub struct Inferred;\n".to_string(),
+    );
+    sources.insert(
+        "z_extracted.rs".to_string(),
+        "pub struct Extracted;\n".to_string(),
+    );
 
     let slicer = GraphContextSlicer::new();
     let outcome = slicer.slice_graph_with_sources(

@@ -12,7 +12,7 @@ use trustkit_core::special_cases::{
     ActiveCycleLookup, IssueLinkage, SpecLockState, TddLifecycleState, WorktreeAllocation,
 };
 use trustkit_core::use_cases::run_execution_wave::{
-    self, validate_commit_message, RunExecutionWaveRequest,
+    self, RunExecutionWaveRequest, validate_commit_message,
 };
 
 struct InMemoryWaveRepo {
@@ -35,8 +35,12 @@ impl CycleEvidenceRepositoryPort for InMemoryWaveRepo {
         }
     }
 
-    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> { Ok(1) }
-    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> { Ok(vec![]) }
+    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> {
+        Ok(1)
+    }
+    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+        Ok(vec![])
+    }
 
     fn append_evidence(&self, evidence: &ExecutionEvidence) -> Result<u64, DomainViolation> {
         let mut list = self.evidences.lock().unwrap();
@@ -44,18 +48,40 @@ impl CycleEvidenceRepositoryPort for InMemoryWaveRepo {
         Ok(list.len() as u64)
     }
 
-    fn list_evidences_for_cycle(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_evidences_for_cycle(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(self.evidences.lock().unwrap().clone())
     }
 
-    fn update_cycle_spec_lock(&self, _cycle_id: &str, _digest: &str, _state: &str) -> Result<(), DomainViolation> { Ok(()) }
-    fn save_atomic_tasks(&self, _c: &str, _t: &[TaskNode], _w: &WaveSchedule) -> Result<(), DomainViolation> { Ok(()) }
+    fn update_cycle_spec_lock(
+        &self,
+        _cycle_id: &str,
+        _digest: &str,
+        _state: &str,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn save_atomic_tasks(
+        &self,
+        _c: &str,
+        _t: &[TaskNode],
+        _w: &WaveSchedule,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
 
     fn list_atomic_tasks(&self, _cycle_id: &str) -> Result<Vec<AtomicTask>, DomainViolation> {
         Ok(self.tasks.lock().unwrap().clone())
     }
 
-    fn update_task_worktree(&self, _cycle_id: &str, task_id: &str, allocation: &WorktreeAllocation) -> Result<(), DomainViolation> {
+    fn update_task_worktree(
+        &self,
+        _cycle_id: &str,
+        task_id: &str,
+        allocation: &WorktreeAllocation,
+    ) -> Result<(), DomainViolation> {
         let mut list = self.tasks.lock().unwrap();
         if let Some(t) = list.iter_mut().find(|t| t.task_id == task_id) {
             t.worktree_allocation = allocation.clone();
@@ -70,7 +96,12 @@ struct MockWorktreePort {
 }
 
 impl WorktreeIsolationPort for MockWorktreePort {
-    fn provision_worktree(&self, _cycle_id: &str, task_id: &str, _base_branch: &str) -> Result<WorktreeAllocation, DomainViolation> {
+    fn provision_worktree(
+        &self,
+        _cycle_id: &str,
+        task_id: &str,
+        _base_branch: &str,
+    ) -> Result<WorktreeAllocation, DomainViolation> {
         let path = format!("/tmp/worktrees/{}", task_id);
         self.provisioned_paths.lock().unwrap().push(path.clone());
         Ok(WorktreeAllocation::Provisioned {
@@ -79,7 +110,10 @@ impl WorktreeIsolationPort for MockWorktreePort {
         })
     }
 
-    fn check_worktree_status(&self, worktree_path: &str) -> Result<WorktreeStatus, DomainViolation> {
+    fn check_worktree_status(
+        &self,
+        worktree_path: &str,
+    ) -> Result<WorktreeStatus, DomainViolation> {
         Ok(WorktreeStatus {
             worktree_path: worktree_path.to_string(),
             branch_name: "branch".to_string(),
@@ -88,8 +122,16 @@ impl WorktreeIsolationPort for MockWorktreePort {
         })
     }
 
-    fn merge_and_prune_worktree(&self, _task_id: &str, worktree_path: &str, _target_branch: &str) -> Result<String, DomainViolation> {
-        self.merged_paths.lock().unwrap().push(worktree_path.to_string());
+    fn merge_and_prune_worktree(
+        &self,
+        _task_id: &str,
+        worktree_path: &str,
+        _target_branch: &str,
+    ) -> Result<String, DomainViolation> {
+        self.merged_paths
+            .lock()
+            .unwrap()
+            .push(worktree_path.to_string());
         Ok("merge_sha_abcdef1234567890".to_string())
     }
 }
@@ -156,7 +198,10 @@ fn test_wave_execution_fails_when_spec_draft_unverified() {
     };
 
     let res = run_execution_wave::execute(req, &repo, &worktree_port);
-    assert!(matches!(res, Err(DomainViolation::SpecOrTraceabilityIncomplete { .. })));
+    assert!(matches!(
+        res,
+        Err(DomainViolation::SpecOrTraceabilityIncomplete { .. })
+    ));
 }
 
 #[test]

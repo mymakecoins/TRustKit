@@ -7,8 +7,8 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use trustkit_core::entities::{
-    ContextSliceRequest, GraphContextSlice, GraphTraversalOutcome, StructuralEdge,
-    StructuralNode, TraversalMode,
+    ContextSliceRequest, GraphContextSlice, GraphTraversalOutcome, StructuralEdge, StructuralNode,
+    TraversalMode,
 };
 
 use crate::context_slicer::AstContextSlicer;
@@ -20,7 +20,9 @@ pub struct GraphContextSlicer {
 
 impl GraphContextSlicer {
     pub const fn new() -> Self {
-        Self { ast_slicer: AstContextSlicer::new() }
+        Self {
+            ast_slicer: AstContextSlicer::new(),
+        }
     }
 
     pub fn slice_graph(
@@ -33,7 +35,13 @@ impl GraphContextSlicer {
         max_line_budget: usize,
     ) -> GraphTraversalOutcome {
         self.slice_graph_with_sources(
-            nodes, edges, &HashMap::new(), root_file, mode, max_hops, max_line_budget,
+            nodes,
+            edges,
+            &HashMap::new(),
+            root_file,
+            mode,
+            max_hops,
+            max_line_budget,
         )
     }
 
@@ -53,7 +61,9 @@ impl GraphContextSlicer {
         }
 
         let exists = sources.contains_key(root_file)
-            || nodes.iter().any(|n| n.source_file == root_file || n.node_id == root_file)
+            || nodes
+                .iter()
+                .any(|n| n.source_file == root_file || n.node_id == root_file)
             || fs::metadata(root_file).is_ok();
 
         if !exists {
@@ -70,10 +80,16 @@ impl GraphContextSlicer {
         }
 
         let mut lines = Vec::new();
-        let budget = if max_line_budget == 0 { 100 } else { max_line_budget };
+        let budget = if max_line_budget == 0 {
+            100
+        } else {
+            max_line_budget
+        };
 
         for path in &visited_nodes {
-            if lines.len() >= budget { break; }
+            if lines.len() >= budget {
+                break;
+            }
             let content = if let Some(src) = sources.get(path) {
                 src.clone()
             } else if let Ok(src) = fs::read_to_string(path) {
@@ -83,7 +99,9 @@ impl GraphContextSlicer {
             };
 
             let remaining = budget.saturating_sub(lines.len());
-            if remaining == 0 { break; }
+            if remaining == 0 {
+                break;
+            }
 
             let req = ContextSliceRequest {
                 target_files: vec![path.clone()],
@@ -93,7 +111,9 @@ impl GraphContextSlicer {
 
             let slice = self.ast_slicer.slice_code(path, &content, &req);
             for l in slice.sliced_content.lines() {
-                if lines.len() >= budget { break; }
+                if lines.len() >= budget {
+                    break;
+                }
                 lines.push(l.to_string());
             }
         }
@@ -125,7 +145,9 @@ impl GraphContextSlicer {
         queue.push_back((root_file.to_string(), 0));
 
         while let Some((curr, hop)) = queue.pop_front() {
-            if hop >= max_hops { continue; }
+            if hop >= max_hops {
+                continue;
+            }
             for (edge, target) in self.get_sorted_edges(&curr, nodes, edges) {
                 if visited.insert(target.clone()) {
                     order.push(target.clone());
@@ -151,7 +173,16 @@ impl GraphContextSlicer {
         visited.insert(root_file.to_string());
         order.push(root_file.to_string());
 
-        self.dfs_step(root_file, 0, max_hops, nodes, edges, &mut visited, &mut order, &mut traversed);
+        self.dfs_step(
+            root_file,
+            0,
+            max_hops,
+            nodes,
+            edges,
+            &mut visited,
+            &mut order,
+            &mut traversed,
+        );
         (order, traversed)
     }
 
@@ -167,12 +198,23 @@ impl GraphContextSlicer {
         order: &mut Vec<String>,
         traversed: &mut Vec<StructuralEdge>,
     ) {
-        if hop >= max_hops { return; }
+        if hop >= max_hops {
+            return;
+        }
         for (edge, target) in self.get_sorted_edges(curr, nodes, edges) {
             if visited.insert(target.clone()) {
                 order.push(target.clone());
                 traversed.push(edge);
-                self.dfs_step(&target, hop + 1, max_hops, nodes, edges, visited, order, traversed);
+                self.dfs_step(
+                    &target,
+                    hop + 1,
+                    max_hops,
+                    nodes,
+                    edges,
+                    visited,
+                    order,
+                    traversed,
+                );
             }
         }
     }
@@ -185,14 +227,21 @@ impl GraphContextSlicer {
     ) -> Vec<(StructuralEdge, String)> {
         let mut outgoing = Vec::new();
         for edge in edges {
-            if edge.source_file != file_path && edge.source_id != file_path { continue; }
+            if edge.source_file != file_path && edge.source_id != file_path {
+                continue;
+            }
             let target = resolve_target_file(&edge.target_id, nodes);
-            if target == file_path { continue; }
+            if target == file_path {
+                continue;
+            }
             outgoing.push((edge.clone(), target));
         }
 
         outgoing.sort_by(|(e1, t1), (e2, t2)| {
-            e2.confidence.priority_weight().cmp(&e1.confidence.priority_weight()).then_with(|| t1.cmp(t2))
+            e2.confidence
+                .priority_weight()
+                .cmp(&e1.confidence.priority_weight())
+                .then_with(|| t1.cmp(t2))
         });
         outgoing
     }

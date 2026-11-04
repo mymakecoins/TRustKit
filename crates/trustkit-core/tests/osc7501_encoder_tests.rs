@@ -4,7 +4,7 @@
 // Constitutional Principle IV: Zero Panic.
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
-use trustkit_core::entities::{encode_osc7501, Osc7501Payload};
+use trustkit_core::entities::{Osc7501Payload, encode_osc7501};
 use trustkit_core::errors::DomainViolation;
 
 #[test]

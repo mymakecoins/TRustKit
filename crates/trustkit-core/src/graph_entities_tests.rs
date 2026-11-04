@@ -291,7 +291,12 @@ fn test_structural_graph_repository_and_analyzer_ports_contract() {
     );
 
     let verdict = repo
-        .save_graph_snapshot(&[node_a.clone(), node_b.clone()], std::slice::from_ref(&edge), std::slice::from_ref(&manifest), false)
+        .save_graph_snapshot(
+            &[node_a.clone(), node_b.clone()],
+            std::slice::from_ref(&edge),
+            std::slice::from_ref(&manifest),
+            false,
+        )
         .expect("initial snapshot should succeed");
     assert_eq!(verdict, GraphHealthVerdict::Healthy);
 

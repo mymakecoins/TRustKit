@@ -30,8 +30,8 @@ fn test_slice_ast_context_use_case_success() {
         max_line_budget: 80,
     };
 
-    let outcome = slice_ast_context::execute(req, &slicer)
-        .expect("slice use case execution should succeed");
+    let outcome =
+        slice_ast_context::execute(req, &slicer).expect("slice use case execution should succeed");
 
     assert_eq!(outcome.preserved_symbols, vec!["User".to_string()]);
     assert_eq!(outcome.total_lines, 1);

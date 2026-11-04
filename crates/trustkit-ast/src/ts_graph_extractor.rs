@@ -46,12 +46,7 @@ impl TsGraphExtractor {
         }
     }
 
-    fn process_import(
-        node: &Node,
-        bytes: &[u8],
-        file_path: &str,
-        edges: &mut Vec<StructuralEdge>,
-    ) {
+    fn process_import(node: &Node, bytes: &[u8], file_path: &str, edges: &mut Vec<StructuralEdge>) {
         let Some(source_node) = node.child_by_field_name("source") else {
             return;
         };
@@ -181,7 +176,9 @@ impl TsGraphExtractor {
     }
 
     fn resolve_relative_path(base_file: &str, relative: &str) -> String {
-        let parent = Path::new(base_file).parent().unwrap_or_else(|| Path::new(""));
+        let parent = Path::new(base_file)
+            .parent()
+            .unwrap_or_else(|| Path::new(""));
         let joined = parent.join(relative);
         let mut components = Vec::new();
         for comp in joined.components() {

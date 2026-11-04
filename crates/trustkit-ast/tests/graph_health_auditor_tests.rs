@@ -14,8 +14,20 @@ use trustkit_core::ports::StructuralGraphAnalyzerPort;
 #[test]
 fn test_graph_health_auditor_detects_dangling_and_self_loops() {
     let nodes = vec![
-        StructuralNode::new("specs/spec.md", "spec.md", GraphNodeKind::KnowledgeNote, "specs/spec.md", "SPEC"),
-        StructuralNode::new("node_a.rs", "node_a.rs", GraphNodeKind::CodeFile, "node_a.rs", "CORE"),
+        StructuralNode::new(
+            "specs/spec.md",
+            "spec.md",
+            GraphNodeKind::KnowledgeNote,
+            "specs/spec.md",
+            "SPEC",
+        ),
+        StructuralNode::new(
+            "node_a.rs",
+            "node_a.rs",
+            GraphNodeKind::CodeFile,
+            "node_a.rs",
+            "CORE",
+        ),
     ];
 
     let edges = vec![
@@ -52,8 +64,20 @@ fn test_graph_health_auditor_detects_dangling_and_self_loops() {
 #[test]
 fn test_graph_health_auditor_detects_surprising_connections_hexagonal_violation() {
     let nodes = vec![
-        StructuralNode::new("crates/trustkit-core/src/domain.rs", "domain.rs", GraphNodeKind::CodeFile, "crates/trustkit-core/src/domain.rs", "CORE"),
-        StructuralNode::new("crates/trustkit-db/src/repo.rs", "repo.rs", GraphNodeKind::CodeFile, "crates/trustkit-db/src/repo.rs", "DB"),
+        StructuralNode::new(
+            "crates/trustkit-core/src/domain.rs",
+            "domain.rs",
+            GraphNodeKind::CodeFile,
+            "crates/trustkit-core/src/domain.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "crates/trustkit-db/src/repo.rs",
+            "repo.rs",
+            GraphNodeKind::CodeFile,
+            "crates/trustkit-db/src/repo.rs",
+            "DB",
+        ),
     ];
 
     // Core importing DB is a prohibited hexagonal violation!
@@ -74,21 +98,55 @@ fn test_graph_health_auditor_detects_surprising_connections_hexagonal_violation(
     assert_eq!(report.surprising_connections.len(), 1);
     assert_eq!(report.surprising_connections[0].source_layer, "CORE");
     assert_eq!(report.surprising_connections[0].target_layer, "DB");
-    assert!(report.surprising_connections[0].reason.contains("hexagonal"));
+    assert!(
+        report.surprising_connections[0]
+            .reason
+            .contains("hexagonal")
+    );
 }
 
 #[test]
 fn test_graph_health_auditor_detects_collapsed_edges() {
     let nodes = vec![
-        StructuralNode::new("file_a.rs", "file_a.rs", GraphNodeKind::CodeFile, "file_a.rs", "CORE"),
-        StructuralNode::new("file_b.rs", "file_b.rs", GraphNodeKind::CodeFile, "file_b.rs", "CORE"),
+        StructuralNode::new(
+            "file_a.rs",
+            "file_a.rs",
+            GraphNodeKind::CodeFile,
+            "file_a.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "file_b.rs",
+            "file_b.rs",
+            GraphNodeKind::CodeFile,
+            "file_b.rs",
+            "CORE",
+        ),
     ];
 
     // Three parallel edges between file_a and file_b
     let edges = vec![
-        StructuralEdge::new("file_a.rs", "file_b.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "file_a.rs"),
-        StructuralEdge::new("file_a.rs", "file_b.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "file_a.rs"),
-        StructuralEdge::new("file_a.rs", "file_b.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "file_a.rs"),
+        StructuralEdge::new(
+            "file_a.rs",
+            "file_b.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "file_a.rs",
+        ),
+        StructuralEdge::new(
+            "file_a.rs",
+            "file_b.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "file_a.rs",
+        ),
+        StructuralEdge::new(
+            "file_a.rs",
+            "file_b.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "file_a.rs",
+        ),
     ];
 
     let auditor = GraphHealthAuditor::new();
@@ -102,16 +160,58 @@ fn test_graph_health_auditor_detects_collapsed_edges() {
 #[test]
 fn test_graph_health_auditor_calculates_god_nodes_and_cohesion() {
     let nodes = vec![
-        StructuralNode::new("center.rs", "center.rs", GraphNodeKind::CodeFile, "center.rs", "CORE"),
-        StructuralNode::new("leaf1.rs", "leaf1.rs", GraphNodeKind::CodeFile, "leaf1.rs", "CORE"),
-        StructuralNode::new("leaf2.rs", "leaf2.rs", GraphNodeKind::CodeFile, "leaf2.rs", "CORE"),
-        StructuralNode::new("leaf3.rs", "leaf3.rs", GraphNodeKind::CodeFile, "leaf3.rs", "DB"),
+        StructuralNode::new(
+            "center.rs",
+            "center.rs",
+            GraphNodeKind::CodeFile,
+            "center.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "leaf1.rs",
+            "leaf1.rs",
+            GraphNodeKind::CodeFile,
+            "leaf1.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "leaf2.rs",
+            "leaf2.rs",
+            GraphNodeKind::CodeFile,
+            "leaf2.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "leaf3.rs",
+            "leaf3.rs",
+            GraphNodeKind::CodeFile,
+            "leaf3.rs",
+            "DB",
+        ),
     ];
 
     let edges = vec![
-        StructuralEdge::new("leaf1.rs", "center.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "leaf1.rs"),
-        StructuralEdge::new("leaf2.rs", "center.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "leaf2.rs"),
-        StructuralEdge::new("center.rs", "leaf3.rs", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "center.rs"),
+        StructuralEdge::new(
+            "leaf1.rs",
+            "center.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "leaf1.rs",
+        ),
+        StructuralEdge::new(
+            "leaf2.rs",
+            "center.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "leaf2.rs",
+        ),
+        StructuralEdge::new(
+            "center.rs",
+            "leaf3.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "center.rs",
+        ),
     ];
 
     let auditor = GraphHealthAuditor::new();

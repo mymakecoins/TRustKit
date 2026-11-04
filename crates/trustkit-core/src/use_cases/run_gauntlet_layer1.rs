@@ -46,10 +46,35 @@ fn resolve_critic_command(
         return (c.command.clone(), c.args.clone());
     }
     match kind {
-        CriticKind::DomainAdversarial => ("cargo".to_string(), vec!["test".to_string(), "--test".to_string(), "domain_adversarial".to_string()]),
-        CriticKind::ContractCompliance => ("cargo".to_string(), vec!["test".to_string(), "--test".to_string(), "contract_compliance".to_string()]),
-        CriticKind::StaticSecurity => ("cargo".to_string(), vec!["clippy".to_string(), "--".to_string(), "-D".to_string(), "warnings".to_string()]),
-        CriticKind::PlaywrightVisual => ("npx".to_string(), vec!["playwright".to_string(), "test".to_string()]),
+        CriticKind::DomainAdversarial => (
+            "cargo".to_string(),
+            vec![
+                "test".to_string(),
+                "--test".to_string(),
+                "domain_adversarial".to_string(),
+            ],
+        ),
+        CriticKind::ContractCompliance => (
+            "cargo".to_string(),
+            vec![
+                "test".to_string(),
+                "--test".to_string(),
+                "contract_compliance".to_string(),
+            ],
+        ),
+        CriticKind::StaticSecurity => (
+            "cargo".to_string(),
+            vec![
+                "clippy".to_string(),
+                "--".to_string(),
+                "-D".to_string(),
+                "warnings".to_string(),
+            ],
+        ),
+        CriticKind::PlaywrightVisual => (
+            "npx".to_string(),
+            vec!["playwright".to_string(), "test".to_string()],
+        ),
     }
 }
 
@@ -73,21 +98,25 @@ pub fn execute(
         return Err(DomainViolation::CircuitBreakerTripped {
             cycle_id: cycle.cycle_id.clone(),
             consecutive_failures: cycle.gauntlet_attempt,
-            remediation: "Circuit breaker is tripped. Execute 'trustkit doctor' to diagnose.".to_string(),
+            remediation: "Circuit breaker is tripped. Execute 'trustkit doctor' to diagnose."
+                .to_string(),
         });
     }
 
     // Step 1: Verify Layer 0 clean pass
     let evidences = repo.list_evidences_for_cycle(&cycle.cycle_id)?;
-    let layer0_passed = evidences.iter().rev().any(|e| {
-        e.evidence_kind == EvidenceKind::AstAudit && e.verdict == GateVerdict::Pass
-    });
+    let layer0_passed = evidences
+        .iter()
+        .rev()
+        .any(|e| e.evidence_kind == EvidenceKind::AstAudit && e.verdict == GateVerdict::Pass);
 
     if !layer0_passed {
         return Err(DomainViolation::CriticSwarmOrPlaywrightFailed {
             layer: "Layer0Ast".to_string(),
             attempt: cycle.gauntlet_attempt,
-            failure_summary: "Layer 0 AST Audit did not pass clean. Layer 1 critics cannot be dispatched.".to_string(),
+            failure_summary:
+                "Layer 0 AST Audit did not pass clean. Layer 1 critics cannot be dispatched."
+                    .to_string(),
         });
     }
 
@@ -135,7 +164,11 @@ pub fn execute(
             sanitized_stdout_tail: outcome.stdout_tail,
             sanitized_stderr_tail: outcome.stderr_tail,
             output_blake3_digest: outcome.output_blake3_digest,
-            verdict: if verdict.is_pass() { GateVerdict::Pass } else { GateVerdict::Fail },
+            verdict: if verdict.is_pass() {
+                GateVerdict::Pass
+            } else {
+                GateVerdict::Fail
+            },
             recorded_at: req.now_iso.clone(),
         };
         repo.append_evidence(&evidence)?;
@@ -152,20 +185,29 @@ pub fn execute(
         IssueLinkage::LinkedIssue { issue_number, .. } => format!("issue-{}", issue_number),
         IssueLinkage::UnlinkedLocalCycle { directory_slug } => directory_slug.clone(),
     };
-    visual_port.restore_foreign_screenshots(&issue_prefix, &format!("{}/tests/screenshots", req.working_dir))?;
+    visual_port.restore_foreign_screenshots(
+        &issue_prefix,
+        &format!("{}/tests/screenshots", req.working_dir),
+    )?;
 
     // Step 4: Validate unanimity (RN-003)
     let unanimous_pass = findings.iter().all(|f| f.verdict.is_pass());
 
     if !unanimous_pass {
-        let cb_state = cycle.record_gauntlet_failure("One or more Gauntlet Layer 1 critics failed.");
-        repo.update_cycle_status(&cycle.cycle_id, cycle.lifecycle_status, cycle.gauntlet_attempt)?;
+        let cb_state =
+            cycle.record_gauntlet_failure("One or more Gauntlet Layer 1 critics failed.");
+        repo.update_cycle_status(
+            &cycle.cycle_id,
+            cycle.lifecycle_status,
+            cycle.gauntlet_attempt,
+        )?;
 
         if cb_state.is_tripped() {
             return Err(DomainViolation::CircuitBreakerTripped {
                 cycle_id: cycle.cycle_id,
                 consecutive_failures: cycle.gauntlet_attempt,
-                remediation: "Circuit breaker tripped after 5 failures. Run 'trustkit doctor'.".to_string(),
+                remediation: "Circuit breaker tripped after 5 failures. Run 'trustkit doctor'."
+                    .to_string(),
             });
         }
 

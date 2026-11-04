@@ -18,20 +18,12 @@ min_confidence_threshold = 8
     assert_eq!(policy.mode, SecurityReviewMode::Prompt);
     assert_eq!(policy.min_confidence_threshold, 8);
 
-    let decision_tty = resolve_security_review_decision(
-        CliSecurityReviewFlag::Unspecified,
-        &policy,
-        true,
-        false,
-    );
+    let decision_tty =
+        resolve_security_review_decision(CliSecurityReviewFlag::Unspecified, &policy, true, false);
     assert_eq!(decision_tty, SecurityReviewDecision::PromptUser);
 
-    let decision_json = resolve_security_review_decision(
-        CliSecurityReviewFlag::Unspecified,
-        &policy,
-        true,
-        true,
-    );
+    let decision_json =
+        resolve_security_review_decision(CliSecurityReviewFlag::Unspecified, &policy, true, true);
     assert_eq!(
         decision_json,
         SecurityReviewDecision::Skip {

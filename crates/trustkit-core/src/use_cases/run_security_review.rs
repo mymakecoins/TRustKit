@@ -47,7 +47,9 @@ pub fn execute(
     }
 
     match req.decision {
-        SecurityReviewDecision::Skip { reason } => record_skipped(req.cycle_id, reason, req.now_iso, repo),
+        SecurityReviewDecision::Skip { reason } => {
+            record_skipped(req.cycle_id, reason, req.now_iso, repo)
+        }
         SecurityReviewDecision::PromptUser => record_skipped(
             req.cycle_id,
             SecuritySkipReason::HeadlessNonInteractiveDefault,
@@ -73,30 +75,31 @@ pub fn execute(
             let discarded_low_confidence_count =
                 total_candidates.saturating_sub(surviving_findings.len());
 
-            let (verdict, gate_verdict, exit_code, stdout_summary) =
-                if surviving_findings.is_empty() {
-                    (
-                        SecurityReviewVerdict::CleanPass,
-                        GateVerdict::Pass,
-                        0,
-                        format!(
-                            "SecurityReviewVerdict::CleanPass (Confianca >= {})",
-                            req.min_confidence_threshold
-                        ),
-                    )
-                } else {
-                    let count = surviving_findings.len();
-                    (
-                        SecurityReviewVerdict::VulnerabilitiesDetected {
-                            findings: surviving_findings.clone(),
-                        },
-                        GateVerdict::Fail,
-                        5,
-                        format!(
-                            "SecurityReviewVerdict::VulnerabilitiesDetected ({count} vulnerabilidades detectadas)"
-                        ),
-                    )
-                };
+            let (verdict, gate_verdict, exit_code, stdout_summary) = if surviving_findings
+                .is_empty()
+            {
+                (
+                    SecurityReviewVerdict::CleanPass,
+                    GateVerdict::Pass,
+                    0,
+                    format!(
+                        "SecurityReviewVerdict::CleanPass (Confianca >= {})",
+                        req.min_confidence_threshold
+                    ),
+                )
+            } else {
+                let count = surviving_findings.len();
+                (
+                    SecurityReviewVerdict::VulnerabilitiesDetected {
+                        findings: surviving_findings.clone(),
+                    },
+                    GateVerdict::Fail,
+                    5,
+                    format!(
+                        "SecurityReviewVerdict::VulnerabilitiesDetected ({count} vulnerabilidades detectadas)"
+                    ),
+                )
+            };
 
             let evidence = ExecutionEvidence {
                 evidence_id: 0,

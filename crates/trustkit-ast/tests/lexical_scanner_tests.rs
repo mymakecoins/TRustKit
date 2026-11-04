@@ -12,7 +12,11 @@ fn test_scanner_detects_forbidden_emojis() {
 
     assert_eq!(violations.len(), 1);
     match &violations[0] {
-        AstViolation::ForbiddenEmoji { file_path, line, character } => {
+        AstViolation::ForbiddenEmoji {
+            file_path,
+            line,
+            character,
+        } => {
             assert_eq!(file_path, "src/calc.rs");
             assert_eq!(*line, 2);
             assert_eq!(character, "🚀");
@@ -29,7 +33,11 @@ fn test_scanner_detects_ai_trailers() {
 
     assert_eq!(violations.len(), 1);
     match &violations[0] {
-        AstViolation::AiTrailer { file_path, line, trailer } => {
+        AstViolation::AiTrailer {
+            file_path,
+            line,
+            trailer,
+        } => {
             assert_eq!(file_path, "commit.txt");
             assert_eq!(*line, 3);
             assert!(trailer.contains("Co-Authored-By: Claude"));

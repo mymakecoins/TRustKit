@@ -175,7 +175,5 @@ fn test_run_security_review_skip_does_not_invoke_reviewer_and_records_skipped() 
     let evs = repo.list_evidences_for_cycle("issue-7").unwrap();
     assert_eq!(evs.len(), 1);
     assert_eq!(evs[0].evidence_kind, EvidenceKind::SecurityReview);
-    assert!(evs[0]
-        .sanitized_stdout_tail
-        .contains("SkippedByDeveloper"));
+    assert!(evs[0].sanitized_stdout_tail.contains("SkippedByDeveloper"));
 }

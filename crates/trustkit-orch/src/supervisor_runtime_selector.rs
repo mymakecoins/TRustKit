@@ -5,11 +5,11 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
-use std::path::PathBuf;
-use trustkit_core::entities::{encode_osc7501, Osc7501Payload, RuntimeBackendMode};
-use trustkit_core::errors::DomainViolation;
 use crate::async_supervisor::AsyncExecutionSupervisor;
 use crate::pty_socket_adapter::PtySocketAdapter;
+use std::path::PathBuf;
+use trustkit_core::entities::{Osc7501Payload, RuntimeBackendMode, encode_osc7501};
+use trustkit_core::errors::DomainViolation;
 
 #[derive(Debug, Clone)]
 pub struct ResolvedRuntimeBackend {
@@ -26,11 +26,15 @@ pub struct SupervisorRuntimeSelector {
 
 impl SupervisorRuntimeSelector {
     pub fn new() -> Self {
-        Self { custom_socket_path: None }
+        Self {
+            custom_socket_path: None,
+        }
     }
 
     pub fn with_custom_socket(socket_path: PathBuf) -> Self {
-        Self { custom_socket_path: Some(socket_path) }
+        Self {
+            custom_socket_path: Some(socket_path),
+        }
     }
 
     fn check_pty_available(&self) -> Option<PtySocketAdapter> {
@@ -44,7 +48,10 @@ impl SupervisorRuntimeSelector {
         }
     }
 
-    pub fn resolve(&self, requested: RuntimeBackendMode) -> Result<ResolvedRuntimeBackend, DomainViolation> {
+    pub fn resolve(
+        &self,
+        requested: RuntimeBackendMode,
+    ) -> Result<ResolvedRuntimeBackend, DomainViolation> {
         let supervisor = AsyncExecutionSupervisor::new();
         let pty_opt = self.check_pty_available();
 
@@ -97,7 +104,11 @@ impl SupervisorRuntimeSelector {
             progress: None,
             app: "trustkit".to_string(),
             title: "Runtime resolved".to_string(),
-            msg: format!("Active: {}, Fallback: {}", resolved.active_mode.as_str(), resolved.fallback_triggered),
+            msg: format!(
+                "Active: {}, Fallback: {}",
+                resolved.active_mode.as_str(),
+                resolved.fallback_triggered
+            ),
         };
         let _ = encode_osc7501(&payload);
 

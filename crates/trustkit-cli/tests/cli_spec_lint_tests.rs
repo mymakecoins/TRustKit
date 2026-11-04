@@ -86,7 +86,11 @@ fn test_spec_lint_execution_clean_pass() {
 fn test_spec_lint_execution_structural_violation_returns_incomplete_code() {
     let dir = tempdir().expect("tempdir");
     let spec_path = dir.path().join("broken_spec.md");
-    fs::write(&spec_path, "# Especificacao: Incompleta\nSem secoes obrigatorias\n").expect("write broken");
+    fs::write(
+        &spec_path,
+        "# Especificacao: Incompleta\nSem secoes obrigatorias\n",
+    )
+    .expect("write broken");
 
     let args = SpecLintArgs {
         file: Some(spec_path.to_str().unwrap().to_string()),

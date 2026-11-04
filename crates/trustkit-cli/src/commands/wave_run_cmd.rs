@@ -40,7 +40,8 @@ pub fn execute_with_db(
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "wave_run".to_string(),
-            details: "No active SDD cycle found in state.db. Run 'trustkit init' first.".to_string(),
+            details: "No active SDD cycle found in state.db. Run 'trustkit init' first."
+                .to_string(),
         });
     }
 
@@ -64,42 +65,50 @@ pub fn execute_with_db(
     let mode = RuntimeBackendMode::from_str_name(&args.runtime);
     let resolved = selector.resolve(mode)?;
 
-    let (successful_tasks, failed_tasks, verdict_str) = if resolved.multiplexer.is_some() || !args.agent_cmd.is_empty() {
-        let req = RunInteractiveWaveRequest {
-            cycle_id: active_cycle.cycle_id,
-            wave_index: args.wave,
-            runtime_mode: resolved.active_mode,
-            agent_command: args.agent_cmd.clone(),
-            now_iso,
-        };
-        let mux_ref = resolved.multiplexer.as_ref().map(|m| m as &dyn TerminalMultiplexerPort);
-        let outcome = run_interactive_wave::execute(req, &repo, &worktree_provider, mux_ref)?;
-        let mut succ = Vec::new();
-        let mut fail = Vec::new();
-        for t in outcome.tasks_dispatched {
-            if t.state.is_done() {
-                succ.push(t.task_id);
-            } else {
-                fail.push(t.task_id);
+    let (successful_tasks, failed_tasks, verdict_str) =
+        if resolved.multiplexer.is_some() || !args.agent_cmd.is_empty() {
+            let req = RunInteractiveWaveRequest {
+                cycle_id: active_cycle.cycle_id,
+                wave_index: args.wave,
+                runtime_mode: resolved.active_mode,
+                agent_command: args.agent_cmd.clone(),
+                now_iso,
+            };
+            let mux_ref = resolved
+                .multiplexer
+                .as_ref()
+                .map(|m| m as &dyn TerminalMultiplexerPort);
+            let outcome = run_interactive_wave::execute(req, &repo, &worktree_provider, mux_ref)?;
+            let mut succ = Vec::new();
+            let mut fail = Vec::new();
+            for t in outcome.tasks_dispatched {
+                if t.state.is_done() {
+                    succ.push(t.task_id);
+                } else {
+                    fail.push(t.task_id);
+                }
             }
-        }
-        let v = match outcome.overall_verdict {
-            GateVerdict::Pass => "PASS".to_string(),
-            GateVerdict::Blocked => "BLOCKED".to_string(),
-            GateVerdict::Fail => "FAIL".to_string(),
-            GateVerdict::Info => "INFO".to_string(),
+            let v = match outcome.overall_verdict {
+                GateVerdict::Pass => "PASS".to_string(),
+                GateVerdict::Blocked => "BLOCKED".to_string(),
+                GateVerdict::Fail => "FAIL".to_string(),
+                GateVerdict::Info => "INFO".to_string(),
+            };
+            (succ, fail, v)
+        } else {
+            let request = RunExecutionWaveRequest {
+                cycle_id: active_cycle.cycle_id,
+                wave_index: args.wave,
+                now_iso,
+            };
+            let outcome = run_execution_wave::execute(request, &repo, &worktree_provider)?;
+            let succ: Vec<String> = outcome
+                .tasks_executed
+                .iter()
+                .map(|t| t.task_id.clone())
+                .collect();
+            (succ, Vec::new(), "PASS".to_string())
         };
-        (succ, fail, v)
-    } else {
-        let request = RunExecutionWaveRequest {
-            cycle_id: active_cycle.cycle_id,
-            wave_index: args.wave,
-            now_iso,
-        };
-        let outcome = run_execution_wave::execute(request, &repo, &worktree_provider)?;
-        let succ: Vec<String> = outcome.tasks_executed.iter().map(|t| t.task_id.clone()).collect();
-        (succ, Vec::new(), "PASS".to_string())
-    };
 
     let duration_ms = start.elapsed().as_millis() as u64;
 

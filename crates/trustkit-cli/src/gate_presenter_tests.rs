@@ -19,12 +19,18 @@ fn is_emoji(ch: char) -> bool {
 
 fn assert_no_emojis(text: &str) {
     for ch in text.chars() {
-        assert!(!is_emoji(ch), "Forbidden emoji found: '{ch}' in text: {text}");
+        assert!(
+            !is_emoji(ch),
+            "Forbidden emoji found: '{ch}' in text: {text}"
+        );
     }
 }
 
 fn assert_no_null(text: &str) {
-    assert!(!text.contains("null"), "JSON contains forbidden 'null': {text}");
+    assert!(
+        !text.contains("null"),
+        "JSON contains forbidden 'null': {text}"
+    );
 }
 
 #[test]

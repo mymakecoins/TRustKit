@@ -29,25 +29,15 @@ fn test_multiplexed_terminal_request_valid() {
 
 #[test]
 fn test_multiplexed_terminal_request_empty_fields_fail() {
-    let empty_dir = MultiplexedTerminalRequest::new(
-        "TASK-001",
-        "",
-        vec!["claude".to_string()],
-        vec![],
-        10_000,
-    );
+    let empty_dir =
+        MultiplexedTerminalRequest::new("TASK-001", "", vec!["claude".to_string()], vec![], 10_000);
     assert!(matches!(
         empty_dir,
         Err(DomainViolation::AstIntegrityOrInvariantViolation { .. })
     ));
 
-    let empty_argv = MultiplexedTerminalRequest::new(
-        "TASK-001",
-        "/tmp/worktree",
-        vec![],
-        vec![],
-        10_000,
-    );
+    let empty_argv =
+        MultiplexedTerminalRequest::new("TASK-001", "/tmp/worktree", vec![], vec![], 10_000);
     assert!(matches!(
         empty_argv,
         Err(DomainViolation::AstIntegrityOrInvariantViolation { .. })
@@ -56,12 +46,7 @@ fn test_multiplexed_terminal_request_empty_fields_fail() {
 
 #[test]
 fn test_multiplexed_terminal_handle_and_states() {
-    let handle = MultiplexedTerminalHandle::new(
-        "term-123",
-        "TASK-001",
-        42,
-        "2026-11-03T17:00:00Z",
-    );
+    let handle = MultiplexedTerminalHandle::new("term-123", "TASK-001", 42, "2026-11-03T17:00:00Z");
     assert_eq!(handle.terminal_id, "term-123");
     assert_eq!(handle.pid, 42);
 

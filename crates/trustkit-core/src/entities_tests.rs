@@ -104,7 +104,10 @@ fn test_atomic_task_worktree_allocation_lifecycle() {
     };
 
     assert!(task.worktree_allocation.is_not_provisioned());
-    assert!(task.allocate_worktree(".trustkit/worktrees/wt-1", "branch-wt-1").is_ok());
+    assert!(
+        task.allocate_worktree(".trustkit/worktrees/wt-1", "branch-wt-1")
+            .is_ok()
+    );
     assert!(task.worktree_allocation.is_provisioned());
 
     assert!(task.merge_and_prune_worktree("merge-sha-789").is_ok());
@@ -146,7 +149,11 @@ fn test_sdd_cycle_circuit_breaker_transition_on_5_failures() {
     assert!(cb5.is_tripped());
     assert_eq!(cycle.gauntlet_attempt, 5);
     assert_eq!(cycle.lifecycle_status, CycleStatus::CircuitBreakerTripped);
-    if let CircuitBreakerState::Tripped { consecutive_failures, diagnostic } = cb5 {
+    if let CircuitBreakerState::Tripped {
+        consecutive_failures,
+        diagnostic,
+    } = cb5
+    {
         assert_eq!(consecutive_failures, 5);
         assert!(diagnostic.contains("5th consecutive failure"));
     }

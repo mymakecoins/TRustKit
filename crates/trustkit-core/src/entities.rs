@@ -3,6 +3,7 @@
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
 pub use crate::ast_entities::*;
+use crate::errors::DomainViolation;
 pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
 pub use crate::graph_entities::*;
@@ -11,10 +12,9 @@ pub use crate::osc7501_encoder::*;
 pub use crate::semantic_review_entities::*;
 pub use crate::spec_entities::*;
 pub use crate::spec_scaffold_entities::*;
-pub use crate::terminal_multiplexer_entities::*;
 pub use crate::special_cases::{CircuitBreakerState, SpecLockState, WorktreeAllocation};
-use crate::errors::DomainViolation;
 use crate::special_cases::{IssueLinkage, TddLifecycleState};
+pub use crate::terminal_multiplexer_entities::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SddCycle {
@@ -35,7 +35,10 @@ pub struct SddCycle {
 }
 
 impl SddCycle {
-    pub fn record_gauntlet_failure(&mut self, diagnostic: impl Into<String>) -> CircuitBreakerState {
+    pub fn record_gauntlet_failure(
+        &mut self,
+        diagnostic: impl Into<String>,
+    ) -> CircuitBreakerState {
         self.gauntlet_attempt = self.gauntlet_attempt.saturating_add(1);
         let diag = diagnostic.into();
         let cb = CircuitBreakerState::evaluate(self.gauntlet_attempt, diag);
@@ -78,7 +81,8 @@ impl AtomicTask {
         if proof.exit_code == 0 {
             return Err(DomainViolation::TddLifecycleViolation {
                 task_id: self.task_id.clone(),
-                reason: "Red phase requires a failing test execution (non-zero exit code)".to_string(),
+                reason: "Red phase requires a failing test execution (non-zero exit code)"
+                    .to_string(),
             });
         }
         self.tdd_lifecycle_state = self
@@ -98,7 +102,10 @@ impl AtomicTask {
         Ok(())
     }
 
-    pub fn advance_green_phase(&mut self, proof: &TddExecutionProof) -> Result<(), DomainViolation> {
+    pub fn advance_green_phase(
+        &mut self,
+        proof: &TddExecutionProof,
+    ) -> Result<(), DomainViolation> {
         if proof.phase != TddPhase::Green {
             return Err(DomainViolation::TddLifecycleViolation {
                 task_id: self.task_id.clone(),
@@ -108,7 +115,8 @@ impl AtomicTask {
         if proof.exit_code != 0 {
             return Err(DomainViolation::TddLifecycleViolation {
                 task_id: self.task_id.clone(),
-                reason: "Green phase requires a successful test execution (exit code 0)".to_string(),
+                reason: "Green phase requires a successful test execution (exit code 0)"
+                    .to_string(),
             });
         }
         self.tdd_lifecycle_state = self
@@ -128,7 +136,10 @@ impl AtomicTask {
         Ok(())
     }
 
-    pub fn advance_committed(&mut self, commit_sha: impl Into<String>) -> Result<(), DomainViolation> {
+    pub fn advance_committed(
+        &mut self,
+        commit_sha: impl Into<String>,
+    ) -> Result<(), DomainViolation> {
         let sha = commit_sha.into();
         self.tdd_lifecycle_state = self
             .tdd_lifecycle_state
@@ -159,12 +170,12 @@ impl AtomicTask {
         Ok(())
     }
 
-    pub fn merge_and_prune_worktree(&mut self, commit_sha: impl Into<String>) -> Result<(), DomainViolation> {
+    pub fn merge_and_prune_worktree(
+        &mut self,
+        commit_sha: impl Into<String>,
+    ) -> Result<(), DomainViolation> {
         let sha = commit_sha.into();
-        self.worktree_allocation = self
-            .worktree_allocation
-            .clone()
-            .merge_and_prune(&sha)?;
+        self.worktree_allocation = self.worktree_allocation.clone().merge_and_prune(&sha)?;
         self.commit_sha = sha;
         Ok(())
     }

@@ -38,8 +38,12 @@ impl CycleEvidenceRepositoryPort for InMemoryCertRepo {
         }
     }
 
-    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> { Ok(1) }
-    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> { Ok(vec![]) }
+    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> {
+        Ok(1)
+    }
+    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+        Ok(vec![])
+    }
 
     fn append_evidence(&self, evidence: &ExecutionEvidence) -> Result<u64, DomainViolation> {
         let mut list = self.evidences.lock().unwrap();
@@ -47,14 +51,36 @@ impl CycleEvidenceRepositoryPort for InMemoryCertRepo {
         Ok(list.len() as u64)
     }
 
-    fn list_evidences_for_cycle(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_evidences_for_cycle(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(self.evidences.lock().unwrap().clone())
     }
 
-    fn update_cycle_spec_lock(&self, _cycle_id: &str, _digest: &str, _state: &str) -> Result<(), DomainViolation> { Ok(()) }
-    fn save_atomic_tasks(&self, _c: &str, _t: &[TaskNode], _w: &WaveSchedule) -> Result<(), DomainViolation> { Ok(()) }
+    fn update_cycle_spec_lock(
+        &self,
+        _cycle_id: &str,
+        _digest: &str,
+        _state: &str,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn save_atomic_tasks(
+        &self,
+        _c: &str,
+        _t: &[TaskNode],
+        _w: &WaveSchedule,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
 
-    fn update_cycle_status(&self, _cycle_id: &str, status: CycleStatus, gauntlet_attempt: u8) -> Result<(), DomainViolation> {
+    fn update_cycle_status(
+        &self,
+        _cycle_id: &str,
+        status: CycleStatus,
+        gauntlet_attempt: u8,
+    ) -> Result<(), DomainViolation> {
         let mut c = self.cycle.lock().unwrap();
         if let Some(cycle) = c.as_mut() {
             cycle.lifecycle_status = status;
@@ -63,7 +89,11 @@ impl CycleEvidenceRepositoryPort for InMemoryCertRepo {
         Ok(())
     }
 
-    fn advance_cycle_gate(&self, _cycle_id: &str, next_gate: GateStage) -> Result<(), DomainViolation> {
+    fn advance_cycle_gate(
+        &self,
+        _cycle_id: &str,
+        next_gate: GateStage,
+    ) -> Result<(), DomainViolation> {
         let mut c = self.cycle.lock().unwrap();
         if let Some(cycle) = c.as_mut() {
             cycle.current_gate = next_gate;
@@ -71,7 +101,10 @@ impl CycleEvidenceRepositoryPort for InMemoryCertRepo {
         Ok(())
     }
 
-    fn list_certification_evidences(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_certification_evidences(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(self.evidences.lock().unwrap().clone())
     }
 }
@@ -79,13 +112,24 @@ impl CycleEvidenceRepositoryPort for InMemoryCertRepo {
 struct MockCertPort;
 
 impl CycleCertificationPort for MockCertPort {
-    fn render_gauntlet_report(&self, summary: &CertificationSummary, _evidences: &[ExecutionEvidence]) -> Result<String, DomainViolation> {
+    fn render_gauntlet_report(
+        &self,
+        summary: &CertificationSummary,
+        _evidences: &[ExecutionEvidence],
+    ) -> Result<String, DomainViolation> {
         assert!(!summary.cycle_id.is_empty());
         Ok(format!("# Gauntlet Report for {}", summary.cycle_id))
     }
 
-    fn format_issue_completion_comment(&self, summary: &CertificationSummary, _spec: &SpecificationV2) -> Result<String, DomainViolation> {
-        Ok(format!("## Cycle {} Certified Successfully", summary.cycle_id))
+    fn format_issue_completion_comment(
+        &self,
+        summary: &CertificationSummary,
+        _spec: &SpecificationV2,
+    ) -> Result<String, DomainViolation> {
+        Ok(format!(
+            "## Cycle {} Certified Successfully",
+            summary.cycle_id
+        ))
     }
 }
 
@@ -95,16 +139,28 @@ struct MockBoardGateway {
 }
 
 impl ProjectBoardGatewayPort for MockBoardGateway {
-    fn verify_active_identity(&self, expected_handle: &str) -> Result<IdentityVerification, DomainViolation> {
-        Ok(IdentityVerification::Verified { operator_handle: expected_handle.to_string() })
+    fn verify_active_identity(
+        &self,
+        expected_handle: &str,
+    ) -> Result<IdentityVerification, DomainViolation> {
+        Ok(IdentityVerification::Verified {
+            operator_handle: expected_handle.to_string(),
+        })
     }
 
-    fn transition_issue_column(&self, issue_number: u64, target: BoardColumn) -> Result<BoardSyncOutcome, DomainViolation> {
+    fn transition_issue_column(
+        &self,
+        issue_number: u64,
+        target: BoardColumn,
+    ) -> Result<BoardSyncOutcome, DomainViolation> {
         *self.last_transition.lock().unwrap() = Some((issue_number, target));
         Ok(BoardSyncOutcome::Synchronized { column: target })
     }
 
-    fn create_pull_request(&self, details: &PullRequestDetails) -> Result<PullRequestOutcome, DomainViolation> {
+    fn create_pull_request(
+        &self,
+        details: &PullRequestDetails,
+    ) -> Result<PullRequestOutcome, DomainViolation> {
         *self.last_pr.lock().unwrap() = Some(details.clone());
         Ok(PullRequestOutcome {
             pr_number: 101,
@@ -130,7 +186,10 @@ fn build_cycle(status: CycleStatus) -> SddCycle {
         gauntlet_attempt: 0,
         spec_dir: "specs".to_string(),
         spec_file_path: "specs/spec.md".to_string(),
-        spec_seal_state: SpecLockState::Frozen { spec_path: "p".into(), blake3_digest: "h".into() },
+        spec_seal_state: SpecLockState::Frozen {
+            spec_path: "p".into(),
+            blake3_digest: "h".into(),
+        },
         work_branch: "feat/45".to_string(),
         base_commit_sha: "sha".to_string(),
         pre_existing_dirty_files: vec![],
@@ -140,24 +199,22 @@ fn build_cycle(status: CycleStatus) -> SddCycle {
 }
 
 fn make_passed_evidences() -> Vec<ExecutionEvidence> {
-    let mut list = vec![
-        ExecutionEvidence {
-            evidence_id: 1,
-            cycle_id: "cycle-cert-1".to_string(),
-            gate_stage: GateStage::Gate5GauntletCleared,
-            gauntlet_attempt: 0,
-            actor_role: "AUDITOR:AST_LAYER0".to_string(),
-            evidence_kind: EvidenceKind::AstAudit,
-            executed_command: "ast-audit".to_string(),
-            exit_code: 0,
-            duration_ms: 5,
-            sanitized_stdout_tail: "".to_string(),
-            sanitized_stderr_tail: "".to_string(),
-            output_blake3_digest: "".to_string(),
-            verdict: GateVerdict::Pass,
-            recorded_at: "2026-10-28T12:00:00Z".to_string(),
-        }
-    ];
+    let mut list = vec![ExecutionEvidence {
+        evidence_id: 1,
+        cycle_id: "cycle-cert-1".to_string(),
+        gate_stage: GateStage::Gate5GauntletCleared,
+        gauntlet_attempt: 0,
+        actor_role: "AUDITOR:AST_LAYER0".to_string(),
+        evidence_kind: EvidenceKind::AstAudit,
+        executed_command: "ast-audit".to_string(),
+        exit_code: 0,
+        duration_ms: 5,
+        sanitized_stdout_tail: "".to_string(),
+        sanitized_stderr_tail: "".to_string(),
+        output_blake3_digest: "".to_string(),
+        verdict: GateVerdict::Pass,
+        recorded_at: "2026-10-28T12:00:00Z".to_string(),
+    }];
 
     let critics = [
         CriticKind::DomainAdversarial,
@@ -221,8 +278,19 @@ fn test_certify_cycle_and_report_success() {
 
     assert!(!outcome.report_markdown.contains("null"));
     assert!(!outcome.completion_comment.contains("null"));
-    assert_eq!(repo.cycle.lock().unwrap().as_ref().unwrap().lifecycle_status, CycleStatus::Certified);
-    assert_eq!(repo.cycle.lock().unwrap().as_ref().unwrap().current_gate, GateStage::Gate6Certified);
+    assert_eq!(
+        repo.cycle
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .lifecycle_status,
+        CycleStatus::Certified
+    );
+    assert_eq!(
+        repo.cycle.lock().unwrap().as_ref().unwrap().current_gate,
+        GateStage::Gate6Certified
+    );
 }
 
 #[test]
@@ -243,7 +311,10 @@ fn test_merge_cycle_fails_when_not_certified() {
     };
 
     let res = merge_cycle::execute(req, &repo, &board);
-    assert!(matches!(res, Err(DomainViolation::InfrastructureBoundaryFault { .. })));
+    assert!(matches!(
+        res,
+        Err(DomainViolation::InfrastructureBoundaryFault { .. })
+    ));
 }
 
 #[test]
@@ -265,8 +336,19 @@ fn test_merge_cycle_succeeds_when_certified() {
 
     let outcome = merge_cycle::execute(req, &repo, &board).expect("merge should succeed");
     assert_eq!(outcome.cycle_status, CycleStatus::Merged);
-    assert_eq!(repo.cycle.lock().unwrap().as_ref().unwrap().lifecycle_status, CycleStatus::Merged);
-    assert_eq!(*board.last_transition.lock().unwrap(), Some((45, BoardColumn::ReadyForTest)));
+    assert_eq!(
+        repo.cycle
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .lifecycle_status,
+        CycleStatus::Merged
+    );
+    assert_eq!(
+        *board.last_transition.lock().unwrap(),
+        Some((45, BoardColumn::ReadyForTest))
+    );
 }
 
 #[test]
@@ -290,7 +372,8 @@ fn test_open_pull_request_success_with_reviewers_assignees_and_ref() {
         now_iso: "2026-10-28T12:00:00Z".to_string(),
     };
 
-    let outcome = open_pull_request::execute(req, &repo, &board).expect("pr creation should succeed");
+    let outcome =
+        open_pull_request::execute(req, &repo, &board).expect("pr creation should succeed");
     assert_eq!(outcome.pr_number, 101);
     assert_eq!(outcome.target_column, BoardColumn::InReview);
 
@@ -352,5 +435,8 @@ fn test_open_pull_request_requires_human_authorization() {
     };
 
     let res = open_pull_request::execute(req, &repo, &board);
-    assert!(matches!(res, Err(DomainViolation::InfrastructureBoundaryFault { .. })));
+    assert!(matches!(
+        res,
+        Err(DomainViolation::InfrastructureBoundaryFault { .. })
+    ));
 }

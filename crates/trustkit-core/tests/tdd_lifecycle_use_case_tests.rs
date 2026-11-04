@@ -7,8 +7,8 @@ use trustkit_core::entities::{
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
-    AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SupervisedExecutionRequest,
-    SupervisedExecutionOutcome,
+    AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SupervisedExecutionOutcome,
+    SupervisedExecutionRequest,
 };
 use trustkit_core::special_cases::{ActiveCycleLookup, TddLifecycleState, WorktreeAllocation};
 use trustkit_core::use_cases::complete_task::{self, CompleteTaskRequest};
@@ -20,29 +20,61 @@ struct InMemoryRepo {
 }
 
 impl CycleEvidenceRepositoryPort for InMemoryRepo {
-    fn save_cycle(&self, _cycle: &SddCycle) -> Result<(), DomainViolation> { Ok(()) }
+    fn save_cycle(&self, _cycle: &SddCycle) -> Result<(), DomainViolation> {
+        Ok(())
+    }
     fn find_active_cycle(&self) -> Result<ActiveCycleLookup, DomainViolation> {
         Ok(ActiveCycleLookup::NoActiveCycle)
     }
-    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> { Ok(1) }
-    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> { Ok(vec![]) }
+    fn save_artifact_seal(&self, _seal: &ArtifactSeal) -> Result<u64, DomainViolation> {
+        Ok(1)
+    }
+    fn list_artifact_seals(&self, _cycle_id: &str) -> Result<Vec<ArtifactSeal>, DomainViolation> {
+        Ok(vec![])
+    }
     fn append_evidence(&self, evidence: &ExecutionEvidence) -> Result<u64, DomainViolation> {
         let mut list = self.evidences.lock().unwrap();
         list.push(evidence.clone());
         Ok(list.len() as u64)
     }
-    fn list_evidences_for_cycle(&self, _cycle_id: &str) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
+    fn list_evidences_for_cycle(
+        &self,
+        _cycle_id: &str,
+    ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         Ok(self.evidences.lock().unwrap().clone())
     }
-    fn update_cycle_spec_lock(&self, _cycle_id: &str, _digest: &str, _state: &str) -> Result<(), DomainViolation> { Ok(()) }
-    fn save_atomic_tasks(&self, _c: &str, _t: &[TaskNode], _w: &WaveSchedule) -> Result<(), DomainViolation> { Ok(()) }
+    fn update_cycle_spec_lock(
+        &self,
+        _cycle_id: &str,
+        _digest: &str,
+        _state: &str,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn save_atomic_tasks(
+        &self,
+        _c: &str,
+        _t: &[TaskNode],
+        _w: &WaveSchedule,
+    ) -> Result<(), DomainViolation> {
+        Ok(())
+    }
 
-    fn find_atomic_task(&self, _cycle_id: &str, task_id: &str) -> Result<Option<AtomicTask>, DomainViolation> {
+    fn find_atomic_task(
+        &self,
+        _cycle_id: &str,
+        task_id: &str,
+    ) -> Result<Option<AtomicTask>, DomainViolation> {
         let list = self.tasks.lock().unwrap();
         Ok(list.iter().find(|t| t.task_id == task_id).cloned())
     }
 
-    fn update_task_tdd_phase(&self, _cycle_id: &str, task_id: &str, state: &TddLifecycleState) -> Result<(), DomainViolation> {
+    fn update_task_tdd_phase(
+        &self,
+        _cycle_id: &str,
+        task_id: &str,
+        state: &TddLifecycleState,
+    ) -> Result<(), DomainViolation> {
         let mut list = self.tasks.lock().unwrap();
         if let Some(t) = list.iter_mut().find(|t| t.task_id == task_id) {
             t.tdd_lifecycle_state = state.clone();
@@ -58,7 +90,10 @@ struct MockSupervisor {
 }
 
 impl AsyncExecutionSupervisorPort for MockSupervisor {
-    fn execute_supervised(&self, _request: &SupervisedExecutionRequest) -> Result<SupervisedExecutionOutcome, DomainViolation> {
+    fn execute_supervised(
+        &self,
+        _request: &SupervisedExecutionRequest,
+    ) -> Result<SupervisedExecutionOutcome, DomainViolation> {
         Ok(SupervisedExecutionOutcome {
             exit_code: self.exit_code,
             duration_ms: 42,
@@ -90,7 +125,10 @@ fn sample_task(task_id: &str, state: TddLifecycleState) -> AtomicTask {
 #[test]
 fn test_green_phase_rejected_when_awaiting_red_phase() {
     let repo = InMemoryRepo {
-        tasks: Mutex::new(vec![sample_task("TASK-001", TddLifecycleState::AwaitingRedPhase)]),
+        tasks: Mutex::new(vec![sample_task(
+            "TASK-001",
+            TddLifecycleState::AwaitingRedPhase,
+        )]),
         evidences: Mutex::new(vec![]),
     };
     let supervisor = MockSupervisor {
@@ -123,7 +161,10 @@ fn test_green_phase_rejected_when_awaiting_red_phase() {
 #[test]
 fn test_red_phase_advances_to_red_verified_on_test_failure() {
     let repo = InMemoryRepo {
-        tasks: Mutex::new(vec![sample_task("TASK-002", TddLifecycleState::AwaitingRedPhase)]),
+        tasks: Mutex::new(vec![sample_task(
+            "TASK-002",
+            TddLifecycleState::AwaitingRedPhase,
+        )]),
         evidences: Mutex::new(vec![]),
     };
     let supervisor = MockSupervisor {
@@ -143,7 +184,8 @@ fn test_red_phase_advances_to_red_verified_on_test_failure() {
         now_iso: "2026-10-28T12:00:00Z".to_string(),
     };
 
-    let outcome = record_tdd_phase::execute(req, &repo, &supervisor).expect("red phase should succeed");
+    let outcome =
+        record_tdd_phase::execute(req, &repo, &supervisor).expect("red phase should succeed");
     assert_eq!(outcome.phase, TddPhase::Red);
     assert!(outcome.new_state.is_red_verified());
     assert_eq!(repo.evidences.lock().unwrap().len(), 1);
@@ -152,7 +194,10 @@ fn test_red_phase_advances_to_red_verified_on_test_failure() {
 #[test]
 fn test_red_phase_fails_when_test_passes() {
     let repo = InMemoryRepo {
-        tasks: Mutex::new(vec![sample_task("TASK-002", TddLifecycleState::AwaitingRedPhase)]),
+        tasks: Mutex::new(vec![sample_task(
+            "TASK-002",
+            TddLifecycleState::AwaitingRedPhase,
+        )]),
         evidences: Mutex::new(vec![]),
     };
     let supervisor = MockSupervisor {
@@ -173,13 +218,21 @@ fn test_red_phase_fails_when_test_passes() {
     };
 
     let result = record_tdd_phase::execute(req, &repo, &supervisor);
-    assert!(matches!(result, Err(DomainViolation::TddLifecycleViolation { .. })));
+    assert!(matches!(
+        result,
+        Err(DomainViolation::TddLifecycleViolation { .. })
+    ));
 }
 
 #[test]
 fn test_green_phase_advances_to_green_verified_on_test_success() {
     let repo = InMemoryRepo {
-        tasks: Mutex::new(vec![sample_task("TASK-003", TddLifecycleState::RedVerified { failing_evidence_id: 1 })]),
+        tasks: Mutex::new(vec![sample_task(
+            "TASK-003",
+            TddLifecycleState::RedVerified {
+                failing_evidence_id: 1,
+            },
+        )]),
         evidences: Mutex::new(vec![]),
     };
     let supervisor = MockSupervisor {
@@ -199,7 +252,8 @@ fn test_green_phase_advances_to_green_verified_on_test_success() {
         now_iso: "2026-10-28T12:00:00Z".to_string(),
     };
 
-    let outcome = record_tdd_phase::execute(req, &repo, &supervisor).expect("green phase should succeed");
+    let outcome =
+        record_tdd_phase::execute(req, &repo, &supervisor).expect("green phase should succeed");
     assert_eq!(outcome.phase, TddPhase::Green);
     assert!(outcome.new_state.is_green_verified());
 }
@@ -207,7 +261,13 @@ fn test_green_phase_advances_to_green_verified_on_test_success() {
 #[test]
 fn test_complete_task_advances_to_committed() {
     let repo = InMemoryRepo {
-        tasks: Mutex::new(vec![sample_task("TASK-004", TddLifecycleState::GreenVerified { red_evidence_id: 1, green_evidence_id: 2 })]),
+        tasks: Mutex::new(vec![sample_task(
+            "TASK-004",
+            TddLifecycleState::GreenVerified {
+                red_evidence_id: 1,
+                green_evidence_id: 2,
+            },
+        )]),
         evidences: Mutex::new(vec![]),
     };
 
@@ -225,7 +285,12 @@ fn test_complete_task_advances_to_committed() {
 #[test]
 fn test_complete_task_fails_when_not_green() {
     let repo = InMemoryRepo {
-        tasks: Mutex::new(vec![sample_task("TASK-004", TddLifecycleState::RedVerified { failing_evidence_id: 1 })]),
+        tasks: Mutex::new(vec![sample_task(
+            "TASK-004",
+            TddLifecycleState::RedVerified {
+                failing_evidence_id: 1,
+            },
+        )]),
         evidences: Mutex::new(vec![]),
     };
 
@@ -237,5 +302,8 @@ fn test_complete_task_fails_when_not_green() {
     };
 
     let result = complete_task::execute(req, &repo);
-    assert!(matches!(result, Err(DomainViolation::TddLifecycleViolation { .. })));
+    assert!(matches!(
+        result,
+        Err(DomainViolation::TddLifecycleViolation { .. })
+    ));
 }

@@ -15,7 +15,8 @@ use trustkit_db::GraphSqliteRepository;
 #[test]
 fn test_shrink_guard_blocks_accidental_node_reduction_without_force() {
     let tmp = NamedTempFile::new().expect("Failed creating temp db file");
-    let repo = GraphSqliteRepository::open(tmp.path()).expect("Failed opening GraphSqliteRepository");
+    let repo =
+        GraphSqliteRepository::open(tmp.path()).expect("Failed opening GraphSqliteRepository");
 
     // 1. Initial snapshot with 50 nodes
     let mut initial_nodes = Vec::new();
@@ -47,7 +48,8 @@ fn test_shrink_guard_blocks_accidental_node_reduction_without_force() {
         "2026-10-29T22:00:00Z",
     )];
 
-    let verdict = repo.save_graph_snapshot(&initial_nodes, &initial_edges, &manifests, false)
+    let verdict = repo
+        .save_graph_snapshot(&initial_nodes, &initial_edges, &manifests, false)
         .expect("Initial snapshot save must succeed");
     assert_eq!(verdict, GraphHealthVerdict::Healthy);
 
@@ -58,28 +60,45 @@ fn test_shrink_guard_blocks_accidental_node_reduction_without_force() {
     let reduced_nodes: Vec<StructuralNode> = initial_nodes[0..10].to_vec();
     let reduced_edges: Vec<StructuralEdge> = initial_edges[0..9].to_vec();
 
-    let shrink_verdict = repo.save_graph_snapshot(&reduced_nodes, &reduced_edges, &manifests, false)
+    let shrink_verdict = repo
+        .save_graph_snapshot(&reduced_nodes, &reduced_edges, &manifests, false)
         .expect("Shrink-Guard must return verdict without failing the call");
 
-    assert_eq!(shrink_verdict, GraphHealthVerdict::ShrinkBlocked, "Shrink-Guard must trigger when reducing 50 -> 10 nodes");
+    assert_eq!(
+        shrink_verdict,
+        GraphHealthVerdict::ShrinkBlocked,
+        "Shrink-Guard must trigger when reducing 50 -> 10 nodes"
+    );
 
     // Verify database nodes remained intact at 50
-    let persisted_nodes = repo.load_nodes().expect("Must load nodes after shrink attempt");
-    assert_eq!(persisted_nodes.len(), 50, "Node count in SQLite must remain unchanged at 50");
+    let persisted_nodes = repo
+        .load_nodes()
+        .expect("Must load nodes after shrink attempt");
+    assert_eq!(
+        persisted_nodes.len(),
+        50,
+        "Node count in SQLite must remain unchanged at 50"
+    );
 
     // 3. With force=true, the reduction must be permitted
-    let force_verdict = repo.save_graph_snapshot(&reduced_nodes, &reduced_edges, &manifests, true)
+    let force_verdict = repo
+        .save_graph_snapshot(&reduced_nodes, &reduced_edges, &manifests, true)
         .expect("Forced snapshot save must succeed");
     assert_eq!(force_verdict, GraphHealthVerdict::Healthy);
 
     let forced_nodes = repo.load_nodes().expect("Must load nodes after force");
-    assert_eq!(forced_nodes.len(), 10, "Nodes must be updated to 10 after --force");
+    assert_eq!(
+        forced_nodes.len(),
+        10,
+        "Nodes must be updated to 10 after --force"
+    );
 }
 
 #[test]
 fn test_detect_changed_files_with_blake3_digests() {
     let tmp = NamedTempFile::new().expect("Failed creating temp db file");
-    let repo = GraphSqliteRepository::open(tmp.path()).expect("Failed opening GraphSqliteRepository");
+    let repo =
+        GraphSqliteRepository::open(tmp.path()).expect("Failed opening GraphSqliteRepository");
 
     // Seed 20 files in manifest
     let mut initial_manifests = Vec::new();
@@ -118,7 +137,8 @@ fn test_detect_changed_files_with_blake3_digests() {
         ));
     }
 
-    let changed = repo.detect_changed_files(&current_manifests)
+    let changed = repo
+        .detect_changed_files(&current_manifests)
         .expect("detect_changed_files must succeed");
 
     assert_eq!(changed.len(), 2, "Only 2 files must be detected as changed");
@@ -132,20 +152,49 @@ fn test_roundtrip_nodes_edges_and_manifests_preserves_not_null_metadata() {
     let repo = GraphSqliteRepository::open(tmp.path()).expect("Failed opening repo");
 
     let nodes = vec![
-        StructuralNode::new("crates/core/lib.rs", "lib.rs", GraphNodeKind::CodeFile, "crates/core/lib.rs", "CORE"),
-        StructuralNode::new("crates/core/lib.rs::MyStruct", "MyStruct", GraphNodeKind::PublicSymbol, "crates/core/lib.rs", "CORE"),
+        StructuralNode::new(
+            "crates/core/lib.rs",
+            "lib.rs",
+            GraphNodeKind::CodeFile,
+            "crates/core/lib.rs",
+            "CORE",
+        ),
+        StructuralNode::new(
+            "crates/core/lib.rs::MyStruct",
+            "MyStruct",
+            GraphNodeKind::PublicSymbol,
+            "crates/core/lib.rs",
+            "CORE",
+        ),
     ];
 
     let edges = vec![
-        StructuralEdge::new("crates/core/lib.rs", "crates/core/lib.rs::MyStruct", EdgeRelationKind::DefinesSymbol, EdgeConfidence::Extracted, "crates/core/lib.rs"),
-        StructuralEdge::new("crates/core/lib.rs", "std::sync::Arc", EdgeRelationKind::Imports, EdgeConfidence::Extracted, "crates/core/lib.rs"),
+        StructuralEdge::new(
+            "crates/core/lib.rs",
+            "crates/core/lib.rs::MyStruct",
+            EdgeRelationKind::DefinesSymbol,
+            EdgeConfidence::Extracted,
+            "crates/core/lib.rs",
+        ),
+        StructuralEdge::new(
+            "crates/core/lib.rs",
+            "std::sync::Arc",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/core/lib.rs",
+        ),
     ];
 
-    let manifests = vec![
-        FileGraphManifest::new("crates/core/lib.rs", "blake3_lib_digest", 2, "2026-10-29T22:00:00Z"),
-    ];
+    let manifests = vec![FileGraphManifest::new(
+        "crates/core/lib.rs",
+        "blake3_lib_digest",
+        2,
+        "2026-10-29T22:00:00Z",
+    )];
 
-    let verdict = repo.save_graph_snapshot(&nodes, &edges, &manifests, false).expect("Save must succeed");
+    let verdict = repo
+        .save_graph_snapshot(&nodes, &edges, &manifests, false)
+        .expect("Save must succeed");
     assert_eq!(verdict, GraphHealthVerdict::Healthy);
 
     let loaded_nodes = repo.load_nodes().expect("Load nodes");

@@ -28,7 +28,12 @@ impl CycleCertificationPort for CycleCertificationReporter {
         evidences: &[ExecutionEvidence],
     ) -> Result<String, DomainViolation> {
         let mut report = String::with_capacity(4096);
-        writeln!(report, "# Gauntlet Certification Report: {}", summary.cycle_id).unwrap();
+        writeln!(
+            report,
+            "# Gauntlet Certification Report: {}",
+            summary.cycle_id
+        )
+        .unwrap();
         writeln!(report).unwrap();
         writeln!(report, "- **Cycle ID:** {}", summary.cycle_id).unwrap();
         writeln!(report, "- **Certified At:** {}", summary.certified_at).unwrap();
@@ -36,7 +41,11 @@ impl CycleCertificationPort for CycleCertificationReporter {
         writeln!(
             report,
             "- **Layer 0 AST Integrity:** {}",
-            if summary.layer0_clean_pass { "CLEAN PASS" } else { "REJECTED" }
+            if summary.layer0_clean_pass {
+                "CLEAN PASS"
+            } else {
+                "REJECTED"
+            }
         )
         .unwrap();
         writeln!(
@@ -77,7 +86,11 @@ impl CycleCertificationPort for CycleCertificationReporter {
         writeln!(report, "| Critic | Verdict | Duration (ms) |").unwrap();
         writeln!(report, "|---|---|---|").unwrap();
         for finding in &summary.critic_findings {
-            let verdict_str = if finding.verdict.is_pass() { "PASS" } else { "FAIL" };
+            let verdict_str = if finding.verdict.is_pass() {
+                "PASS"
+            } else {
+                "FAIL"
+            };
             writeln!(
                 report,
                 "| {} | {} | {} |",
@@ -90,7 +103,11 @@ impl CycleCertificationPort for CycleCertificationReporter {
         writeln!(report).unwrap();
 
         writeln!(report, "## Audit Evidence Log").unwrap();
-        writeln!(report, "| ID | Stage | Actor | Exit Code | Digest (Blake3) | Command |").unwrap();
+        writeln!(
+            report,
+            "| ID | Stage | Actor | Exit Code | Digest (Blake3) | Command |"
+        )
+        .unwrap();
         writeln!(report, "|---|---|---|---|---|---|").unwrap();
         for ev in evidences {
             let digest_prefix = if ev.output_blake3_digest.len() >= 12 {
@@ -120,7 +137,12 @@ impl CycleCertificationPort for CycleCertificationReporter {
         spec: &SpecificationV2,
     ) -> Result<String, DomainViolation> {
         let mut comment = String::with_capacity(2048);
-        writeln!(comment, "## [Gate 6] SDD Cycle {} Certified", summary.cycle_id).unwrap();
+        writeln!(
+            comment,
+            "## [Gate 6] SDD Cycle {} Certified",
+            summary.cycle_id
+        )
+        .unwrap();
         writeln!(comment).unwrap();
         writeln!(comment, "Feature: **{}**", spec.feature_slug).unwrap();
         writeln!(comment, "Certified At: `{}`", summary.certified_at).unwrap();
@@ -130,7 +152,11 @@ impl CycleCertificationPort for CycleCertificationReporter {
         writeln!(
             comment,
             "- Layer 1 Critics: {}/{} passed unanimously",
-            summary.critic_findings.iter().filter(|f| f.verdict.is_pass()).count(),
+            summary
+                .critic_findings
+                .iter()
+                .filter(|f| f.verdict.is_pass())
+                .count(),
             summary.critic_findings.len()
         )
         .unwrap();
@@ -144,7 +170,11 @@ impl CycleCertificationPort for CycleCertificationReporter {
 
         if !spec.traceability_matrix.is_empty() {
             writeln!(comment, "### Traceability Matrix").unwrap();
-            writeln!(comment, "| Business Rule | Functional Req | Task | Node | Spec | Evidence |").unwrap();
+            writeln!(
+                comment,
+                "| Business Rule | Functional Req | Task | Node | Spec | Evidence |"
+            )
+            .unwrap();
             writeln!(comment, "|---|---|---|---|---|---|").unwrap();
             for row in &spec.traceability_matrix {
                 writeln!(

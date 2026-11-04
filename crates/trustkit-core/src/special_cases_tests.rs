@@ -120,14 +120,24 @@ fn test_tdd_lifecycle_state_transitions() {
 
 #[test]
 fn test_circuit_breaker_state_evaluations() {
-    assert_eq!(CircuitBreakerState::evaluate(0, ""), CircuitBreakerState::Closed);
-    assert_eq!(CircuitBreakerState::evaluate(4, "Almost tripped"), CircuitBreakerState::Closed);
+    assert_eq!(
+        CircuitBreakerState::evaluate(0, ""),
+        CircuitBreakerState::Closed
+    );
+    assert_eq!(
+        CircuitBreakerState::evaluate(4, "Almost tripped"),
+        CircuitBreakerState::Closed
+    );
 
     let tripped = CircuitBreakerState::evaluate(5, "Max iterations reached (RN-005)");
     assert!(tripped.is_tripped());
     assert!(!tripped.is_closed());
 
-    if let CircuitBreakerState::Tripped { consecutive_failures, diagnostic } = tripped {
+    if let CircuitBreakerState::Tripped {
+        consecutive_failures,
+        diagnostic,
+    } = tripped
+    {
         assert_eq!(consecutive_failures, 5);
         assert_eq!(diagnostic, "Max iterations reached (RN-005)");
     }

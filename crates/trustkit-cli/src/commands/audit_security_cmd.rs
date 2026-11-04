@@ -4,11 +4,11 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
-use std::path::{Path, PathBuf};
-use serde_json::json;
-use trustkit_core::errors::DomainViolation;
 use crate::cli_contract::{AuditArgs, AuditProfileArg, AuditSecurityArgs, AuditSubcommand};
 use crate::error_handler::DomainOutcome;
+use serde_json::json;
+use std::path::{Path, PathBuf};
+use trustkit_core::errors::DomainViolation;
 
 pub fn execute(args: &AuditArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     match &args.action {
@@ -37,9 +37,14 @@ pub fn execute_security_audit(
         AuditProfileArg::Deep => "deep",
     };
 
-    std::fs::create_dir_all(output_path).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "audit_security_fs".to_string(),
-        details: format!("Failed creating security audit output directory {}: {e}", output_path.display()),
+    std::fs::create_dir_all(output_path).map_err(|e| {
+        DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "audit_security_fs".to_string(),
+            details: format!(
+                "Failed creating security audit output directory {}: {e}",
+                output_path.display()
+            ),
+        }
     })?;
 
     write_baseline_ledger_artifacts(output_path, profile_str, scope_str)?;
@@ -104,7 +109,8 @@ fn verify_output_dir_isolation(
             output_path.display(),
             scope_path.display()
         ),
-        remediation: "Specify an external --output-dir or add the output directory to .gitignore.".to_string(),
+        remediation: "Specify an external --output-dir or add the output directory to .gitignore."
+            .to_string(),
     })
 }
 
@@ -142,7 +148,10 @@ fn is_path_gitignored(scope_root: &Path, rel_str: &str, first_segment: &str) -> 
             continue;
         }
         let cleaned = line.trim_start_matches('/').trim_end_matches('/');
-        if cleaned == first_segment || cleaned == rel_str || rel_str.starts_with(&format!("{cleaned}/")) {
+        if cleaned == first_segment
+            || cleaned == rel_str
+            || rel_str.starts_with(&format!("{cleaned}/"))
+        {
             return true;
         }
     }

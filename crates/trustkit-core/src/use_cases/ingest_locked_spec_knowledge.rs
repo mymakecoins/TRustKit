@@ -55,20 +55,13 @@ pub fn execute(
     let title = extract_markdown_heading(&req.spec_content)
         .unwrap_or_else(|| format!("Especificacao Congelada: {cycle_id}"));
 
-    let tags = vec![
-        "spec".to_string(),
-        "frozen".to_string(),
-        cycle_id.clone(),
-    ];
+    let tags = vec!["spec".to_string(), "frozen".to_string(), cycle_id.clone()];
 
     let task_ids = extract_prefixed_tokens(&req.spec_content, "TASK-");
     let rule_ids = extract_prefixed_tokens(&req.spec_content, "RN-");
     let req_ids = extract_prefixed_tokens(&req.spec_content, "RF-");
 
-    let task_links: Vec<String> = task_ids
-        .iter()
-        .map(|tid| format!("tasks/{tid}"))
-        .collect();
+    let task_links: Vec<String> = task_ids.iter().map(|tid| format!("tasks/{tid}")).collect();
 
     let body_markdown = synthesize_spec_knowledge_body(
         &req.lock_outcome,
