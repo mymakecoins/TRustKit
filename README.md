@@ -295,7 +295,58 @@ trustkit mcp
 
 ---
 
-## 9. Matriz de Features Concluidas
+## 9. Agentic Harness & Governanca L4 (100% no harness-score)
+
+O TRustKit possui certificacao de maturidade maxima de harness agêntico auditado deterministamente via `harness-score`:
+
+```
+harness-score: Maturity L4 · Self-correcting | Score: 105/105 (100%)
+Detected Environments: Antigravity, Claude Code, Codex
+```
+
+### Pilares da Governanca Agêntica
+
+1. Context & Guides (20/20 pts):
+   - `AGENTS.md`: Guia canônico na raiz contendo overview, arquitetura hexagonal, comandos de build/test e invariantes inegociáveis.
+   - Regras Escopadas (`.claude/rules/`): Regras ativadas por caminho (`rust-crates.md` para `crates/**`, `specs-governance.md` para `specs/**`, e `governance-invariants.md`).
+
+2. Skills & Commands (17/17 pts):
+   - Skills especializadas em `.agents/skills/` e `skills/`.
+   - Comandos explícitos de ciclo em `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
+   - Subagentes dedicados em `.claude/agents/` (`gauntlet-critic.md`, `spec-reviewer.md`).
+
+3. Hooks & Guardrails (14/14 pts):
+   - Gate Hook (`PreToolUse`): Interceptação de comandos perigosos via `skills/trustkit-sdd/scripts/trustkit-pre-tool.sh` integrado a `trustkit hook pre-tool` (< 3ms).
+   - Feedback Hook (`PostToolUse`): Validação automática de integridade e formatação via `skills/trustkit-sdd/scripts/trustkit-post-tool.sh`.
+   - Configuração formal padronizada em `.claude/settings.json`.
+
+4. Sensors & Feedback (20/20 pts):
+   - Linter configurado na raiz via `clippy.toml`.
+   - Extrator AST Tree-Sitter nativo para auditoria anti-cheat de asserções em tempo de compilação.
+
+5. CI Feedback (14/14 pts):
+   - Pipeline de integração contínua em `.github/workflows/ci.yml` com jobs de `cargo test`, `cargo clippy` e `cargo fmt`.
+   - Hooks de pre-commit gerenciados via `.pre-commit-config.yaml`.
+
+6. Hygiene & Safety (20/20 pts):
+   - Licença formalizada (`LICENSE`), dependências travadas em `Cargo.lock` e ausência total de credenciais no repositório.
+
+---
+
+## 10. Diagramas de Arquitetura e Fluxos (Archify)
+
+O TRustKit disponibiliza diagramas interativos independentes (HTML standalone com SVG inline) gerados via motor determinístico Archify em `docs/diagrams/`:
+
+- `01-trustkit-architecture.html`: Arquitetura Modular Hexagonal e Portas do Cargo Workspace.
+- `02-trustkit-7gates-workflow.html`: Fluxo de Trabalho dos 7 Gates do Spec-Driven Development.
+- `03-trustkit-task-tdd-sequence.html`: Sequência de Execução de Tarefas e Ciclo TDD em Git Worktrees.
+- `04-trustkit-memory-dataflow.html`: Fluxo de Dados da Memória Viva FTS5 e Grafo Estrutural.
+- `05-trustkit-feature-lifecycle.html`: Máquina de Estados e Ciclo de Vida da Feature até o Merge.
+- `06-trustkit-agent-harness.html`: Arquitetura do Agent Harness e Loop de Governança L4.
+
+---
+
+## 11. Matriz de Features Concluidas
 
 | Ciclo / Branch | Titulo | Capacidades Chave |
 |---|---|---|
@@ -310,7 +361,7 @@ trustkit mcp
 
 ---
 
-## 10. Codigos de Saida Semanticos (POSIX Exit Codes)
+## 12. Codigos de Saida Semanticos (POSIX Exit Codes)
 
 | Codigo | Identificador | Categoria | Descricao |
 |---|---|---|---|
@@ -324,7 +375,7 @@ trustkit mcp
 
 ---
 
-## 11. Dual-Audience: Modos de Operacao
+## 13. Dual-Audience: Modos de Operacao
 
 - Modo Humano (saida padrao em terminal TTY):
   - Interface textual em ASCII puro, sem emojis ou caracteres decorativos.
@@ -338,7 +389,7 @@ trustkit mcp
 
 ---
 
-## 12. Compilacao, Instalacao e Testes
+## 14. Compilacao, Instalacao e Testes
 
 ### Pre-requisitos
 - Rust 1.82+ (Edicao 2024 / 2021) e Cargo instalados.
@@ -375,6 +426,6 @@ target/release/trustkit
 
 ---
 
-## 13. Licenca
+## 15. Licenca
 
-Software proprietario de uso interno restrito. Todos os direitos reservados. Consulte o comite de arquitetura de software para autorizacoes e diretrizes de governanca.
+Distribuido sob os termos da licenca MIT. Consulte o arquivo `LICENSE` para maiores detalhes.
