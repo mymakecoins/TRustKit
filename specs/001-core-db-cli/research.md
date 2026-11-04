@@ -58,6 +58,6 @@
 ## 6. GitHub Projects v2 & Identity Verification
 
 - **Decision**: Encapsulate GitHub interactions behind `ProjectBoardGatewayPort` implemented by `trustkit-gh::GitHubCliGraphQlAdapter`, invoking the authenticated host `gh` CLI (`gh auth status`, `gh api graphql`). Support offline resilience via `BoardSyncOutcome::DeferredOffline`.
-- **Rationale**: Reuses the developer's existing `gh` keyring authentication without managing raw PAT tokens, enforces `RN-014` (`marcos-rodoind` identity check), and avoids blocking local development if GitHub's API is unreachable.
+- **Rationale**: Reuses the developer's existing `gh` keyring authentication without managing raw PAT tokens, enforces `RN-014` (active account identity check), and avoids blocking local development if GitHub's API is unreachable.
 - **Alternatives Considered**:
   - *Direct HTTP OAuth client in Rust*: Rejected to avoid duplicating credential storage already managed securely by `gh auth`.

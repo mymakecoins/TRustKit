@@ -14,7 +14,7 @@ test_file: crates/trustkit-core/src/osc7501_encoder_tests.rs
 ---
 
 ## Contexto
-O protocolo OSC 7501 padronizado pelo Ghostty e adotado pelo `herdr-core` permite a programas de terminal reportar mecanicamente seu estado operacional (`working`, `blocked`, `done`, `error`), progresso percentual e mensagens estruturadas. Para que o TRustKit seja observavel por multiplexadores externos sem depender de bibliotecas de terceiros, o core deve implementar um codificador deterministico em `std`.
+O protocolo OSC 7501 padronizado pelo Ghostty e adotado pelo `multiplexador PTY` permite a programas de terminal reportar mecanicamente seu estado operacional (`working`, `blocked`, `done`, `error`), progresso percentual e mensagens estruturadas. Para que o TRustKit seja observavel por multiplexadores externos sem depender de bibliotecas de terceiros, o core deve implementar um codificador deterministico em `std`.
 
 ## Escopo
 Implementar em `crates/trustkit-core/src/osc7501_encoder.rs` e registrar em `crates/trustkit-core/src/entities.rs`:
@@ -35,7 +35,7 @@ Implementar em `crates/trustkit-core/src/osc7501_encoder.rs` e registrar em `cra
 ## Premissas
 - Implementacao 100% em Rust standard library (`std` only).
 - Zero alocacoes excessivas e zero panics.
-- Conformidade estrita com o formato esperado pelo `ghostty-vt` e `herdr-core`.
+- Conformidade estrita com o formato esperado pelo `ghostty-vt` e `multiplexador PTY`.
 
 ## Criterio de Aceite
 - [ ] **Dado** um payload com estado `working`, progresso `45` e app `trustkit`, **quando** codificado via `encode_osc7501`, **entao** gera uma cadeia no padrao `\x1b]7501;...` contendo campos chave-valor delimitados por `:` e terminados com `\x1b\`.

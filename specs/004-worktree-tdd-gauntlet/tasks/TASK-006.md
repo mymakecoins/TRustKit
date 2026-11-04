@@ -38,7 +38,7 @@ Implementar em `crates/trustkit-core/src/use_cases/`:
 ## Criterio de Aceite
 - [x] **Dado** um ciclo com Gauntlet aprovado, **quando** `certify_cycle_and_report` executa, **entao** o status avança para `Certified` e os artefatos de relatório são gerados sem `null`.
 - [x] **Dado** uma solicitação de merge sem o ciclo estar certificado, **quando** executada, **entao** o comando rejeita com erro de portão não cumprido.
-- [x] **Dado** uma solicitação de abertura de PR, **quando** executada, **entao** o payload do PR contém revisor `@thiagobotelhorodoind`, assignee `@marcos-rodoind` e referência `Ref #<id>`.
+- [x] **Dado** uma solicitação de abertura de PR, **quando** executada, **entao** o payload do PR contém revisores e assignees configurados e referência `Ref #<id>`.
 
 ## Notas Tecnicas
 - Arquivos: `crates/trustkit-core/src/use_cases/certify_cycle_and_report.rs`, `crates/trustkit-core/src/use_cases/merge_cycle.rs`, `crates/trustkit-core/src/use_cases/open_pull_request.rs`.

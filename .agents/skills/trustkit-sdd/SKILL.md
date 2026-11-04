@@ -58,10 +58,10 @@ trustkit wave plan --json
 ```
 
 ### Gate 4: Execucao em Git Worktrees, Multiplexacao de Terminais e TDD Estrito
-Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (herdr-core ou nativo) e garanta as fases TDD:
+Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (multiplexador PTY ou nativo) e garanta as fases TDD:
 ```bash
-# Executa a onda com isolamento de worktree e runtime de terminais (auto, herdr, native)
-trustkit wave run --wave <WAVE_INDEX> [--runtime auto|herdr|native] [--agent-cmd "<cmd>"] --json
+# Executa a onda com isolamento de worktree e runtime de terminais (auto, pty, native)
+trustkit wave run --wave <WAVE_INDEX> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] --json
 
 # Registra a fase RED (falha obrigatoria comprovada)
 trustkit task test <TASK_ID> --phase red --json

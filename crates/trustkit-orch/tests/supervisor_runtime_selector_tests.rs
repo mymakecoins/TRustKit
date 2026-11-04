@@ -11,7 +11,7 @@ use trustkit_orch::supervisor_runtime_selector::SupervisorRuntimeSelector;
 
 #[test]
 fn test_selector_auto_fallback_to_native_when_socket_missing() {
-    let selector = SupervisorRuntimeSelector::with_custom_socket(PathBuf::from("/tmp/non_existent_herdr_123.sock"));
+    let selector = SupervisorRuntimeSelector::with_custom_socket(PathBuf::from("/tmp/non_existent_pty_123.sock"));
     let resolved = selector.resolve(RuntimeBackendMode::Auto).expect("Auto should not fail");
     assert_eq!(resolved.active_mode, RuntimeBackendMode::Native);
     assert!(resolved.fallback_triggered);
@@ -20,7 +20,7 @@ fn test_selector_auto_fallback_to_native_when_socket_missing() {
 
 #[test]
 fn test_selector_explicit_native() {
-    let selector = SupervisorRuntimeSelector::with_custom_socket(PathBuf::from("/tmp/non_existent_herdr_123.sock"));
+    let selector = SupervisorRuntimeSelector::with_custom_socket(PathBuf::from("/tmp/non_existent_pty_123.sock"));
     let resolved = selector.resolve(RuntimeBackendMode::Native).expect("Native should not fail");
     assert_eq!(resolved.active_mode, RuntimeBackendMode::Native);
     assert!(!resolved.fallback_triggered);
@@ -28,9 +28,9 @@ fn test_selector_explicit_native() {
 }
 
 #[test]
-fn test_selector_explicit_herdr_fails_when_socket_missing() {
-    let selector = SupervisorRuntimeSelector::with_custom_socket(PathBuf::from("/tmp/non_existent_herdr_123.sock"));
-    let err = selector.resolve(RuntimeBackendMode::Herdr);
+fn test_selector_explicit_pty_fails_when_socket_missing() {
+    let selector = SupervisorRuntimeSelector::with_custom_socket(PathBuf::from("/tmp/non_existent_pty_123.sock"));
+    let err = selector.resolve(RuntimeBackendMode::Pty);
     assert!(matches!(
         err,
         Err(DomainViolation::InfrastructureBoundaryFault { .. })
@@ -38,14 +38,14 @@ fn test_selector_explicit_herdr_fails_when_socket_missing() {
 }
 
 #[test]
-fn test_selector_resolves_herdr_when_socket_exists() {
+fn test_selector_resolves_pty_when_socket_exists() {
     let temp_dir = tempfile::tempdir().unwrap();
-    let socket_path = temp_dir.path().join("mock_herdr.sock");
+    let socket_path = temp_dir.path().join("mock_pty.sock");
     std::fs::write(&socket_path, b"mock").unwrap();
 
     let selector = SupervisorRuntimeSelector::with_custom_socket(socket_path);
-    let resolved = selector.resolve(RuntimeBackendMode::Herdr).expect("Should resolve Herdr");
-    assert_eq!(resolved.active_mode, RuntimeBackendMode::Herdr);
+    let resolved = selector.resolve(RuntimeBackendMode::Pty).expect("Should resolve Pty");
+    assert_eq!(resolved.active_mode, RuntimeBackendMode::Pty);
     assert!(!resolved.fallback_triggered);
     assert!(resolved.multiplexer.is_some());
 }

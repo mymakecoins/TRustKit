@@ -22,7 +22,7 @@ Represents an isolated Spec-Driven Development execution cycle.
 | `lifecycle_status` | `CycleStatus` | `Active`, `Paused`, `CircuitBreakerTripped`, `Certified`, or `Merged`. |
 | `gauntlet_attempt` | `u8` | Bounded integer `0..=5`. Trips Circuit Breaker at `5` (`RN-005`). |
 | `spec_seal_state` | `SpecLockState` | `DraftUnverified` or `Frozen { spec_path, blake3_digest }`. |
-| `work_branch` | `String` | Non-protected work branch following `feat/<id>-<slug>`, `fix/<id>-<slug>`, `chore/<id>-<slug>`, `marcos/<id>/<slug>`, or active feature branch. |
+| `work_branch` | `String` | Non-protected work branch following `feat/<id>-<slug>`, `fix/<id>-<slug>`, `chore/<id>-<slug>`, or active feature branch. |
 | `base_commit_sha` | `String` | 40-char Git commit hash at cycle initialization. |
 | `pre_existing_dirty_files` | `Vec<String>` | Relative paths of uncommitted files present prior to `init` (`[]` when clean). |
 | `created_at` | `String` | ISO-8601 UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`). |

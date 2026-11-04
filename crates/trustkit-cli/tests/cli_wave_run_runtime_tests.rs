@@ -15,7 +15,7 @@ fn test_parse_wave_run_with_runtime_auto_and_agent_cmd() {
         "--wave",
         "1",
         "--runtime",
-        "herdr",
+        "pty",
         "--agent-cmd",
         "claude",
         "--json",
@@ -26,7 +26,7 @@ fn test_parse_wave_run_with_runtime_auto_and_agent_cmd() {
         Command::Wave(wave_cmd) => match wave_cmd.action {
             WaveSubcommand::Run(run_args) => {
                 assert_eq!(run_args.wave, 1);
-                assert_eq!(run_args.runtime, "herdr");
+                assert_eq!(run_args.runtime, "pty");
                 assert_eq!(run_args.agent_cmd, "claude");
                 assert!(run_args.json);
             }

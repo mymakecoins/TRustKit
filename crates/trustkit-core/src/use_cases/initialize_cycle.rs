@@ -38,7 +38,8 @@ pub fn execute(
     let linkage = resolve_linkage(&req.issue_param, &req.work_branch, &req.timestamp_slug);
     let (cycle_id, sync_outcome) = match &linkage {
         IssueLinkage::LinkedIssue { issue_number, .. } => {
-            match board.verify_active_identity("marcos-rodoind")? {
+            let expected_identity = std::env::var("TRUSTKIT_GITHUB_USER").unwrap_or_default();
+            match board.verify_active_identity(&expected_identity)? {
                 IdentityVerification::Verified { .. } => {}
                 IdentityVerification::Rejected {
                     detected_handle,
@@ -247,7 +248,7 @@ mod tests {
         let repo = FakeRepo(Mutex::new(vec![]), Mutex::new(vec![]));
         let board = FakeBoard(
             IdentityVerification::Verified {
-                operator_handle: "marcos-rodoind".into(),
+                operator_handle: "operator".into(),
             },
             BoardSyncOutcome::Synchronized {
                 column: BoardColumn::InProgress,
@@ -268,7 +269,7 @@ mod tests {
         let repo = FakeRepo(Mutex::new(vec![]), Mutex::new(vec![]));
         let board = FakeBoard(
             IdentityVerification::Verified {
-                operator_handle: "marcos-rodoind".into(),
+                operator_handle: "operator".into(),
             },
             BoardSyncOutcome::SkippedUnlinkedCycle,
         );
@@ -284,7 +285,7 @@ mod tests {
         let rej = FakeBoard(
             IdentityVerification::Rejected {
                 detected_handle: "other".into(),
-                expected_handle: "marcos-rodoind".into(),
+                expected_handle: "operator".into(),
             },
             BoardSyncOutcome::SkippedUnlinkedCycle,
         );
@@ -292,7 +293,7 @@ mod tests {
 
         let off = FakeBoard(
             IdentityVerification::Verified {
-                operator_handle: "marcos-rodoind".into(),
+                operator_handle: "operator".into(),
             },
             BoardSyncOutcome::DeferredOffline {
                 queued_transition: BoardColumn::InProgress,

@@ -110,8 +110,8 @@ mod tests {
             body: "Closes #45".to_string(),
             base_branch: "develop".to_string(),
             head_branch: "feat/45".to_string(),
-            reviewers: vec!["thiagobotelhorodoind".to_string()],
-            assignees: vec!["marcos-rodoind".to_string()],
+            reviewers: vec!["reviewer1".to_string()],
+            assignees: vec!["dev1".to_string()],
         };
 
         let res = synchronizer.create_pull_request(&details);

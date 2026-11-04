@@ -1,4 +1,4 @@
-// Herdr OpenRPC Unix Domain Socket Adapter.
+// PTY Multiplexer OpenRPC Unix Domain Socket Adapter.
 // Constitutional Principle I: Strict Hexagonal Isolation.
 // Constitutional Principle II: Absolute Prohibition of NULL.
 // Constitutional Principle IV: Zero Panic.
@@ -29,27 +29,27 @@ fn current_timestamp_iso() -> String {
 
 fn fault(msg: impl Into<String>) -> DomainViolation {
     DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "herdr_socket_adapter".to_string(),
+        subsystem: "pty_socket_adapter".to_string(),
         details: msg.into(),
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct HerdrSocketAdapter {
+pub struct PtySocketAdapter {
     pub socket_path: PathBuf,
 }
 
-impl HerdrSocketAdapter {
+impl PtySocketAdapter {
     pub fn new(socket_path: impl Into<PathBuf>) -> Self {
         Self { socket_path: socket_path.into() }
     }
 
     pub fn discover_default() -> Option<Self> {
-        if let Ok(env_path) = std::env::var("HERDR_SOCKET") {
+        if let Ok(env_path) = std::env::var("PTY_SOCKET").or_else(|_| std::env::var("PTY_MULTIPLEXER_SOCKET")) {
             let p = PathBuf::from(env_path);
             if p.exists() { return Some(Self::new(p)); }
         }
-        for c in &["/tmp/herdr.sock", "/tmp/herdr-core.sock", "/var/run/herdr.sock"] {
+        for c in &["/tmp/pty-multiplexer.sock", "/tmp/pty.sock", "/var/run/pty.sock"] {
             let p = Path::new(c);
             if p.exists() { return Some(Self::new(p.to_path_buf())); }
         }
@@ -71,11 +71,11 @@ impl HerdrSocketAdapter {
         let (reader, _) = stream.into_split();
         let mut lines = BufReader::new(reader).lines();
         let line = lines.next_line().await.map_err(|e| fault(format!("Socket read error: {e}")))?
-            .ok_or_else(|| fault("Herdr socket closed connection prematurely"))?;
+            .ok_or_else(|| fault("PTY socket closed connection prematurely"))?;
 
         let resp: serde_json::Value = serde_json::from_str(&line).map_err(|e| fault(format!("JSON-RPC parse error: {e}")))?;
         if let Some(err) = resp.get("error") {
-            return Err(fault(format!("Herdr RPC error: {err}")));
+            return Err(fault(format!("PTY RPC error: {err}")));
         }
         Ok(resp.get("result").cloned().unwrap_or(serde_json::Value::Null))
     }
@@ -105,7 +105,7 @@ impl HerdrSocketAdapter {
     }
 }
 
-impl TerminalMultiplexerPort for HerdrSocketAdapter {
+impl TerminalMultiplexerPort for PtySocketAdapter {
     fn spawn_terminal(&self, req: &MultiplexedTerminalRequest) -> Result<MultiplexedTerminalHandle, DomainViolation> {
         let env_map: serde_json::Map<String, serde_json::Value> = req.env_vars.iter()
             .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone()))).collect();

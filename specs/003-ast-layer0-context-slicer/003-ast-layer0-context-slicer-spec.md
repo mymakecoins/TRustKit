@@ -20,7 +20,7 @@ flowchart LR
 ### Cenario 1: Atendimento de RF-001
 
 - **Dado** requisito RF-001 habilitado no sistema
-- **Quando** Inicialização Concorrente e Sincronização de Board (`Gate 0`): Cenário 1.1 (Com Issue Vinculada):** **Dado** que o repositório possui árvore Git acessível e o desenvolvedor executa `trustkit init --issue 45`, **quando** o comando inicia, **então** o binário valida a conta `marcos-rodoind`, preserva arquivos sujos pré-existentes na lista `PreExistingDirtyFiles` (sem executar `git stash`), move o card `#45` para `In progress`, cria `docs/specs/issue-45-AAAAMMDDHHMM/` e registra o ciclo `SddCycle` no SQLite com `Exit Code: 0` em `< 250ms`.<br>**Cenário 1.2 (Caso Especial Sem Issue):** **Dado** que `trustkit init` é invocado sem argumento `--issue` e fora de uma branch `marcos/<id>/...`, **quando** o comando inicia, **então** o binário instancia o Caso Especial `IssueTarget::UnlinkedCycle`, cria o diretório `docs/specs/no-issue-AAAAMMDDHHMM/`, não move nenhum card no GitHub Projects e solicita confirmação explícita ao usuário.
+- **Quando** Inicialização Concorrente e Sincronização de Board (`Gate 0`): Cenário 1.1 (Com Issue Vinculada):** **Dado** que o repositório possui árvore Git acessível e o desenvolvedor executa `trustkit init --issue 45`, **quando** o comando inicia, **então** o binário valida a conta GitHub ativa, preserva arquivos sujos pré-existentes na lista `PreExistingDirtyFiles` (sem executar `git stash`), move o card `#45` para `In progress`, cria `docs/specs/issue-45-AAAAMMDDHHMM/` e registra o ciclo `SddCycle` no SQLite com `Exit Code: 0` em `< 250ms`.<br>**Cenário 1.2 (Caso Especial Sem Issue):** **Dado** que `trustkit init` é invocado sem argumento `--issue` e fora de uma branch de feature (`feat/<id>-...`), **quando** o comando inicia, **então** o binário instancia o Caso Especial `IssueTarget::UnlinkedCycle`, cria o diretório `docs/specs/no-issue-AAAAMMDDHHMM/`, não move nenhum card no GitHub Projects e solicita confirmação explícita ao usuário.
 - **Entao** a operacao deve ser validada e persistida
 
 ### Cenario 2: Atendimento de RF-002
@@ -50,7 +50,7 @@ flowchart LR
 ### Cenario 6: Atendimento de RF-006
 
 - **Dado** requisito RF-006 habilitado no sistema
-- **Quando** Isolamento e Merge de Worktrees por Onda (`Gate 4`): Dado** uma onda contendo $N$ tarefas independentes, **quando** `trustkit wave run --wave <W>` é disparado, **então** o `WorktreeIsolationProvider` instancia $N$ worktrees efêmeras em `.trustkit/worktrees/`, executa os Builders em paralelo via `tokio`, valida os commits no padrão `<type>: #<id> <descricao em pt-BR>` e realiza o merge determinístico na branch `marcos/<id>/<slug>`.
+- **Quando** Isolamento e Merge de Worktrees por Onda (`Gate 4`): Dado** uma onda contendo $N$ tarefas independentes, **quando** `trustkit wave run --wave <W>` é disparado, **então** o `WorktreeIsolationProvider` instancia $N$ worktrees efêmeras em `.trustkit/worktrees/`, executa os Builders em paralelo via `tokio`, valida os commits no padrão `<type>: #<id> <descricao em pt-BR>` e realiza o merge determinístico na branch de trabalho (`feat/<id>-<slug>`).
 - **Entao** a operacao deve ser validada e persistida
 
 ### Cenario 7: Atendimento de RF-007
@@ -86,7 +86,7 @@ flowchart LR
 ### Cenario 12: Atendimento de RF-012
 
 - **Dado** requisito RF-012 habilitado no sistema
-- **Quando** Abertura de Pull Request Exclusivamente Sob Demanda: Dado** que o usuário invocou explicitamente `trustkit pr`, **quando** o comando executa, **então** o binário abre o PR para `develop` com `@thiagobotelhorodoind` (revisor), `@marcos-rodoind` (assignee), referência `Ref #<id>` (rejeitando `Closes`/`Fixes`/`Resolves`), Matriz de Rastreabilidade e imagens HTML, movendo o card para `In review`.
+- **Quando** Abertura de Pull Request Exclusivamente Sob Demanda: Dado** que o usuário invocou explicitamente `trustkit pr`, **quando** o comando executa, **então** o binário abre o PR para `develop` com revisores e assignees configurados, referência `Ref #<id>` (rejeitando `Closes`/`Fixes`/`Resolves`), Matriz de Rastreabilidade e imagens HTML, movendo o card para `In review`.
 - **Entao** a operacao deve ser validada e persistida
 
 ### Cenario 13: Atendimento de RF-013
