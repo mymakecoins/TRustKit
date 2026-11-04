@@ -14,11 +14,74 @@ use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 use trustkit_gh::board_synchronizer::ProjectBoardSynchronizer;
 use trustkit_gh::git_inspector::GitInspector;
 
+const DEFAULT_GITIGNORE_ENTRIES: &str = r#"# TRustKit runtime transacional e worktrees efemeras
+.trustkit/state.db*
+.trustkit/worktrees/
+.trustkit/audits/
+!.trustkit/wiki/
+"#;
+
+const DEFAULT_TRUSTKIT_TOML: &str = r#"[governance.gauntlet]
+# Modos: "prompt", "always", "disabled"
+security_review_mode = "prompt"
+min_confidence_threshold = 8
+"#;
+
+pub fn scaffold_gitignore(repo_dir: &Path) -> Result<(), DomainViolation> {
+    let gitignore_path = repo_dir.join(".gitignore");
+    if gitignore_path.exists() {
+        let existing = fs::read_to_string(&gitignore_path).map_err(|e| {
+            DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "filesystem".to_string(),
+                details: format!("Failed reading .gitignore: {e}"),
+            }
+        })?;
+        if !existing.contains(".trustkit/state.db") {
+            let mut updated = existing;
+            if !updated.is_empty() && !updated.ends_with('\n') {
+                updated.push('\n');
+            }
+            updated.push_str(DEFAULT_GITIGNORE_ENTRIES);
+            fs::write(&gitignore_path, updated).map_err(|e| {
+                DomainViolation::InfrastructureBoundaryFault {
+                    subsystem: "filesystem".to_string(),
+                    details: format!("Failed updating .gitignore: {e}"),
+                }
+            })?;
+        }
+    } else {
+        fs::write(&gitignore_path, DEFAULT_GITIGNORE_ENTRIES).map_err(|e| {
+            DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "filesystem".to_string(),
+                details: format!("Failed creating .gitignore: {e}"),
+            }
+        })?;
+    }
+    Ok(())
+}
+
+pub fn scaffold_trustkit_toml(repo_dir: &Path) -> Result<(), DomainViolation> {
+    let toml_path = repo_dir.join("trustkit.toml");
+    if !toml_path.exists() {
+        fs::write(&toml_path, DEFAULT_TRUSTKIT_TOML).map_err(|e| {
+            DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "filesystem".to_string(),
+                details: format!("Failed creating trustkit.toml: {e}"),
+            }
+        })?;
+    }
+    Ok(())
+}
+
 pub fn execute(args: &InitArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     let repo_dir = Path::new(".");
     let git_ctx = GitInspector::inspect(repo_dir)?;
 
     let (now_iso, timestamp_slug) = current_timestamps();
+
+    // Auto-scaffold .gitignore and trustkit.toml if absent or missing entries
+    scaffold_gitignore(repo_dir)?;
+    scaffold_trustkit_toml(repo_dir)?;
 
     let db_path = repo_dir.join(".trustkit").join("state.db");
     let repo = SqliteWalRepositoryAdapter::open(&db_path)?;
@@ -82,6 +145,7 @@ fn current_timestamps() -> (String, String) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_current_timestamps_format() {
@@ -89,5 +153,49 @@ mod tests {
         assert_eq!(iso.len(), 20); // YYYY-MM-DDTHH:MM:SSZ
         assert!(iso.ends_with('Z'));
         assert_eq!(slug.len(), 12); // YYYYMMDDHHMM
+    }
+
+    #[test]
+    fn test_scaffold_gitignore_creates_when_missing() {
+        let dir = tempdir().unwrap();
+        let repo = dir.path();
+        scaffold_gitignore(repo).unwrap();
+        let content = fs::read_to_string(repo.join(".gitignore")).unwrap();
+        assert!(content.contains(".trustkit/state.db*"));
+        assert!(content.contains("!.trustkit/wiki/"));
+    }
+
+    #[test]
+    fn test_scaffold_gitignore_appends_when_present() {
+        let dir = tempdir().unwrap();
+        let repo = dir.path();
+        fs::write(repo.join(".gitignore"), "target/\nnode_modules/\n").unwrap();
+        scaffold_gitignore(repo).unwrap();
+        let content = fs::read_to_string(repo.join(".gitignore")).unwrap();
+        assert!(content.starts_with("target/\nnode_modules/\n"));
+        assert!(content.contains(".trustkit/state.db*"));
+        assert!(content.contains("!.trustkit/wiki/"));
+
+        // Second run does not duplicate
+        scaffold_gitignore(repo).unwrap();
+        let content2 = fs::read_to_string(repo.join(".gitignore")).unwrap();
+        let count = content2.matches(".trustkit/state.db*").count();
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn test_scaffold_trustkit_toml() {
+        let dir = tempdir().unwrap();
+        let repo = dir.path();
+        scaffold_trustkit_toml(repo).unwrap();
+        let content = fs::read_to_string(repo.join("trustkit.toml")).unwrap();
+        assert!(content.contains("[governance.gauntlet]"));
+        assert!(content.contains("security_review_mode = \"prompt\""));
+
+        // Second run preserves custom settings
+        fs::write(repo.join("trustkit.toml"), "custom = true\n").unwrap();
+        scaffold_trustkit_toml(repo).unwrap();
+        let content2 = fs::read_to_string(repo.join("trustkit.toml")).unwrap();
+        assert_eq!(content2, "custom = true\n");
     }
 }

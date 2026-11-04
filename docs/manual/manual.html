@@ -764,7 +764,7 @@ trustkit --version</code></pre>
       <div id="adocao-projetos">
         <h3>2.5 Guia de Adocao: Novo Projeto vs Projeto em Andamento</h3>
         <p>
-          O TRustKit e agnostico quanto a maturidade do repositorio: ele pode tanto fundar a governanca de um projeto do absoluto zero (Greenfield) quanto assumir o controle deterministico de uma aplicacao existente em producao (Brownfield).
+          O TRustKit foi arquitetado para eliminar atritos operacionais: o proprio comando <code>trustkit init</code> inspeciona o ambiente, gera ou edita o <code>.gitignore</code>, provisiona o template <code>trustkit.toml</code>, inicializa o banco SQLite WAL e monta a infraestrutura do ciclo.
         </p>
 
         <div class="card-grid">
@@ -773,7 +773,7 @@ trustkit --version</code></pre>
               <span class="info-card-title">Cenario A: Projeto Novo</span>
               <span class="badge badge-pass">Greenfield</span>
             </div>
-            <p>Repositorio vazio, sem codigo pre-existente. O TRustKit estabelece o commit raiz, o banco transacional e a primeira especificacao selada.</p>
+            <p>Repositorio vazio, sem codigo pre-existente. Apos a boa pratica de configurar o Git e o remote, o comando unico do TRustKit cuida de todo o scaffolding.</p>
           </div>
 
           <div class="info-card">
@@ -781,67 +781,56 @@ trustkit --version</code></pre>
               <span class="info-card-title">Cenario B: Projeto Existente</span>
               <span class="badge badge-info">Brownfield</span>
             </div>
-            <p>Repositorio com codigo e historico ativos. O TRustKit preserva modificacoes pendentes, mapeia o grafo estrutural via AST e cataloga God Nodes.</p>
+            <p>Repositorio com codigo e historico ativos. O TRustKit edita o .gitignore existente sem sobrescrever exclusoes anteriores, mapeia o grafo estrutural e diagnostica God Nodes.</p>
           </div>
         </div>
 
         <h4>Cenario A: Como Configurar o TRustKit em um Projeto Novo (Sem Codigo)</h4>
-        <p>Siga o passo a passo para criar e blindar um repositorio do zero:</p>
+        <p>Siga o fluxo simplificado com a preparacao recomendada do repositorio e o comando unico de inicializacao:</p>
 
         <div class="code-container">
           <div class="code-header">
-            <span>Passo 1 e 2: Criar pasta, inicializar Git e commit raiz</span>
+            <span>Passo 1: Boa Pratica Previa de Repositorio (Git e Remote)</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
-          <pre><code># 1. Criar diretorio e acessar
+          <pre><code># Criar diretorio e acessar
 mkdir meu-novo-sistema && cd meu-novo-sistema
 
-# 2. Inicializar o Git com branch develop e commit base inicial
-# (O GitInspector do TRustKit exige a existencia de um commit HEAD valido)
+# Inicializar o Git com branch base e configurar remote de origem
 git init -b develop
+git remote add origin git@github.com:organizacao/meu-novo-sistema.git
 git commit --allow-empty -m "chore: initial repository bootstrap"</code></pre>
         </div>
 
         <div class="code-container">
           <div class="code-header">
-            <span>Passo 3: Criar o .gitignore do ecossistema TRustKit</span>
-            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
-          </div>
-          <pre><code># TRustKit: arquivos de sessao local, worktrees efemeras e relatorios
-.trustkit/state.db*
-.trustkit/worktrees/
-.trustkit/audits/
-
-# ATENCAO: A pasta da base wiki DEVE ser versionada no Git!
-!.trustkit/wiki/</code></pre>
-        </div>
-
-        <div class="code-container">
-          <div class="code-header">
-            <span>Passo 4: Criar configuracao de governanca (trustkit.toml)</span>
-            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
-          </div>
-          <pre><code>[governance.gauntlet]
-# Politica de revisao de seguranca do diff: "prompt", "always" ou "disabled"
-security_review_mode = "prompt"
-min_confidence_threshold = 8</code></pre>
-        </div>
-
-        <div class="code-container">
-          <div class="code-header">
-            <span>Passo 5: Disparar o primeiro ciclo (Gate 0)</span>
+            <span>Passo 2: Comando Unico de Inicializacao e Scaffolding</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
           <pre><code># Se vinculado a uma issue do GitHub Projects:
 trustkit init --issue 1
 
-# Ou para ciclo exclusivamente local:
+# Ou para ciclo puramente local (desconectado):
 trustkit init</code></pre>
         </div>
 
-        <p>
-          Ao executar o <code>init</code>, o TRustKit provisiona a pasta <code>.trustkit/</code>, cria o banco transacional SQLite WAL em <code>.trustkit/state.db</code> com todas as migrations aplicadas e cria a pasta <code>docs/specs/&lt;ciclo&gt;/</code>.
-        </p>
+        <div class="callout">
+          <div class="callout-title">O que o trustkit init faz de forma 100% automatica:</div>
+          <ul style="margin-left: 20px; margin-top: 6px;">
+            <li><strong>Gerencia o .gitignore:</strong> Cria o arquivo ou anexa as regras essenciais (<code>.trustkit/state.db*</code>, <code>.trustkit/worktrees/</code>, <code>.trustkit/audits/</code> e <code>!.trustkit/wiki/</code>) sem alterar regras existentes.</li>
+            <li><strong>Gera o trustkit.toml:</strong> Cria o arquivo de governanca do Gauntlet caso ausente.</li>
+            <li><strong>Provisiona a infraestrutura:</strong> Cria <code>.trustkit/</code>, inicializa o banco SQLite WAL com migrations e cria <code>docs/specs/&lt;ciclo&gt;/</code>.</li>
+          </ul>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Passo 3: Ativar os Fast Hooks no assistente agêntico</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Configurar hook PreToolUse do assistente (Claude Code, Cursor, Antigravity):
+trustkit hook pre-tool --command "$COMMAND"</code></pre>
+        </div>
 
         <h4>Cenario B: Como Implantar o TRustKit em um Projeto em Andamento (Brownfield / Legado)</h4>
         <p>Para repositorios em producao com codigo existente (Rust, TypeScript, JavaScript, Python, etc.):</p>
@@ -850,23 +839,25 @@ trustkit init</code></pre>
           <li>
             <strong>Verificar status da arvore Git:</strong> O TRustKit tolera modificacoes locais sem comitar, registrando-as como <code>pre_existing_dirty_files</code> sem disparar <code>git stash</code> destrutivo. Apenas certifique-se de que a branch atual esta checkoutada (evite <em>detached HEAD</em>).
           </li>
-          <li>
-            <strong>Adicionar as regras no <code>.gitignore</code>:</strong> Adicione <code>.trustkit/state.db*</code> e <code>.trustkit/worktrees/</code> preservando <code>!.trustkit/wiki/</code>.
-          </li>
         </ol>
 
         <div class="code-container">
           <div class="code-header">
-            <span>Passo 3: Inicializar ciclo na demanda atual</span>
+            <span>Passo 2: Inicializar o ciclo no projeto legado</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
           <pre><code># Inicializa na issue ativa ou importando um PRD existente
-trustkit init --issue 45 --from-prd docs/PRD_TRustKit.md</code></pre>
+trustkit init --issue 45 --from-prd docs/PRD_Legado.md</code></pre>
+        </div>
+
+        <div class="callout alert">
+          <div class="callout-title">Edicao Automatica do .gitignore Existente</div>
+          Se o repositorio brownfield ja tiver um <code>.gitignore</code>, o <code>trustkit init</code> nao o sobrescreve: ele detecta as regras faltantes e <strong>anexa o bloco do TRustKit ao final do arquivo</strong>, preservando integralmente suas exclusoes anteriores (ex: <code>node_modules/</code>, <code>target/</code>, <code>.env</code>). O mesmo ocorre com <code>trustkit.toml</code>, que so e criado se nao existir.
         </div>
 
         <div class="code-container">
           <div class="code-header">
-            <span>Passo 4: Gerar o Grafo Estrutural Imediato do Legado</span>
+            <span>Passo 3: Gerar o Grafo Estrutural Imediato do Legado</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
           <pre><code># Mapeia dependencias e emite .trustkit/wiki/graph/GRAPH_REPORT.md
@@ -878,7 +869,7 @@ trustkit graph health --top-god-nodes 10</code></pre>
 
         <div class="code-container">
           <div class="code-header">
-            <span>Passo 5: Ingerir notas de arquitetura na Memoria Perene</span>
+            <span>Passo 4: Ingerir notas de arquitetura na Memoria Perene</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
           <pre><code># Registrar visao arquitetural do sistema legado

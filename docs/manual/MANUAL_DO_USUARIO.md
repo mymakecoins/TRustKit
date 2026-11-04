@@ -184,59 +184,41 @@ Exemplo de retorno de status no terminal:
 
 ### 2.5 Guia de Adocao: Novo Projeto vs Projeto em Andamento
 
-O TRustKit pode ser adotado com a mesma facilidade tanto na criacao de um sistema do zero (greenfield) quanto na governanca de uma aplicacao existente em producao (brownfield). Abaixo estao os passos exatos para cada situacao:
+O TRustKit foi projetado para eliminar atritos operacionais de configuracao manual. O proprio comando `trustkit init` encarrega-se de inspecionar o ambiente, gerar ou atualizar o `.gitignore`, criar o template de governanca `trustkit.toml`, inicializar o banco transacional SQLite WAL e criar as pastas necessarias.
+
+Abaixo estao as diretrizes simplificadas para projetos novos (greenfield) e em andamento (brownfield):
 
 #### Cenario A: Inicializando o TRustKit em um Projeto Novo (Greenfield / Sem Codigo)
 
 Quando voce esta iniciando um novo repositorio sem nenhum codigo pre-existente:
 
-1. **Instalar o binario `trustkit` no PATH do sistema:**
-   Certifique-se de que o executavel compilado esteja acessivel globalmente:
+1. **Boa Pratica Previa de Repositorio (Git e Remote):**
+   Antes de invocar qualquer ferramenta, a boa engenharia de sistemas recomenda configurar o repositorio Git local com sua branch base e apontar para o remote de origem:
    ```bash
-   sudo cp target/release/trustkit /usr/local/bin/
-   ```
-
-2. **Inicializar o repositorio Git e criar o commit raiz:**
-   O motor de inspecao do TRustKit (`GitInspector`) exige que o diretorio seja um repositorio Git valido e possua um commit base (`HEAD` SHA) na branch ativa:
-   ```bash
-   mkdir meu-novo-projeto && cd meu-novo-projeto
+   mkdir meu-novo-sistema && cd meu-novo-sistema
    git init -b develop
+   git remote add origin git@github.com:organizacao/meu-novo-sistema.git
    git commit --allow-empty -m "chore: initial repository bootstrap"
    ```
+   *(Nota: O motor de inspecao `GitInspector` exige a presenca de um commit raiz com hash `HEAD` valido).*
 
-3. **Configurar o `.gitignore` para o ecossistema TRustKit:**
-   Crie o arquivo `.gitignore` ignorando arquivos transacionais e pastas temporarias do TRustKit, mas preservando a memoria perene:
-   ```gitignore
-   # TRustKit: estado local, worktrees efemeras e relatorios de auditoria
-   .trustkit/state.db*
-   .trustkit/worktrees/
-   .trustkit/audits/
-
-   # ATENCAO: Mantenha a pasta .trustkit/wiki versionada no Git!
-   !.trustkit/wiki/
-   ```
-
-4. **Criar a configuracao opcional de governanca (`trustkit.toml`):**
-   Na raiz do projeto, defina as politicas da esteira Gauntlet:
-   ```toml
-   [governance.gauntlet]
-   # Modos aceitos: "prompt" (pergunta no terminal), "always" (sempre executa) ou "disabled"
-   security_review_mode = "prompt"
-   min_confidence_threshold = 8
-   ```
-
-5. **Disparar o primeiro ciclo com o TRustKit (Gate 0):**
+2. **Comando Unico de Inicializacao e Scaffolding (`trustkit init`):**
+   Com o repositorio Git pronto, basta executar:
    ```bash
-   # Com uma issue do GitHub:
+   # Vinculado a uma issue do GitHub:
    trustkit init --issue 1
 
-   # Ou para desenvolvimento puramente local:
+   # Ou para ciclo puramente local (desconectado):
    trustkit init
    ```
-   O TRustKit cria a pasta `.trustkit/`, inicializa o banco SQLite WAL em `.trustkit/state.db` com todas as tabelas e migrations, cria o diretorio `docs/specs/<ciclo>/` e abre a sessao transacional.
 
-6. **Ativar os Fast Hooks no assistente agêntico (Claude Code, Cursor ou Antigravity):**
-   Configure o hook `PreToolUse` para invocar:
+   **O que o `trustkit init` faz de forma 100% automatica:**
+   * **Gerencia o `.gitignore`:** Cria o arquivo `.gitignore` com as regras necessarias (`.trustkit/state.db*`, `.trustkit/worktrees/`, `.trustkit/audits/` e a preservacao da base viva `!.trustkit/wiki/`). Caso o arquivo ja exista, o TRustKit anexa essas regras sem sobrescrever o conteudo anterior.
+   * **Gera a politica de governanca (`trustkit.toml`):** Cria o template padrao de configuracao do Gauntlet (`security_review_mode = "prompt"`, `min_confidence_threshold = 8`) caso ele nao exista.
+   * **Provisiona a infraestrutura:** Cria o diretorio `.trustkit/`, inicializa o banco SQLite em modo WAL (`.trustkit/state.db`) aplicando todas as migrations e cria a pasta `docs/specs/<ciclo>/`.
+
+3. **Ativar os Fast Hooks no assistente agêntico (Claude Code, Cursor ou Antigravity):**
+   Configure o interceptador `PreToolUse` do seu assistente para chamar:
    ```bash
    trustkit hook pre-tool --command "$COMMAND"
    ```
@@ -247,44 +229,38 @@ Quando voce esta iniciando um novo repositorio sem nenhum codigo pre-existente:
 
 Para projetos legados ou em producao (em Rust, TypeScript, JavaScript, Python, etc.) que ja possuem base de codigo:
 
-1. **Verificar a arvore Git existente:**
-   O TRustKit tolera alteracoes locais nao comitadas: ele inspeciona o status via `git status` e cataloga os arquivos pendentes em `pre_existing_dirty_files`, protegendo-os sem rodar `git stash` destrutivo. Apenas certifique-se de que voce esta em uma branch nomeada (ex: `develop` ou `marcos/...`) e nao em `detached HEAD`.
+1. **Verificar a arvore de trabalho Git:**
+   * O TRustKit tolera modificacoes locais sem comitar: ele as cataloga como `pre_existing_dirty_files` e as protege sem executar `git stash` destrutivo.
+   * Apenas assegure-se de estar em uma branch ativa (evite estado de *detached HEAD*).
 
-2. **Adicionar o `.gitignore` das pastas do TRustKit:**
-   Adicione as mesmas regras no `.gitignore` do projeto:
-   ```gitignore
-   .trustkit/state.db*
-   .trustkit/worktrees/
-   .trustkit/audits/
-   !.trustkit/wiki/
-   ```
-
-3. **Executar a inicializacao do ciclo (`Gate 0`):**
+2. **Executar a inicializacao no projeto (`Gate 0`):**
    ```bash
    trustkit init --issue 45
-   ```
-   Se houver um PRD ou documento de requisitos existente no projeto legado, use:
-   ```bash
+   # Ou aproveitando um PRD funcional legado ja existente:
    trustkit init --issue 45 --from-prd docs/PRD_Legado.md
    ```
+   > [!IMPORTANT]
+   > **Edicao Automatica do `.gitignore` Existente:**  
+   > Se o seu projeto brownfield ja possuir um `.gitignore`, o `trustkit init` ira inspeciona-lo e, caso as entradas do TRustKit ainda nao estejam presentes, **anexara o bloco de regras ao final do arquivo**, preservando integralmente todas as exclusoes anteriores (`node_modules/`, `target/`, `.env`, etc.). O mesmo se aplica ao `trustkit.toml`, que so e criado se estiver ausente.
 
-4. **Gerar o Grafo Estrutural Imediato do Repositorio:**
+3. **Gerar o Grafo Estrutural Imediato do Legado:**
    Execute a extracao sintatica via Tree-Sitter sobre todo o codigo existente para indexar dependencias e diagnosticar a arquitetura atual:
    ```bash
+   # Mapeia componentes e emite .trustkit/wiki/graph/GRAPH_REPORT.md
    trustkit graph build
+
+   # Identifica os maiores God Nodes (componentes hiperacoplados legados)
    trustkit graph health --top-god-nodes 10
    ```
-   Isso mapeia todas as funcoes, structs, imports e chamadas pre-existentes no arquivo `.trustkit/wiki/graph/GRAPH_REPORT.md` e aponta componentes hiperacoplados que merecem atencao.
 
-5. **Indexar a Memoria Perene do Sistema:**
+4. **Indexar a Memoria Perene do Sistema:**
    Registre notas fundamentais sobre a arquitetura legada em `.trustkit/wiki/`:
    ```bash
    trustkit memory write --slug "arquitetura-legada" --title "Visao da Arquitetura Legada" --tags "overview,brownfield" --body "Visao dos servicos e modulos existentes..."
    trustkit memory rebuild
    ```
-   A partir desse momento, as buscas FTS5 BM25 (`trustkit memory search`) e o gerador de especificacoes (`trustkit spec prompt`) utilizarao esse conhecimento historico para formular novas demandas com contexto cirurgico.
 
-6. **Habilitar o Servidor MCP Nativo:**
+5. **Habilitar o Servidor MCP Nativo:**
    Inicie o servidor MCP (`trustkit mcp`) para que seus assistentes de IDE (Claude Code, Cursor, Antigravity) consumam as ferramentas deterministas diretamente na sessao de trabalho.
 
 ---
