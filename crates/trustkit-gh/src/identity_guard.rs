@@ -15,7 +15,7 @@ impl GitHubIdentityGuard {
             Err(details) => return Ok(IdentityVerification::GhUnavailable { details }),
         };
 
-        if detected.eq_ignore_ascii_case(expected_handle) {
+        if expected_handle.trim().is_empty() || detected.eq_ignore_ascii_case(expected_handle) {
             return Ok(IdentityVerification::Verified {
                 operator_handle: detected,
             });
@@ -116,12 +116,12 @@ mod tests {
 github.com
   Logged in to github.com account other_user (keyring)
   - Active account: false
-  Logged in to github.com account marcos-rodoind (keyring)
+  Logged in to github.com account operator (keyring)
   - Active account: true
   - Token scopes: 'gist', 'project'
 "#;
         let parsed = GitHubIdentityGuard::parse_active_handle(status);
-        assert_eq!(parsed, Some("marcos-rodoind".to_string()));
+        assert_eq!(parsed, Some("operator".to_string()));
     }
 
     #[test]

@@ -54,7 +54,8 @@ impl PullRequestGateway {
         Self::validate_invariants(details)?;
 
         // Verify account identity per RN-014
-        match GitHubIdentityGuard::verify("marcos-rodoind")? {
+        let expected_identity = std::env::var("TRUSTKIT_GITHUB_USER").unwrap_or_default();
+        match GitHubIdentityGuard::verify(&expected_identity)? {
             IdentityVerification::Rejected { detected_handle, expected_handle } => {
                 return Err(DomainViolation::AstIntegrityOrInvariantViolation {
                     invariant_id: "RN-014".to_string(),
@@ -83,16 +84,6 @@ impl PullRequestGateway {
             details.base_branch.clone()
         };
 
-        let mut reviewers = details.reviewers.clone();
-        if !reviewers.contains(&"thiagobotelhorodoind".to_string()) {
-            reviewers.push("thiagobotelhorodoind".to_string());
-        }
-
-        let mut assignees = details.assignees.clone();
-        if !assignees.contains(&"marcos-rodoind".to_string()) {
-            assignees.push("marcos-rodoind".to_string());
-        }
-
         let mut cmd = Command::new("gh");
         cmd.args([
             "pr",
@@ -105,11 +96,15 @@ impl PullRequestGateway {
             &details.title,
             "--body",
             &details.body,
-            "--reviewer",
-            &reviewers.join(","),
-            "--assignee",
-            &assignees.join(","),
         ]);
+
+        if !details.reviewers.is_empty() {
+            cmd.args(["--reviewer", &details.reviewers.join(",")]);
+        }
+
+        if !details.assignees.is_empty() {
+            cmd.args(["--assignee", &details.assignees.join(",")]);
+        }
 
         let output = cmd.output();
         match output {
@@ -154,8 +149,8 @@ mod tests {
             body: "This PR Closes #45 immediately".to_string(),
             base_branch: "develop".to_string(),
             head_branch: "feat/45".to_string(),
-            reviewers: vec!["thiagobotelhorodoind".to_string()],
-            assignees: vec!["marcos-rodoind".to_string()],
+            reviewers: vec!["reviewer1".to_string()],
+            assignees: vec!["dev1".to_string()],
         };
 
         let err = PullRequestGateway::validate_invariants(&details).unwrap_err();
@@ -175,8 +170,8 @@ mod tests {
             body: "No reference tag here".to_string(),
             base_branch: "develop".to_string(),
             head_branch: "feat/45".to_string(),
-            reviewers: vec!["thiagobotelhorodoind".to_string()],
-            assignees: vec!["marcos-rodoind".to_string()],
+            reviewers: vec!["reviewer1".to_string()],
+            assignees: vec!["dev1".to_string()],
         };
 
         let err = PullRequestGateway::validate_invariants(&details).unwrap_err();
@@ -191,8 +186,8 @@ mod tests {
             body: "Implementation completed. Ref #45".to_string(),
             base_branch: "develop".to_string(),
             head_branch: "feat/45".to_string(),
-            reviewers: vec!["thiagobotelhorodoind".to_string()],
-            assignees: vec!["marcos-rodoind".to_string()],
+            reviewers: vec!["reviewer1".to_string()],
+            assignees: vec!["dev1".to_string()],
         };
 
         assert!(PullRequestGateway::validate_invariants(&details).is_ok());

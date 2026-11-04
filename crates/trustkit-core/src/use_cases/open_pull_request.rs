@@ -97,8 +97,8 @@ pub fn execute(
         body,
         base_branch: req.base_branch,
         head_branch: req.head_branch,
-        reviewers: vec!["thiagobotelhorodoind".to_string()],
-        assignees: vec!["marcos-rodoind".to_string()],
+        reviewers: vec![],
+        assignees: vec![],
     };
 
     let outcome: PullRequestOutcome = board_gateway.create_pull_request(&details)?;

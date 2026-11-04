@@ -316,9 +316,9 @@ fn test_mock_project_board_create_pr() {
             title: "feat: #45 worktree isolation".to_string(),
             body: "PR details".to_string(),
             base_branch: "develop".to_string(),
-            head_branch: "marcos/45/feat".to_string(),
-            reviewers: vec!["thiagobotelhorodoind".to_string()],
-            assignees: vec!["marcos-rodoind".to_string()],
+            head_branch: "feat/45".to_string(),
+            reviewers: vec!["reviewer1".to_string()],
+            assignees: vec!["dev1".to_string()],
         })
         .expect("create pr");
     assert_eq!(pr.pr_number, 45);

@@ -63,10 +63,10 @@ fn setup_mock_gh(dir: &Path) -> PathBuf {
     let gh_path = bin_dir.join("gh");
     let script = r#"#!/bin/sh
 if [ "$1" = "auth" ]; then
-    echo "Logged in to github.com account marcos-rodoind"
+    echo "Logged in to github.com account operator"
     exit 0
 elif [ "$1" = "api" ]; then
-    echo "marcos-rodoind"
+    echo "operator"
     exit 0
 elif [ "$1" = "pr" ] && [ "$2" = "create" ]; then
     echo "https://github.com/org/repo/pull/45"

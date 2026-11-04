@@ -15,7 +15,7 @@ Em 28 de outubro de 2026, foram diagnosticados 4 gaps e estruturado um plano de 
 | :--- | :---: | :--- |
 | **Passo 1: Auto-Certificacao (Dogfooding)** | **CUMPRIDO** | - Sessao legada arquivada em `.trustkit/state.db.legacy-backup`.<br>- Auditoria de Camada 0 executada com veredito `CLEAN PASS`.<br>- Ciclo finalizado no Gate 6 gerando o relatorio oficial `docs/gauntlet-report.md` (`PASS - Gate 6 Certified`, 11 evidencias, Circuit Breaker Closed). |
 | **Passo 2: Deploy da Thin Skill e Hooks Globais** | **CUMPRIDO** | - Thin Skill v4 unificada e renomeada para `trustkit-sdd`, com symlink global em `~/.gemini/config/skills/trustkit-sdd`.<br>- Script de hook sincrono criado em `skills/trustkit-sdd/scripts/trustkit-pre-tool.sh` e linkado em `~/.local/bin/trustkit-pre-tool`.<br>- Hook configurado e ativo em `~/.gemini/config/hooks.json` no bloco `"trustkit-guard"` (interceptando `run_command` com timeout de 5s). |
-| **Passo 3: Execucao de Projeto Piloto em Repositorio Real** | **NAO CUMPRIDO** (Pendente) | - A homologacao em repositorio externo cliente (ex: LoggiQ ou RodoInd) com issue real do GitHub Projects v2 **nao foi realizada**.<br>- O TRustKit operou em regime intensivo de dogfooding em si mesmo para implementar as Features 005 a 008, mas o teste de interoperabilidade em um projeto externo do mundo real permanece pendente. |
+| **Passo 3: Execucao de Projeto Piloto em Repositorio Real** | **NAO CUMPRIDO** (Pendente) | - A homologacao em repositorio externo cliente com issue real do GitHub Projects v2 **nao foi realizada**.<br>- O TRustKit operou em regime intensivo de dogfooding em si mesmo para implementar as Features 005 a 008, mas o teste de interoperabilidade em um projeto externo do mundo real permanece pendente. |
 | **Passo 4.1: Contadores Tree-Sitter para Python, Go, .NET e JavaScript** | **NAO CUMPRIDO** (Pendente) | - O crate `trustkit-ast` mantem gramaticas AST nativas apenas para **Rust** (`tree-sitter-rust`) e **TypeScript/TSX** (`tree-sitter-typescript`).<br>- Scanners para **Python** (`pytest`/`unittest`), **Go** (`testing`), **.NET / C#** (`xUnit`/`NUnit`/`MSTest`) e **JavaScript puro / JSX** (`jest`/`vitest`/`mocha`) continuam operando exclusivamente via expressoes regulares / varredura lexica ou carecem de gramaticas dedicadas (`tree-sitter-c-sharp`, `tree-sitter-javascript`, `tree-sitter-python`, `tree-sitter-go`). |
 | **Passo 4.2: Servidor MCP no `.mcp.json` / `mcp_config.json`** | **NAO CUMPRIDO** (Pendente) | - O servidor stdio e 8 ferramentas nativas de MCP foram codificados e testados com sucesso em `trustkit-orch`.<br>- Porem, o binario `trustkit mcp` **ainda nao foi declarado** em nenhum arquivo de configuracao global (`~/.gemini/config/mcp_config.json`) ou local (`.mcp.json`), impedindo o acionamento direto via tools pelos assistentes de IA sem uso de shell. |
 | **Passo 4.3: Comando CLI `trustkit contract unlock`** | **NAO CUMPRIDO** (Pendente) | - O subcomando CLI `trustkit contract unlock --file <path> --reason "..."` para relaxamento auditavel de assercoes protegidas **nao foi implementado** na CLI. |
@@ -80,7 +80,7 @@ flowchart LR
 ## 3. Gaps e Oportunidades Identificados (Now-Is)
 
 1. **Ausencia de Homologacao em Projeto Piloto Externo (Prioridade 1):**
-   O TRustKit demonstrou extrema robustez operando em regime de self-hosting ao longo das features 005 a 008. No entanto, a plataforma ainda nao foi testada de ponta a ponta em um repositorio corporativo real de terceiros (como LoggiQ ou RodoInd) com regras de negocio externas e fluxos reais de pull requests e branches.
+   O TRustKit demonstrou extrema robustez operando em regime de self-hosting ao longo das features 005 a 008. No entanto, a plataforma ainda nao foi testada de ponta a ponta em um repositorio corporativo real de terceiros com regras de negocio externas e fluxos reais de pull requests e branches.
 2. **Defasagem da Camada 0 para Linguagens Dinamicas e Backend (Python, Go, .NET e JavaScript):**
    O suporte a AST Anti-Cheat na Camada 0 continua restrito a Rust e TypeScript/TSX. Projetos em Python (`pytest`), Go (`testing`), .NET/C# (`xUnit`, `NUnit`, `MSTest`) e JavaScript puro/JSX (`Jest`, `Vitest`, `Mocha`) continuam utilizando o fallback de scanner lexico (regex) ou carecem de parsing sintatico dedicado via AST, o que os torna suscetiveis a variacoes sintaticas que seriam capturadas com precisao cirurgica por arvores sintaticas dedicadas (`tree-sitter`).
 3. **Desconexao do Servidor MCP nos Ambientes dos Agentes:**
@@ -128,7 +128,7 @@ flowchart TD
 
 ### Fase B: Execucao do Projeto Piloto em Repositorio Real (Marco Critico)
 * **Acao 3: Escolha do Repositorio e Issue de Teste**
-  * Selecionar uma issue corporativa real no GitHub Projects v2 (ex: LoggiQ ou RodoInd).
+  * Selecionar uma issue corporativa real no GitHub Projects v2.
 * **Acao 4: Execucao do Ciclo SDD Ponta a Ponta**
   * `trustkit init --issue <ID> --from-prd <PRD>` no repositorio cliente.
   * Gerar prompt contextualizado com a nova engine nativa: `trustkit spec prompt`.

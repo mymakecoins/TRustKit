@@ -459,7 +459,7 @@ Apos concluir os testes e a revisao, finalize a tarefa atomica:
 trustkit task complete TASK-001
 ```
 
-O TRustKit consolida o commit da tarefa no formato oficial, encerra a worktree efemera e incorpora as mudancas na branch de trabalho da funcionalidade (`marcos/<id>/<slug>`).
+O TRustKit consolida o commit da tarefa no formato oficial, encerra a worktree efemera e incorpora as mudancas na branch de trabalho da funcionalidade (`feat/<id>-<slug>`).
 
 ---
 

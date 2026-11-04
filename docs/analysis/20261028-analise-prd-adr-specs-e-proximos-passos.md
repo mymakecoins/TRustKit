@@ -12,7 +12,7 @@ Todas as quatro fases do MVP definidas no PRD e no ADR-001 foram **implementadas
 
 | Feature / Especificacao | Fase PRD / ADR | Status no Repositorio | Entregaveis Validados |
 | :--- | :---: | :---: | :--- |
-| **`001-core-db-cli`** | **Fase 1** | Concluida e Mergeada | - Workspace Cargo modular.<br>- Crate `trustkit-core` pura (`std` only, zero dependencias externas).<br>- SQLite WAL com 5 tabelas e **100% `NOT NULL`** (sem uso de `null`).<br>- Hashing `BLAKE3` concorrente.<br>- Hooks sincronos `PreToolUse` com latencia media de **1,68 ms**.<br>- Guardiao de identidade GitHub (`marcos-rodoind`) e sincronizacao 9 colunas. |
+| **`001-core-db-cli`** | **Fase 1** | Concluida e Mergeada | - Workspace Cargo modular.<br>- Crate `trustkit-core` pura (`std` only, zero dependencias externas).<br>- SQLite WAL com 5 tabelas e **100% `NOT NULL`** (sem uso de `null`).<br>- Hashing `BLAKE3` concorrente.<br>- Hooks sincronos `PreToolUse` com latencia media de **1,68 ms**.<br>- Guardiao de identidade GitHub (`GitHubIdentityGuard`) e sincronizacao 9 colunas. |
 | **`002-spec-v2-dag-planner`** | **Fase 2** | Concluida e Mergeada | - Ingestao upstream `--from-prd` com extracao de RN e RF.<br>- Validacao sintatica de Mermaid `flowchart LR`, blocos Gherkin e fechamento da Matriz de Rastreabilidade.<br>- Congelamento criptografico (`spec lock`) com digest `BLAKE3`.<br>- Calculo de ondas de execucao topologicas via DAG em `petgraph` com deteccao de ciclos e segregacao de arquivos concorrentes. |
 | **`003-ast-layer0-context-slicer`** | **Fase 3** | Concluida e Mergeada | - Camada 0 do Gauntlet (`trustkit gauntlet ast-audit`) em `< 5ms` (zero tokens).<br>- Auditor Anti-Cheat via `tree-sitter` (Rust e TS) impedindo remocao de assercoes (`expect`/`assert`) ou uso de `.skip`.<br>- Scanner lexico bloqueando emojis Unicode, trailers de IA (`Co-Authored-By`) e links externos proibidos.<br>- Fatiador de contexto sintatico (`AstContextSlicer`). |
 | **`004-worktree-tdd-gauntlet`** | **Fase 4** | Concluida e Mergeada | - Provedor de Git Worktrees efemeras com isolamento por onda e symlinks de dependencias.<br>- Fiscalizacao deterministica de TDD: falha comprovada (`RED`) obrigatoria antes de avanco (`GREEN`).<br>- Despachante concorrente com redacao automatica de segredos.<br>- Guardiao visual do Playwright com restauracao automatica de evidencias alheias (`git checkout --`).<br>- Circuit Breaker com limite estrito de 5 falhas no Gauntlet.<br>- Geracao deterministica de relatorio de certificacao, merge seguro e abertura de PR sob demanda.<br>- Servidor MCP stdio (`mcp_stdio_server.rs`) e Thin Skill (`SKILL.md` v4 com 94 linhas). |
@@ -72,7 +72,7 @@ flowchart LR
   3. Adicionar o hook sincrono `trustkit hook pre-tool` nas configuracoes locais de ferramentas dos agentes para interceptacao de comandos proibidos (`git stash`, commits sem padrao, uso de emojis).
 
 ### Passo 3: Execucao de um Projeto Piloto em Repositorio Real
-* **Objetivo:** Homologar a orquestracao em campo com uma issue real do GitHub Projects v2 (ex: repositorio corporativo LoggiQ ou RodoInd).
+* **Objetivo:** Homologar a orquestracao em campo com uma issue real do GitHub Projects v2 (ex: repositorio corporativo parceiro ou cliente).
 * **Acoes:**
   1. Disparar `trustkit init --issue <ID> --from-prd <PRD>` em um repositorio cliente.
   2. Executar uma spec real com diagrama Mermaid e criterios Gherkin, verificando a criacao do selo `spec lock`.

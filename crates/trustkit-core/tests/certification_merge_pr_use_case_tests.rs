@@ -295,8 +295,8 @@ fn test_open_pull_request_success_with_reviewers_assignees_and_ref() {
     assert_eq!(outcome.target_column, BoardColumn::InReview);
 
     let pr_details = board.last_pr.lock().unwrap().clone().unwrap();
-    assert_eq!(pr_details.reviewers, vec!["thiagobotelhorodoind".to_string()]);
-    assert_eq!(pr_details.assignees, vec!["marcos-rodoind".to_string()]);
+    assert_eq!(pr_details.reviewers, Vec::<String>::new());
+    assert_eq!(pr_details.assignees, Vec::<String>::new());
     assert!(pr_details.body.contains("Ref #45"));
 }
 

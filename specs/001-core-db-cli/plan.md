@@ -9,7 +9,7 @@
 Implement the Phase 1 foundation of **TRustKit** (`trustkit` static native binary in Rust 2024 Edition) following a strict Hexagonal Architecture (Ports & Adapters). This phase establishes:
 1. **`trustkit-core`**: Zero-dependency pure domain crate (`std` only) containing Plain Old Rust Structs (PORS), Special Case algebraic enums (zero `NULL`), the 7-Gate Typestate FSM, the 16 Hard Invariants policy, rich `DomainViolation` error hierarchy, and Port traits.
 2. **`trustkit-db`**: Embedded SQLite 3 persistence adapter (`rusqlite` bundled) operating in `WAL` mode with `100% NOT NULL` columns, paired with parallel `BLAKE3` cryptographic hashing (`Blake3ParallelSealerAdapter`).
-3. **`trustkit-gh`**: GitHub CLI (`gh`) adapter implementing operator identity verification (`marcos-rodoind` — `RN-014`) and 9-column GitHub Projects v2 synchronization (`RN-009`) with offline queue resilience.
+3. **`trustkit-gh`**: GitHub CLI (`gh`) adapter implementing operator identity verification (active account or `TRUSTKIT_GITHUB_USER` — `RN-014`) and 9-column GitHub Projects v2 synchronization (`RN-009`) with offline queue resilience.
 4. **`trustkit-cli`**: Single Composition Root (`bootstrap.rs`) with dual execution routes (Fast Synchronous path `< 3ms` without `tokio` for `hook pre-tool` and `status`, plus concurrent path for `init`), central `CliBoundaryErrorHandler` (mapping domain errors to POSIX exit codes `0..=6`), and dual-audience `Presenter` (null-free `--json` vs. emoji-free ASCII tables).
 
 ## Technical Context
