@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/trustkit-core",
+    "crates/trustkit-db",
+    "crates/trustkit-gh",
+    "crates/trustkit-ast",
+    "crates/trustkit-orch",
+    "crates/trustkit-cli",
+]
+
+[profile.release]
+lto = "thin"
+strip = true
+opt-level = 3

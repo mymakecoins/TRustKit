@@ -75,7 +75,7 @@ Nenhuma struct, erro ou tipo de biblioteca externa (`rusqlite`, `tree-sitter`, `
 | **`SyntaxTreeAuditorPort`** | Auditar integridade de testes (`VerifyTestIntegrity`), escanear invariantes léxicas, validar Mermaid/Gherkin e fatiar contexto (`SliceAstContext`). | `TreeSitterAstAdapter` (`trustkit-ast`) | `tree-sitter` + gramáticas TS/Rust/Py/Go/SQL |
 | **`WaveTopologyPlannerPort`** | Construir o grafo de dependências entre `AtomicTasks`, detectar ciclos e agrupar em `ExecutionWaves`. | `PetgraphTopologyAdapter` (`trustkit-ast`) | `petgraph` |
 | **`WorktreeIsolationPort`** | Provisionar e podar *Git Worktrees* efêmeras com CoW/symlinks, inspecionar árvore compartilhada e restaurar evidências alheias (`RestoreForeignEvidence`). | `GitWorktreeReflinkAdapter` (`trustkit-orch`) | `gix` / `git2` + syscalls POSIX `ioctl_ficlone` |
-| **`ProjectBoardGatewayPort`** | Verificar identidade (`marcos-rodoind`), sincronizar as 9 colunas do GitHub Projects v2, publicar comentário na issue e abrir PR sob demanda. | `GitHubCliGraphQlAdapter` (`trustkit-gh`) | `gh` CLI / GraphQL API v4 |
+| **`ProjectBoardGatewayPort`** | Verificar identidade GitHub ativa, sincronizar as 9 colunas do GitHub Projects v2, publicar comentário na issue e abrir PR sob demanda. | `GitHubCliGraphQlAdapter` (`trustkit-gh`) | `gh` CLI / GraphQL API v4 |
 
 ### 4.2. Separação Estrita entre Construção e Execução — DI & Modelos Limpos (Capítulo 11)
 
@@ -205,7 +205,7 @@ Para respeitar o **Princípio Aberto/Fechado (OCP)** e evitar que erros de baixo
 ```text
 [Gate 0: trustkit init]
    |-- Paralelo (tokio::join! via Adapters injetados):
-   |     1. `GitHubIdentityGuard`: confirma conta ativa `marcos-rodoind`
+   |     1. `GitHubIdentityGuard`: confirma conta ativa no gh
    |     2. `GitWorktreeReflinkAdapter`: inspeciona `git status --porcelain` (isola `PreExistingDirtyFiles`)
    |     3. Detecta `.specify/` (seleciona `SpecKitIntegrated` ou `StandardGauntletV2`)
    |     4. `GitHubProjectsGraphQlAdapter`: move card para `In progress` (ou usa `UnlinkedLocalCycle`)
@@ -230,7 +230,7 @@ Para respeitar o **Princípio Aberto/Fechado (OCP)** e evitar que erros de baixo
    |     1. `GitWorktreeReflinkAdapter` provisiona `.trustkit/worktrees/TASK-NNN` + symlink `node_modules`
    |     2. `AstContextSlicer` extrai pacote enxuto de assinaturas publicas (`SliceAstContext`)
    |     3. `TddPhaseGuard` exige `trustkit task test --phase red` (Exit != 0) ANTES de `--phase green` (Exit == 0)
-   |     4. Valida commit `<type>: #<id> <msg>` (sem emojis, sem Co-Authored-By) e faz merge na branch `marcos/<id>/<slug>`
+   |     4. Valida commit `<type>: #<id> <msg>` (sem emojis, sem Co-Authored-By) e faz merge na branch `feat/<id>-<slug>`
    v
 [Gate 5: trustkit gauntlet run (Loop max 5x - Circuit Breaker)]
    |-- CAMADA 0 (Rust Nativo < 5ms - Zero Tokens):
@@ -250,7 +250,7 @@ Para respeitar o **Princípio Aberto/Fechado (OCP)** e evitar que erros de baixo
    |-- Faz commit das screenshots e do relatorio na branch
    |-- Publica comentario oficial na Issue (Nota de Negocios + Matriz RN->RF->TASK->E2E->Screenshot + `<img ...?raw=true>` + Resumo Tecnico)
    |-- Pergunta destino de merge ao usuario; apos merge em `develop`, move card para `Await Staging`
-   |-- Se usuario executar `trustkit pr`: abre PR (`Ref #<id>`, `@thiagobotelhorodoind`, `@marcos-rodoind`) e move card para `In review`
+   |-- Se usuario executar `trustkit pr`: abre PR (`Ref #<id>`, revisores e assignees configurados) e move card para `In review`
 ```
 
 ### 6.3. Modelagem do Banco de Dados Embarcado Livre de `NULL` (Visão do DBA — SQLite WAL)
@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS sdd_cycles (
     spec_file_path          TEXT NOT NULL,
     spec_lock_state         TEXT NOT NULL DEFAULT 'DRAFT_UNVERIFIED' CHECK (spec_lock_state IN ('DRAFT_UNVERIFIED', 'FROZEN')),
     spec_blake3_digest      TEXT NOT NULL DEFAULT 'UNSEALED_DRAFT',
-    work_branch             TEXT NOT NULL,                  -- ex: 'marcos/45/validacao-unicidade'
+    work_branch             TEXT NOT NULL,                  -- ex: 'feat/45-validacao-unicidade'
     base_commit_sha         TEXT NOT NULL,
     pre_existing_dirty_json TEXT NOT NULL DEFAULT '[]',     -- Lista vazia '[]' como Caso Especial
     created_at              TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
@@ -413,7 +413,7 @@ trustkit/
 |       |-- src/
 |           |-- lib.rs
 |           |-- github_adapter.rs     # Implementa `ProjectBoardGatewayPort` + Boundary Error Translation
-|           |-- identity_guard.rs     # GitHubIdentityGuard: garante conta ativa `marcos-rodoind`
+|           |-- identity_guard.rs     # GitHubIdentityGuard: garante conta ativa no gh
 |           |-- board_synchronizer.rs # Mutacoes GraphQL das 9 Colunas Oficiais (sem regressao silenciosa)
 |           `-- report_renderer.rs    # Renderizador deterministico do comentario de issue e PR
 |
@@ -426,7 +426,7 @@ trustkit/
 
 | Comando CLI | Gate | Caso de Uso / Port Acionado pelo Binário Rust |
 | :--- | :---: | :--- |
-| `trustkit init [url\|id] [--json]` | **Gate 0** | Aciona `InitializeCycleUseCase` $\rightarrow$ `ProjectBoardGatewayPort` (`marcos-rodoind` + `In progress`), `WorktreeIsolationPort` (isola `PreExistingDirtyFiles`) e grava `SddCycle` no `CycleEvidenceRepositoryPort`. |
+| `trustkit init [url\|id] [--json]` | **Gate 0** | Aciona `InitializeCycleUseCase` $\rightarrow$ `ProjectBoardGatewayPort` (conta ativa + `In progress`), `WorktreeIsolationPort` (isola `PreExistingDirtyFiles`) e grava `SddCycle` no `CycleEvidenceRepositoryPort`. |
 | `trustkit spec init [--from-prd <p>]` | **Gate 0a/1** | Aciona `PrdSpecificationIngestor` para gerar `<topico>-spec.md` (ou `gauntlet-rubric.md` no perfil `SpecKitIntegrated`). |
 | `trustkit spec lock [--json]` | **Gate 1 & 2** | Aciona `SealSpecificationUseCase` $\rightarrow$ valida Mermaid `flowchart LR`, Gherkin e Matriz $\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E}$ via `SyntaxTreeAuditorPort` e grava `ArtifactSeal` via `ArtifactHasherPort`. |
 | `trustkit wave plan [--json]` | **Gate 3** | Aciona `PlanExecutionWavesUseCase` $\rightarrow$ `WaveTopologyPlannerPort` constrói o DAG, previne colisão de arquivos e retorna `WaveSchedule`. |
@@ -436,7 +436,7 @@ trustkit/
 | `trustkit gauntlet run [--json]` | **Gate 5 (L0+L1)** | Executa Camada 0 + Camada 1 (Lint/Build, Playwright E2E com `RestoreForeignEvidence` e 4 Críticos) + controle do disjuntor (`TripCircuitBreaker` no 5º loop). |
 | `trustkit done [--json]` | **Gate 6** | Renderiza `gauntlet-report.md` a partir de `execution_evidences`, commita evidências, publica comentário na issue com Matriz de Rastreabilidade e pergunta destino de merge. |
 | `trustkit merge --target <branch>` | **Gate 6+** | Verifica `CycleStatus::Certified`, realiza merge e move card para `Await Staging` via `ProjectBoardGatewayPort`. |
-| `trustkit pr [--json]` | **Sob Demanda** | Abre PR para `develop` (`@thiagobotelhorodoind` revisor, `@marcos-rodoind` assignee, `Ref #<id>`, Matriz e imagens HTML) e move card para `In review`. |
+| `trustkit pr [--json]` | **Sob Demanda** | Abre PR para `develop` (revisores e assignees, `Ref #<id>`, Matriz e imagens HTML) e move card para `In review`. |
 | `trustkit hook <pre-tool\|post-tool>` | **Contínuo** | Rota síncrona `< 3ms` que bloqueia comandos proibidos (`RN-006`, `RN-012`, `RN-013`). |
 
 ---

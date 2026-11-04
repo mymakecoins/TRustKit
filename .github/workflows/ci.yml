@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  check-and-lint:
+    name: Code Quality and Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all --check
+
+      - name: Clippy lint check
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup test environment
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p "$HOME/mock_bin"
+          cat << 'EOF' > "$HOME/mock_bin/gh"
+          #!/bin/sh
+          if [ "$1" = "auth" ]; then
+              echo "Logged in to github.com account operator"
+              exit 0
+          elif [ "$1" = "api" ]; then
+              echo "operator"
+              exit 0
+          elif [ "$1" = "pr" ] && [ "$2" = "create" ]; then
+              echo "https://github.com/org/repo/pull/45"
+              exit 0
+          elif [ "$1" = "issue" ]; then
+              echo "https://github.com/org/repo/issues/45"
+              exit 0
+          fi
+          exit 0
+          EOF
+          chmod +x "$HOME/mock_bin/gh"
+          echo "$HOME/mock_bin" >> "$GITHUB_PATH"
+
+      - name: Run test suite
+        run: cargo test --workspace --verbose

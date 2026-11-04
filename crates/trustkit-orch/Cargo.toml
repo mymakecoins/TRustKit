@@ -1,0 +1,18 @@
+[package]
+name = "trustkit-orch"
+version = "0.1.0"
+edition = "2024"
+authors = ["TRustKit Contributors"]
+description = "Concurrency orchestrator, worktree isolation provider, and async supervisor for TRustKit"
+
+[dependencies]
+trustkit-core = { path = "../trustkit-core" }
+trustkit-ast = { path = "../trustkit-ast" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "process", "time", "io-util", "sync", "net"] }
+blake3 = "1.5"
+regex = "1.10"
+
+[dev-dependencies]
+tempfile = "3.13"

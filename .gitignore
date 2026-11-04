@@ -1,0 +1,22 @@
+# Rust
+target/
+debug/
+release/
+*.rs.bk
+*.rlib
+*.prof*
+
+# TRustKit runtime database
+.trustkit/
+
+# Environment and logs
+*.log
+.env*
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.tmp
+.DS_Store
+Thumbs.db

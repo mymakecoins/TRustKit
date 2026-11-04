@@ -1,0 +1,15 @@
+[package]
+name = "trustkit-db"
+version = "0.1.0"
+edition = "2024"
+authors = ["TRustKit Contributors"]
+description = "SQLite WAL persistence and BLAKE3 cryptographic sealing adapters for TRustKit"
+
+[dependencies]
+trustkit-core = { path = "../trustkit-core" }
+rusqlite = { version = "0.32", features = ["bundled"] }
+blake3 = "1.5"
+rayon = "1.10"
+
+[dev-dependencies]
+tempfile = "3.13"
