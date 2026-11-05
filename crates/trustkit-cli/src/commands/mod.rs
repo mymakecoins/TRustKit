@@ -1,6 +1,7 @@
 //! CLI Command modules
 
 pub mod audit_security_cmd;
+pub mod auto_cmd;
 pub mod context_slice_cmd;
 pub mod doctor_cmd;
 pub mod done_cmd;

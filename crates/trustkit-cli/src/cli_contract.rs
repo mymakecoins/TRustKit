@@ -4,6 +4,7 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use clap::{Args, Parser, Subcommand};
+use trustkit_core::errors::DomainViolation;
 
 pub use crate::cli_gate_args::*;
 pub use crate::cli_spec_args::*;
@@ -81,12 +82,16 @@ impl Cli {
             Command::Audit(AuditArgs { action }) => match action {
                 AuditSubcommand::Security(a) => a.json,
             },
+            Command::Auto(args) => args.json,
         }
     }
 }
 
 #[derive(Subcommand, Debug, PartialEq, Eq)]
 pub enum Command {
+    #[command(about = "Execute full autonomous SDD lifecycle from specification or issue")]
+    Auto(AutoArgs),
+
     #[command(about = "Initialize or resume an SDD cycle at Gate 0")]
     Init(InitArgs),
 
@@ -245,6 +250,51 @@ pub enum GauntletSubcommand {
         about = "Run concurrent verification gauntlet across Layer 0 and Layer 1 critics"
     )]
     Run(GauntletRunArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default, Clone)]
+pub struct AutoArgs {
+    #[arg(long, help = "GitHub issue number, link or ID")]
+    pub issue: Option<String>,
+
+    #[arg(long, help = "Path to local specification markdown file")]
+    pub spec: Option<String>,
+
+    #[arg(
+        long,
+        default_value = "develop",
+        help = "Target branch for deterministic merge"
+    )]
+    pub target: String,
+
+    #[arg(
+        long,
+        default_value = "auto",
+        help = "Runtime execution backend (auto, pty, native)"
+    )]
+    pub runtime: String,
+
+    #[arg(
+        long,
+        default_value = "",
+        help = "Optional builder agent command to execute"
+    )]
+    pub agent_cmd: String,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+impl AutoArgs {
+    pub fn validate(&self) -> Result<(), DomainViolation> {
+        if self.issue.is_none() && self.spec.is_none() {
+            return Err(DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "auto_cli".to_string(),
+                details: "Either --issue or --spec must be provided for trustkit auto".to_string(),
+            });
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]

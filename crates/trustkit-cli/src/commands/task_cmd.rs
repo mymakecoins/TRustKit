@@ -141,6 +141,31 @@ pub fn execute_review_with_db(
     Ok(DomainOutcome::Success)
 }
 
+fn resolve_task_test_args(
+    repo: &SqliteWalRepositoryAdapter,
+    cycle_id: &str,
+    task_id: &str,
+) -> Vec<String> {
+    if let Ok(Some(task)) = repo.find_atomic_task(cycle_id, task_id)
+        && !task.target_test_file.is_empty()
+    {
+        let path = Path::new(&task.target_test_file);
+        if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+            if task.target_test_file.contains("/tests/")
+                || task.target_test_file.starts_with("tests/")
+            {
+                return vec!["test".to_string(), "--test".to_string(), stem.to_string()];
+            }
+            return vec!["test".to_string(), "--".to_string(), stem.replace('-', "_")];
+        }
+    }
+    vec![
+        "test".to_string(),
+        "--".to_string(),
+        task_id.to_lowercase().replace('-', "_"),
+    ]
+}
+
 pub fn execute_test_with_db(
     args: &TaskTestArgs,
     json_mode: bool,
@@ -169,17 +194,14 @@ pub fn execute_test_with_db(
     let working_dir = active_cycle.spec_dir.clone();
     let supervisor = AsyncExecutionSupervisor::new();
     let now_iso = current_timestamp_iso();
+    let test_args = resolve_task_test_args(&repo, &active_cycle.cycle_id, &args.task_id);
 
     let request = RecordTddPhaseRequest {
         cycle_id: active_cycle.cycle_id.clone(),
         task_id: args.task_id.clone(),
         phase,
         test_command: "cargo".to_string(),
-        test_args: vec![
-            "test".to_string(),
-            "--".to_string(),
-            args.task_id.to_lowercase(),
-        ],
+        test_args,
         working_dir,
         timeout_ms: 60_000,
         now_iso,

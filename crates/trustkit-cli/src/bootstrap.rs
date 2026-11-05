@@ -7,7 +7,7 @@ use crate::cli_contract::{
     HookSubcommand, SpecArgs, SpecSubcommand, WaveArgs, WaveSubcommand,
 };
 use crate::commands::{
-    audit_security_cmd, context_slice_cmd, doctor_cmd, done_cmd, gauntlet_ast_audit_cmd,
+    audit_security_cmd, auto_cmd, context_slice_cmd, doctor_cmd, done_cmd, gauntlet_ast_audit_cmd,
     gauntlet_run_cmd, graph_cmd, hook_cmd, init_cmd, mcp_cmd, memory_cmd, merge_cmd, pr_cmd,
     spec_init_cmd, spec_lint_cmd, spec_lock_cmd, spec_prompt_cmd, status_cmd, task_cmd,
     wave_plan_cmd, wave_run_cmd,
@@ -58,6 +58,7 @@ impl FastSyncBootstrap {
             Command::Memory(args) => memory_cmd::execute(args, json_mode),
             Command::Graph(args) => graph_cmd::execute(args, json_mode),
             Command::Audit(args) => audit_security_cmd::execute(args, json_mode),
+            Command::Auto(args) => auto_cmd::execute(args, json_mode),
             Command::Init(_) => Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "bootstrap".to_string(),
                 details: "Command 'init' requires FullConcurrentBootstrap path.".to_string(),
@@ -143,6 +144,7 @@ pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
         | Command::Memory(_)
         | Command::Graph(_)
         | Command::Audit(_)
+        | Command::Auto(_)
         | Command::Wave(WaveArgs {
             action: WaveSubcommand::Plan(_),
         })

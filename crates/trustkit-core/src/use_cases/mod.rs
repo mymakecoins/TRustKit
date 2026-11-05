@@ -17,6 +17,7 @@ pub mod plan_execution_waves;
 pub mod query_cycle_status;
 pub mod record_tdd_phase;
 pub mod review_task_code;
+pub mod run_autonomous_cycle;
 pub mod run_execution_wave;
 pub mod run_gauntlet_layer1;
 pub mod run_interactive_wave;
