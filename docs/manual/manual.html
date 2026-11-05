@@ -607,6 +607,7 @@
         <li><a href="#gate-4" class="nav-link">Gate 4: Worktrees & TDD Estrito</a></li>
         <li><a href="#gate-5" class="nav-link">Gate 5: Gauntlet Loop V2</a></li>
         <li><a href="#gate-6" class="nav-link">Gate 6: Certificacao & Merge</a></li>
+        <li><a href="#exemplo-3-waves" class="nav-link">Exemplo Pratico: 3 Waves</a></li>
 
         <li class="nav-group-title">Recursos Avancados</li>
         <li><a href="#memoria-perene" class="nav-link">Memoria Perene (Wiki FTS5)</a></li>
@@ -1153,6 +1154,217 @@ trustkit gauntlet run --skip-security-review</code></pre>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
           <pre><code>trustkit pr --target develop</code></pre>
+        </div>
+      </div>
+
+      <!-- Exemplo Pratico: Ciclo Completo de Feature com 3 Waves -->
+      <div id="exemplo-3-waves" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+        <h3>Exemplo Pratico: Ciclo Completo de Feature com 3 Waves</h3>
+        <p>Abaixo esta demonstrada a sequencia deterministica exata de comandos para executar uma funcionalidade do inicio ao fim (Gate 0 ao Gate 6), considerando um plano decomposto em 3 waves topologicas no DAG:</p>
+        
+        <ul style="margin: 14px 0 24px 28px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Onda 1 (Base e contratos):</strong> <code>TASK-001</code> (Core Domain) e <code>TASK-002</code> (Adaptador de Persistencia)</li>
+          <li><strong>Onda 2 (Regra de negocio / Servicos):</strong> <code>TASK-003</code> (Servico de Autenticacao / Dominio)</li>
+          <li><strong>Onda 3 (Interface e bordas):</strong> <code>TASK-004</code> (Handlers CLI / Integracao)</li>
+        </ul>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 0: Inicializacao do Ciclo e Setup de Ambiente</h4>
+        <p>Valida a identidade GitHub, protege arquivos pre-existentes na arvore Git e inicializa a sessao no banco transacional SQLite WAL:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Inicializar ciclo associado a issue</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit init --issue 42</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 1: Formulacao e Validacao da Especificacao (Spec V2)</h4>
+        <p>Gera o esqueleto estruturado da especificacao e valida continuamente as regras constitucionais via linter estatico antes do congelamento:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Scaffolding estruturado e linter imediato</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Gera o prompt estruturado e o esqueleto de spec.md com contexto fatiado da AST e da wiki
+trustkit spec prompt --idea "Implementar modulo de autenticacao multifator TOTP" --budget 4000
+
+# 2. Executa o linter estatico imediato para validar Gherkin, Mermaid e matriz de rastreabilidade
+trustkit spec lint</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 2: Congelamento Criptografico (Spec Lock)</h4>
+        <p>Sela a especificacao com digest BLAKE3 apos validacao completa da Matriz de Rastreabilidade ponta a ponta (RN -> RF -> TASK -> E2E):</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Selo criptografico BLAKE3</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit spec lock</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 3: Decomposicao e Planejamento Topologico em Ondas (DAG)</h4>
+        <p>Apos a elaboracao das tarefas atomicas em <code>tasks/TASK-NNN.md</code>, compila o grafo de dependencias e calcula as 3 ondas de execucao paralela:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Compilar DAG e ondas de tarefas</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit wave plan</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 4: Execucao das 3 Ondas com Git Worktrees e TDD Estrito</h4>
+        <p>Cada tarefa atomica e isolada em uma Git Worktree dedicada (<code>.trustkit/worktrees/</code>) e deve cumprir obrigatoriamente o ciclo TDD: <strong>RED comprovado antes de GREEN</strong>.</p>
+
+        <h5 style="margin: 18px 0 8px 0; color: var(--text-primary); font-size: 1.05rem;">Execucao da Onda 1</h5>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Onda 1: Despachar worktrees e ciclo TDD</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Despacha e provisiona os worktrees isolados da Onda 1
+trustkit wave run --wave 1
+
+# --- Execucao da TASK-001 ---
+# Registra comprovacao obrigatoria de falha do teste (fase RED)
+trustkit task test TASK-001 --phase red
+
+# Apos codificar a solucao, registra comprovacao obrigatoria de sucesso (fase GREEN)
+trustkit task test TASK-001 --phase green
+
+# Revisao semantica multi-angulo do diff antes da conclusao (fase REFACTOR)
+trustkit task review TASK-001 --effort medium
+
+# Conclui a tarefa atomica e integra na branch de trabalho da feature
+trustkit task complete TASK-001
+
+# --- Execucao da TASK-002 ---
+trustkit task test TASK-002 --phase red
+trustkit task test TASK-002 --phase green
+trustkit task review TASK-002 --effort medium
+trustkit task complete TASK-002</code></pre>
+        </div>
+
+        <h5 style="margin: 18px 0 8px 0; color: var(--text-primary); font-size: 1.05rem;">Execucao da Onda 2</h5>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Onda 2: Despachar worktrees e ciclo TDD</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 2. Despacha os worktrees da Onda 2 (dependentes da conclusao da Onda 1)
+trustkit wave run --wave 2
+
+# --- Execucao da TASK-003 ---
+trustkit task test TASK-003 --phase red
+trustkit task test TASK-003 --phase green
+trustkit task review TASK-003 --effort medium
+trustkit task complete TASK-003</code></pre>
+        </div>
+
+        <h5 style="margin: 18px 0 8px 0; color: var(--text-primary); font-size: 1.05rem;">Execucao da Onda 3</h5>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Onda 3: Despachar worktrees e ciclo TDD</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 3. Despacha os worktrees da Onda 3 (dependentes da conclusao da Onda 2)
+trustkit wave run --wave 3
+
+# --- Execucao da TASK-004 ---
+trustkit task test TASK-004 --phase red
+trustkit task test TASK-004 --phase green
+trustkit task review TASK-004 --effort medium
+trustkit task complete TASK-004</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 5: Gauntlet Loop V2 (Auditoria AST e Swarm de Criticos)</h4>
+        <p>Executa a esteira de validacao adversarial mais rigorosa do sistema:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Auditoria AST e Swarm de Criticos</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Camada 0: Inspecao AST sintatica (&lt; 5ms) via Tree-Sitter (anti-cheat, zero emojis, sem trailers de IA)
+trustkit gauntlet ast-audit
+
+# 2. Camada 1: Suite de testes de integracao, build release, Playwright E2E e swarm de criticos
+trustkit gauntlet run</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 6: Certificacao, Merge e Abertura de Pull Request Sob Demanda</h4>
+        <p>Consolida as evidencias, integra o codigo na branch alvo e publica o PR apenas sob demanda humana explicita:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Certificacao, merge e PR sob demanda</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Consolida o relatorio oficial gauntlet-report.md e publica comentario na issue
+trustkit done
+
+# 2. Realiza o merge deterministico na branch de destino (ex: develop) e limpa a branch de feature
+trustkit merge --target develop
+
+# 3. Abre o Pull Request formal no repositorio (somente sob solicitacao humana explicita)
+trustkit pr --target develop</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 12px 0; color: var(--accent-primary);">Quadro Resumo dos Comandos</h4>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Gate</th>
+                <th>Objetivo</th>
+                <th>Comandos Sequenciais</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Gate 0</strong></td>
+                <td>Inicializacao</td>
+                <td><code>trustkit init --issue &lt;ID&gt;</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 1</strong></td>
+                <td>Especificacao</td>
+                <td><code>trustkit spec prompt ...</code> &rarr; <code>trustkit spec lint</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 2</strong></td>
+                <td>Congelamento Criptografico</td>
+                <td><code>trustkit spec lock</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 3</strong></td>
+                <td>Planejamento em Ondas (DAG)</td>
+                <td><code>trustkit wave plan</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4 (Onda 1)</strong></td>
+                <td>Execucao Paralela &amp; TDD</td>
+                <td><code>trustkit wave run --wave 1</code> &rarr; (<code>test --phase red</code> &rarr; <code>test --phase green</code> &rarr; <code>review</code> &rarr; <code>complete</code>) para TASK-001 e TASK-002</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4 (Onda 2)</strong></td>
+                <td>Execucao Paralela &amp; TDD</td>
+                <td><code>trustkit wave run --wave 2</code> &rarr; (<code>test --phase red</code> &rarr; <code>test --phase green</code> &rarr; <code>review</code> &rarr; <code>complete</code>) para TASK-003</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4 (Onda 3)</strong></td>
+                <td>Execucao Paralela &amp; TDD</td>
+                <td><code>trustkit wave run --wave 3</code> &rarr; (<code>test --phase red</code> &rarr; <code>test --phase green</code> &rarr; <code>review</code> &rarr; <code>complete</code>) para TASK-004</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 5</strong></td>
+                <td>Auditoria e Gauntlet</td>
+                <td><code>trustkit gauntlet ast-audit</code> &rarr; <code>trustkit gauntlet run</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 6</strong></td>
+                <td>Certificacao e Entrega</td>
+                <td><code>trustkit done</code> &rarr; <code>trustkit merge --target develop</code> &rarr; <code>trustkit pr --target develop</code></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

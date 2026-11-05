@@ -28,6 +28,7 @@
    - [3.4 Tarefa 4: Execucao Paralela, Worktrees e Ciclo TDD Estrito (Gate 4)](#34-tarefa-4-execucao-paralela-worktrees-e-ciclo-tdd-estrito-gate-4)
    - [3.5 Tarefa 5: Submeter ao Gauntlet Loop e Revisao de Seguranca (Gate 5)](#35-tarefa-5-submeter-ao-gauntlet-loop-e-revisao-de-seguranca-gate-5)
    - [3.6 Tarefa 6: Certificacao, Merge e Abertura de Pull Request (Gate 6)](#36-tarefa-6-certificacao-merge-e-abertura-de-pull-request-gate-6)
+   - [3.7 Exemplo Pratico: Ciclo Completo de Feature com 3 Waves](#37-exemplo-pratico-ciclo-completo-de-feature-com-3-waves)
 4. [Recursos Avancados e Modulos Especializados](#4-recursos-avancados-e-modulos-especializados)
    - [4.1 Memoria Perene do Projeto (`trustkit memory`)](#41-memoria-perene-do-projeto-trustkit-memory)
    - [4.2 Inteligencia de Grafo Estrutural (`trustkit graph`)](#42-inteligencia-de-grafo-estrutural-trustkit-graph)
@@ -601,6 +602,140 @@ trustkit pr --target develop
 ```
 
 O comando configura automaticamente os revisores oficiais, os links de rastreabilidade e move o card do quadro para a coluna `In review`.
+
+---
+
+### 3.7 Exemplo Pratico: Ciclo Completo de Feature com 3 Waves
+
+Abaixo esta demonstrada a sequencia deterministica exata de comandos para executar uma funcionalidade do inicio ao fim (Gate 0 ao Gate 6), considerando um plano decomposto em 3 waves topologicas no DAG:
+* **Onda 1 (Base e contratos):** `TASK-001` (Core Domain) e `TASK-002` (Adaptador de Persistencia)
+* **Onda 2 (Regra de negocio / Servicos):** `TASK-003` (Servico de Autenticacao / Dominio)
+* **Onda 3 (Interface e bordas):** `TASK-004` (Handlers CLI / Integracao)
+
+#### Gate 0: Inicializacao do Ciclo e Setup de Ambiente
+Valida a identidade GitHub, protege arquivos pre-existentes na arvore Git e inicializa a sessao no banco transacional SQLite WAL:
+
+```bash
+trustkit init --issue 42
+```
+*(Caso derive de um documento funcional pre-existente: `trustkit init --issue 42 --from-prd docs/PRD_TRustKit.md`)*
+
+#### Gate 1: Formulacao e Validacao da Especificacao (Spec V2)
+Gera o esqueleto estruturado da especificacao e valida continuamente as regras constitucionais via linter estatico antes do congelamento:
+
+```bash
+# 1. Gera o prompt estruturado e o esqueleto de spec.md com contexto fatiado da AST e da wiki
+trustkit spec prompt --idea "Implementar modulo de autenticacao multifator TOTP" --budget 4000
+
+# 2. Executa o linter estatico imediato para validar Gherkin, Mermaid e matriz de rastreabilidade
+trustkit spec lint
+```
+
+#### Gate 2: Congelamento Criptografico (Spec Lock)
+Sela a especificacao com digest BLAKE3 apos validacao completa da Matriz de Rastreabilidade ponta a ponta (RN -> RF -> TASK -> E2E):
+
+```bash
+trustkit spec lock
+```
+
+#### Gate 3: Decomposicao e Planejamento Topologico em Ondas (DAG)
+Apos a elaboracao das tarefas atomicas em `tasks/TASK-NNN.md`, compila o grafo de dependencias e calcula as 3 ondas de execucao paralela:
+
+```bash
+trustkit wave plan
+```
+
+#### Gate 4: Execucao das 3 Ondas com Git Worktrees e TDD Estrito
+Cada tarefa atomica e isolada em uma Git Worktree dedicada (`.trustkit/worktrees/`) e deve cumprir obrigatoriamente o ciclo TDD: RED comprovado antes de GREEN.
+
+##### Execucao da Onda 1
+```bash
+# 1. Despacha e provisiona os worktrees isolados da Onda 1
+trustkit wave run --wave 1
+
+# --- Execucao da TASK-001 ---
+# Registra comprovacao obrigatoria de falha do teste (fase RED)
+trustkit task test TASK-001 --phase red
+
+# Apos codificar a solucao, registra comprovacao obrigatoria de sucesso (fase GREEN)
+trustkit task test TASK-001 --phase green
+
+# Revisao semantica multi-angulo do diff antes da conclusao (fase REFACTOR)
+trustkit task review TASK-001 --effort medium
+
+# Conclui a tarefa atomica e integra na branch de trabalho da feature
+trustkit task complete TASK-001
+
+# --- Execucao da TASK-002 ---
+trustkit task test TASK-002 --phase red
+trustkit task test TASK-002 --phase green
+trustkit task review TASK-002 --effort medium
+trustkit task complete TASK-002
+```
+
+##### Execucao da Onda 2
+```bash
+# 2. Despacha os worktrees da Onda 2 (dependentes da conclusao da Onda 1)
+trustkit wave run --wave 2
+
+# --- Execucao da TASK-003 ---
+trustkit task test TASK-003 --phase red
+trustkit task test TASK-003 --phase green
+trustkit task review TASK-003 --effort medium
+trustkit task complete TASK-003
+```
+
+##### Execucao da Onda 3
+```bash
+# 3. Despacha os worktrees da Onda 3 (dependentes da conclusao da Onda 2)
+trustkit wave run --wave 3
+
+# --- Execucao da TASK-004 ---
+trustkit task test TASK-004 --phase red
+trustkit task test TASK-004 --phase green
+trustkit task review TASK-004 --effort medium
+trustkit task complete TASK-004
+```
+
+#### Gate 5: Gauntlet Loop V2 (Auditoria AST e Swarm de Criticos)
+Executa a esteira de validacao adversarial mais rigorosa do sistema:
+
+```bash
+# 1. Camada 0: Inspecao AST sintatica (< 5ms) via Tree-Sitter (anti-cheat, zero emojis, sem trailers de IA)
+trustkit gauntlet ast-audit
+
+# 2. Camada 1: Suite de testes de integracao, build release, Playwright E2E e swarm de criticos
+trustkit gauntlet run
+```
+*(Nota: e possivel definir explicitamente a revisao de seguranca de diff com `trustkit gauntlet run --security-review` ou `trustkit gauntlet run --skip-security-review`).*
+
+#### Gate 6: Certificacao, Merge e Abertura de Pull Request Sob Demanda
+Consolida as evidencias, integra o codigo na branch alvo e publica o PR apenas sob demanda humana explicita:
+
+```bash
+# 1. Consolida o relatorio oficial gauntlet-report.md e publica comentario na issue
+trustkit done
+
+# 2. Realiza o merge deterministico na branch de destino (ex: develop) e limpa a branch de feature
+trustkit merge --target develop
+
+# 3. Abre o Pull Request formal no repositorio (somente sob solicitacao humana explicita)
+trustkit pr --target develop
+```
+
+#### Quadro Resumo dos Comandos
+
+| Gate | Objetivo | Comandos Sequenciais |
+| :--- | :--- | :--- |
+| **Gate 0** | Inicializacao | `trustkit init --issue <ID>` |
+| **Gate 1** | Especificacao | `trustkit spec prompt ...` -> `trustkit spec lint` |
+| **Gate 2** | Congelamento Criptografico | `trustkit spec lock` |
+| **Gate 3** | Planejamento em Ondas (DAG) | `trustkit wave plan` |
+| **Gate 4 (Onda 1)** | Execucao Paralela & TDD | `trustkit wave run --wave 1` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-001 e TASK-002 |
+| **Gate 4 (Onda 2)** | Execucao Paralela & TDD | `trustkit wave run --wave 2` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-003 |
+| **Gate 4 (Onda 3)** | Execucao Paralela & TDD | `trustkit wave run --wave 3` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-004 |
+| **Gate 5** | Auditoria e Gauntlet | `trustkit gauntlet ast-audit` -> `trustkit gauntlet run` |
+| **Gate 6** | Certificacao e Entrega | `trustkit done` -> `trustkit merge --target develop` -> `trustkit pr --target develop` |
 
 ---
 
