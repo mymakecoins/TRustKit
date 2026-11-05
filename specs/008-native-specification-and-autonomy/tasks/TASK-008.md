@@ -7,7 +7,7 @@
 depends_on: [TASK-007]
 layer: INFRA
 Arquivos Esperados:
-- .agents/skills/sdd-specify/SKILL.md
+- .agents/skills/sdd-define/SKILL.md
 test_file: crates/trustkit-cli/tests/e2e_autonomy_decoupling.rs
 
 ---

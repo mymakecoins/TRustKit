@@ -47,7 +47,7 @@ Adicionar a dependencia `petgraph = "0.7"` no crate `trustkit-ast` e implementar
 ### Rationale
 - `petgraph` e a biblioteca de referencia no ecossistema Rust para algoritmos de grafos, comprovadamente confiavel, rapida e sem dependencias pesadas.
 - O cálculo de ondas por distância em DAG acíclico executa em complexidade $O(V + E)$, consumindo menos de 2ms para centenas de tarefas atomicas.
-- O isolamento deterministico por menor indice numerico cumpre rigorosamente a decisao validada no `/sdd-clarify`.
+- O isolamento deterministico por menor indice numerico cumpre rigorosamente a decisao validada no `/sdd-refine`.
 
 ### Alternatives Considered
 - *Implementar DAG ad-hoc sem petgraph*: Rejeitado; reinventar algoritmos de ordenacao topologica e deteccao de ciclos em grafos direcionados aumentaria a superficie de bugs. A Constituicao do TRustKit explicitamente lista `petgraph` como biblioteca autorizada para `trustkit-ast`.

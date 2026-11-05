@@ -1,5 +1,5 @@
 ---
-name: "sdd-tasks"
+name: "sdd-decompose"
 description: "Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts."
 compatibility: "Requires SDD project structure with .specify/ directory"
 metadata:

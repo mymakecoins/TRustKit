@@ -1,5 +1,5 @@
 ---
-name: "sdd-plan"
+name: "sdd-planning"
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 compatibility: "Requires SDD project structure with .specify/ directory"
 metadata:

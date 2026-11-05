@@ -3,15 +3,15 @@
   "version": "1.0.12",
   "installed_at": "2026-10-27T17:00:48.518496+00:00",
   "files": {
-    ".agents/skills/sdd-analyze/SKILL.md": "60cbd0a4bb5c01bc5d447e5d42543b02ebf1560a2b9bfcb750b3502c5941a711",
-    ".agents/skills/sdd-clarify/SKILL.md": "457e6985a30cf6b3d89990b9ab0f198803398c5cd1a35b62f4ee3e59c8dc30d3",
-    ".agents/skills/sdd-constitution/SKILL.md": "177600a10d466eac78014a3b65d78663e24c05463266df539b5be9830a81c18e",
-    ".agents/skills/sdd-implement/SKILL.md": "0c565295d8b1de03821812be86e6d5bba68268f40d52550499110ab9cad1b118",
-    ".agents/skills/sdd-converge/SKILL.md": "90c6a2cf400d114a41945745aeadc94ebcd69f4eb12dd723635ca153806bced6",
-    ".agents/skills/sdd-plan/SKILL.md": "c77d361665b34d5870dd1ffe9d2c805700a36cfacd35c63a935ea6edcb100762",
-    ".agents/skills/sdd-checklist/SKILL.md": "43009036898a3242742336fd3582c2c5909d12fd9a7d6894eb8608b43ccd27ad",
-    ".agents/skills/sdd-specify/SKILL.md": "342dd2173103ce701b2bae2f489b462da19fc7369d920c93df10754be2216be8",
-    ".agents/skills/sdd-tasks/SKILL.md": "4dfb5cb2fd544f7ad5f1ddb9ff44bf230082fc312090db7e36102fe400dfab77",
-    ".agents/skills/sdd-taskstoissues/SKILL.md": "a25c75b567310292548df39ebaef19b98e3fa9c0b28de32a177c677256acf743"
+    ".agents/skills/sdd-discover/SKILL.md": "8ef1954b229334fbbb2f8fa828e6776278a5a4ead86f0e6a0ee0c81c4379a744",
+    ".agents/skills/sdd-refine/SKILL.md": "20c83f6304f4d11d145a5a4b66aa85deae4e413f3c336426ae1442ba331dc95d",
+    ".agents/skills/sdd-principles/SKILL.md": "c6f0184215259b702604b0d0a97f77e671a423f4486f7942a3ae41d678c21ed6",
+    ".agents/skills/sdd-execute/SKILL.md": "e08a541b2423011369b6afb670c851af33840f39f4552a060f8c84befc1ccce6",
+    ".agents/skills/sdd-resolve/SKILL.md": "b51106e246108ae8168fe10972647b2232ed9dec61a56a92560b53df0d84e6c5",
+    ".agents/skills/sdd-planning/SKILL.md": "a5913bdc6cb11867c167d215d2815036a64c9cc5eb36a40ef75bc5518568d910",
+    ".agents/skills/sdd-validate/SKILL.md": "008bde6e652b56d903211809ee4d74cb4e708d98e4d506a6ff8eecd235a73f92",
+    ".agents/skills/sdd-define/SKILL.md": "600a9b21dfdc6c993bdbcfe131467151594885285ec441c78723c746a7fa5ef1",
+    ".agents/skills/sdd-decompose/SKILL.md": "185d9d9b5d522951eae7ea7b7a7d1dd0e7d538426126469739eacc78c00adfb5",
+    ".agents/skills/sdd-publish-issues/SKILL.md": "26f13ea8842beb3427b1fb7b314ec0083c362641f78106b69993023bfb4829d1"
   }
 }

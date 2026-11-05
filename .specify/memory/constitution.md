@@ -92,7 +92,7 @@ This Constitution represents the supreme architectural and operational contract 
 
 ### 1. Amendment Procedure
 - Any modification, addition, or revocation of principles within this Constitution requires an explicit proposal documented in an Architecture Decision Record (ADR) or specification document.
-- Amendments MUST be validated through a formal SDD amendment cycle (`/sdd-constitution`).
+- Amendments MUST be validated through a formal SDD amendment cycle (`/sdd-principles`).
 - Every amendment MUST increment the document version in accordance with the Semantic Versioning policy below and document rationale in the temporary Sync Impact Report.
 
 ### 2. Versioning Policy
@@ -101,7 +101,7 @@ This Constitution represents the supreme architectural and operational contract 
 - **PATCH (1.0.X):** Clarifications, wording corrections, formatting adjustments, or non-semantic refinements.
 
 ### 3. Compliance & Enforcement
-- Automated verification via `/sdd-analyze` and `trustkit doctor` MUST validate project artifacts against the rules established herein.
+- Automated verification via `/sdd-discover` and `trustkit doctor` MUST validate project artifacts against the rules established herein.
 - Violations detected during code review or Gauntlet evaluation MUST be treated as blocking defects requiring resolution prior to merge.
 
 **Version**: 1.0.0 | **Ratified**: 2026-10-27 | **Last Amended**: 2026-10-27

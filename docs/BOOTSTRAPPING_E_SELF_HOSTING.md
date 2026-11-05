@@ -56,7 +56,7 @@ Na construção de compiladores (como o próprio `rustc`) e ferramentas crítica
 ## 2. Por Que Usar SDD + `mmc-gauntlet-sdd-v2` no Estágio 0?
 
 1. **Blindagem Arquitetural via `constitution.md`:**
-   Sem um harness no Estágio 0, um agente codificador trabalhando diretamente sobre o PRD/ADR tenderia a tomar atalhos (importar `rusqlite` ou `clap` dentro de `trustkit-core`, usar `unwrap()` em produção ou criar colunas `NULL` no SQLite). No SDD, a `constitution.md` atua como lei suprema no Gate 2 (`/sdd-plan` e `/sdd-analyze`) e no Gate 5 (Gauntlet), bloqueando qualquer desvio do `ADR_001_TRustKit_Architecture.md`.
+   Sem um harness no Estágio 0, um agente codificador trabalhando diretamente sobre o PRD/ADR tenderia a tomar atalhos (importar `rusqlite` ou `clap` dentro de `trustkit-core`, usar `unwrap()` em produção ou criar colunas `NULL` no SQLite). No SDD, a `constitution.md` atua como lei suprema no Gate 2 (`/sdd-planning` e `/sdd-discover`) e no Gate 5 (Gauntlet), bloqueando qualquer desvio do `ADR_001_TRustKit_Architecture.md`.
 2. **O Próprio Repositório Serve como Massa de Teste Real:**
    O `TRustKit` precisa suportar nativamente o **Modo SDD Estruturado** (detectar `.specify/`, ler `constitution.md`, `spec.md`, `plan.md` e `tasks.md`). Ao construí-lo com o SDD desde o dia 1, o repositório `/home/mmc/00_code/00_tools/TRustKit` terá artefatos reais de `.specify/` e `specs/001-.../` que servirão de *fixtures* autênticas para a suíte de testes de integração do próprio `trustkit`.
 3. **Decomposição Controlada por Crate:**
@@ -80,7 +80,7 @@ A skill `mmc-gauntlet-sdd-v2` foi originalmente calibrada para aplicações full
 
 ## 4. Constituição Oficial do Repositório (`.specify/memory/constitution.md`)
 
-Ao inicializar o SDD em `/home/mmc/00_code/00_tools/TRustKit`, grave o conteúdo abaixo em `.specify/memory/constitution.md` para que tanto o `/sdd-analyze` quanto os Críticos do `mmc-gauntlet-sdd-v2` fiscalizem as regras de *Clean Code* do `ADR-001`:
+Ao inicializar o SDD em `/home/mmc/00_code/00_tools/TRustKit`, grave o conteúdo abaixo em `.specify/memory/constitution.md` para que tanto o `/sdd-discover` quanto os Críticos do `mmc-gauntlet-sdd-v2` fiscalizem as regras de *Clean Code* do `ADR-001`:
 
 ```markdown
 # Constituicao Arquitetural do Projeto TRustKit (trustkit)
@@ -127,9 +127,9 @@ No **Estágio 0**, você utilizará o pipeline **SDD + `/mmc-gauntlet-sdd-v2`** 
 **Escopo da Fase 1:** Workspace Cargo + `trustkit-core` (Entidades PORS, Special Cases, Ports, `DomainViolation`, `gates_fsm`) + `trustkit-db` (`SqliteWalRepositoryAdapter` e `Blake3ParallelSealerAdapter`) + `trustkit-cli` (`bootstrap`, `error_handler`, `trustkit init`, `trustkit status`, `trustkit hook pre-tool`) + `trustkit-gh` (`GitHubIdentityGuard` e `ProjectBoardSynchronizer`).
 
 1. **Se usar SDD + Gauntlet:**
-   * `/sdd-specify` $\rightarrow$ Gera `specs/001-core-db-cli/spec.md` extraindo os requisitos `RF-001`, `RF-013` e a modelagem SQLite do `PRD_TRustKit.md` e `ADR_001_TRustKit_Architecture.md`.
-   * `/sdd-plan` $\rightarrow$ Gera `specs/001-core-db-cli/plan.md` validado contra a `constitution.md`.
-   * `/sdd-tasks` $\rightarrow$ Gera `specs/001-core-db-cli/tasks.md` organizado por ondas TDD.
+   * `/sdd-define` $\rightarrow$ Gera `specs/001-core-db-cli/spec.md` extraindo os requisitos `RF-001`, `RF-013` e a modelagem SQLite do `PRD_TRustKit.md` e `ADR_001_TRustKit_Architecture.md`.
+   * `/sdd-planning` $\rightarrow$ Gera `specs/001-core-db-cli/plan.md` validado contra a `constitution.md`.
+   * `/sdd-decompose` $\rightarrow$ Gera `specs/001-core-db-cli/tasks.md` organizado por ondas TDD.
    * `/mmc-gauntlet-sdd-v2 spec` $\rightarrow$ Gera a rubrica adversarial `gauntlet-rubric.md`.
    * `/mmc-gauntlet-sdd-v2 start` $\rightarrow$ Os Builders implementam em ciclo TDD (`RED -> GREEN -> REFACTOR` via `cargo test`).
    * `/mmc-gauntlet-sdd-v2 test-gauntlet` $\rightarrow$ Os 4 Críticos validam pureza do `trustkit-core`, ausência de `NULL` no SQLite, zero `unwrap()` e *cold-start* `< 3ms` do `trustkit hook`.

@@ -1,5 +1,5 @@
 ---
-name: "sdd-specify"
+name: "sdd-define"
 description: "DEPRECATED: Use trustkit-sdd. Create or update the feature specification from a natural language feature description."
 compatibility: "Requires SDD project structure with .specify/ directory"
 metadata:
@@ -65,7 +65,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-The text the user typed after `/sdd-specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+The text the user typed after `/sdd-define` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
 
 Given that feature description, do this:
 
@@ -113,10 +113,10 @@ Given that feature description, do this:
      }
      ```
      Write the actual resolved directory path value (for example, `specs/003-user-auth`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
-     This allows downstream commands (`/sdd-plan`, `/sdd-tasks`, etc.) to locate the feature directory without relying on git branch name conventions.
+     This allows downstream commands (`/sdd-planning`, `/sdd-decompose`, etc.) to locate the feature directory without relying on git branch name conventions.
 
    **IMPORTANT**:
-   - You must only create one feature per `/sdd-specify` invocation
+   - You must only create one feature per `/sdd-define` invocation
    - The spec directory name and the git branch name are independent — they may be the same but that is the user's choice
    - The spec directory and file are always created by this command, never by the hook
 
@@ -189,7 +189,7 @@ Given that feature description, do this:
 
       ## Notes
 
-      - Items marked incomplete require spec updates before `/sdd-clarify` or `/sdd-plan`
+      - Items marked incomplete require spec updates before `/sdd-refine` or `/sdd-planning`
       ```
 
    b. **Run Validation Check**: Review the spec against each checklist item:
@@ -284,7 +284,7 @@ Report completion to the user with:
 - `SPECIFY_FEATURE_DIRECTORY` — the feature directory path
 - `SPEC_FILE` — the spec file path
 - Checklist results summary
-- Readiness for the next phase (`/sdd-clarify` or `/sdd-plan`)
+- Readiness for the next phase (`/sdd-refine` or `/sdd-planning`)
 
 **NOTE:** Branch creation is handled by the `before_specify` hook (git extension). Spec directory and file creation are always handled by this core command.
 
