@@ -591,6 +591,7 @@
       <ul id="navList">
         <li class="nav-group-title">Introducao</li>
         <li><a href="#visao-geral" class="nav-link">1. Visao Geral</a></li>
+        <li><a href="#thin-skills" class="nav-link">1.3 Thin Skills e Slash Commands</a></li>
         <li><a href="#principios" class="nav-link">1.4 Principios de Governanca</a></li>
 
         <li class="nav-group-title">Comecando</li>
@@ -694,14 +695,96 @@
         </div>
       </div>
 
-      <h3>1.3 O Paradigma Hybrid Rust Core + Thin Skill</h3>
+      <h3 id="thin-skills">1.3 O Paradigma Hybrid Rust Core + Thin Skill</h3>
       <p>
-        O TRustKit opera sob uma composicao equilibrada:
+        O TRustKit opera sob uma composicao equilibrada em duas camadas:
       </p>
       <ul>
         <li><strong>Thin Skill Declarativa (Prompt):</strong> Guia instrucional enxuta em Markdown que reside na memoria do agente/desenvolvedor para raciocinio de negocio sem sobrecarregar a janela de tokens.</li>
         <li><strong>Native Rust Core (Binario trustkit):</strong> Motor compilado responsavel por 100% das mutacoes fisicas de arquivos, git, verificacoes de TDD e hashes criptograficos.</li>
       </ul>
+
+      <h4>Catalogo das Thin Skills e Slash Commands do Framework SDD</h4>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Slash Command</th>
+              <th>Thin Skill (<code>SKILL.md</code>)</th>
+              <th>Gate Principal</th>
+              <th>Finalidade e Entregaveis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/sdd-define</code></td>
+              <td><code>sdd-define</code></td>
+              <td><span class="badge badge-info">Gate 1</span></td>
+              <td>Formulacao da especificacao funcional em <code>spec.md</code>, personas do Product Trio e criterios BDD.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-refine</code></td>
+              <td><code>sdd-refine</code></td>
+              <td><span class="badge badge-info">Gate 1</span></td>
+              <td>Identificacao de ambiguidades na especificacao e rodadas interativas de perguntas/respostas.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-principles</code></td>
+              <td><code>sdd-principles</code></td>
+              <td><span class="badge badge-info">Gate 2</span></td>
+              <td>Gestao da constituicao do projeto (<code>constitution.md</code>), diretrizes arquiteturais e regras inegociaveis.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-planning</code></td>
+              <td><code>sdd-planning</code></td>
+              <td><span class="badge badge-info">Gate 2</span></td>
+              <td>Planejamento de arquitetura, contratos de interfaces e modelagem de dados em <code>plan.md</code>.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-decompose</code></td>
+              <td><code>sdd-decompose</code></td>
+              <td><span class="badge badge-info">Gate 3</span></td>
+              <td>Decomposicao sequenciada por dependencias em tarefas atomicas isoladas em <code>tasks.md</code>.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-discover</code></td>
+              <td><code>sdd-discover</code></td>
+              <td><span class="badge badge-info">Gate 3</span></td>
+              <td>Auditoria nao destrutiva de consistencia cruzada entre <code>spec.md</code>, <code>plan.md</code> e <code>tasks.md</code>.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-execute</code></td>
+              <td><code>sdd-execute</code></td>
+              <td><span class="badge badge-warn">Gate 4</span></td>
+              <td>Execucao orientada das tarefas atomicas sob TDD estrito e isolamento em Git Worktrees.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-resolve</code></td>
+              <td><code>sdd-resolve</code></td>
+              <td><span class="badge badge-warn">Gate 4</span></td>
+              <td>Avaliacao comparativa do codigo construido contra os requisitos e convergencia de tarefas pendentes.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-validate</code></td>
+              <td><code>sdd-validate</code></td>
+              <td><span class="badge badge-pass">Gate 5</span></td>
+              <td>Geracao de checklists de qualidade de requisitos e homologacao previa ao Gauntlet Loop.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-publish-issues</code></td>
+              <td><code>sdd-publish-issues</code></td>
+              <td><span class="badge badge-pass">Gate 6</span></td>
+              <td>Sincronizacao idempotente de tarefas no GitHub Issues e boards de projetos.</td>
+            </tr>
+            <tr>
+              <td><em>Transversal</em></td>
+              <td><code>trustkit-sdd</code></td>
+              <td><span class="badge badge-pass">Todos</span></td>
+              <td>Thin Skill mestre de governanca SDD, worktrees com CoW e consenso Gauntlet V2 em Rust nativo.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div id="principios" class="callout alert">
         <div class="callout-title">Principios Constitucionais de Governanca</div>
@@ -1351,6 +1434,18 @@ trustkit context slice --file crates/trustkit-core/src/entities.rs --hops 2 --st
             <tr>
               <td><strong>Modo Agente</strong></td>
               <td>Execucao do CLI via flag <code>--json</code> com saida estritamente livre de campos nulos (null).</td>
+            </tr>
+            <tr>
+              <td><strong>Thin Skill</strong></td>
+              <td>Guia instrucional conciso em Markdown que orienta raciocinios de alto nivel no contexto do agente sem invalidar o KV-Cache.</td>
+            </tr>
+            <tr>
+              <td><strong>Slash Commands SDD</strong></td>
+              <td>Conjunto de comandos conceituais (<code>/sdd-define</code>, <code>/sdd-planning</code>, <code>/sdd-execute</code>, etc.) que padronizam o fluxo SDD.</td>
+            </tr>
+            <tr>
+              <td><strong>Gauntlet Loop V2</strong></td>
+              <td>Bateria de verificacao adversarial multi-agente que audita integridade estatica, TDD, Playwright E2E e seguranca antes do merge.</td>
             </tr>
           </tbody>
         </table>

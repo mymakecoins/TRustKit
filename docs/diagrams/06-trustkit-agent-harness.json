@@ -40,7 +40,7 @@
       "id": "context_layer",
       "type": "frontend",
       "label": "Context & Guides",
-      "sublabel": "AGENTS.md & Rules",
+      "sublabel": "AGENTS.md & Skills",
       "pos": [260, 100],
       "size": [130, 60]
     },

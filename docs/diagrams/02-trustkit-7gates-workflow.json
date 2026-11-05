@@ -184,24 +184,24 @@
       "dot": "cyan",
       "title": "Deterministic Governance & Spec Scaffold",
       "items": [
-        "Gate 1 scaffold prompts from natural language with AST context slicing and sub-3ms Rust linter",
-        "Gate 2 locks specification with BLAKE3 cryptographic digest before wave DAG planning"
+        "Thin Skills (/sdd-define, /sdd-refine, /sdd-principles, /sdd-planning) guide prompt design and architecture",
+        "Gate 1 scaffolds prompts with AST context slicing and sub-3ms Rust linter; Gate 2 locks spec with BLAKE3"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Mechanical TDD & Code Review",
+      "title": "Mechanical TDD & Execution Waves",
       "items": [
-        "Gate 4 enforces RED before GREEN and runs multi-angle Code Review in Refactor",
-        "Git worktrees run in isolated CoW trees to prevent index pollution"
+        "Thin Skills (/sdd-decompose, /sdd-discover, /sdd-execute) plan waves, audit consistency and drive TDD",
+        "Gate 4 enforces RED before GREEN in isolated worktrees and runs multi-angle Code Review in Refactor"
       ]
     },
     {
       "dot": "rose",
-      "title": "Gauntlet V2, Optional AppSec & Audit",
+      "title": "Gauntlet V2 & Verification",
       "items": [
-        "Optional security-review (--security-review / --skip-security-review / TTY [s/N]) at Gates 5 & 6",
-        "Decoupled 6-phase Pre-Release Security Audit via trustkit audit security"
+        "Thin Skills (/sdd-validate, /sdd-resolve, /sdd-publish-issues) check requirements and publish issues",
+        "Optional security-review at Gates 5 & 6, plus decoupled 6-phase audit via trustkit audit security"
       ]
     }
   ]

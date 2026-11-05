@@ -311,7 +311,18 @@ Detected Environments: Antigravity, Claude Code, Codex
    - Scoped Rules (`.claude/rules/`): Path-activated rules (`rust-crates.md` for `crates/**`, `specs-governance.md` for `specs/**`, and `governance-invariants.md`).
 
 2. Skills & Commands (17/17 pts):
-   - Specialized skills under `.agents/skills/` and `skills/`.
+   - Primary Thin Skill: `trustkit-sdd` for deterministic lifecycle governance, worktrees, and Gauntlet loop.
+   - SDD Framework Thin Skills and Slash Commands suite (`.agents/skills/`):
+     - `/sdd-define` (`sdd-define`): Requirements definition, Product Trio, and structured feature specification in `spec.md`.
+     - `/sdd-refine` (`sdd-refine`): Targeted ambiguity clarification and interactive Q&A rounds.
+     - `/sdd-principles` (`sdd-principles`): Project constitution (`constitution.md`) and non-negotiable architectural principles.
+     - `/sdd-planning` (`sdd-planning`): Architectural planning, interface contracts, and data modeling in `plan.md`.
+     - `/sdd-decompose` (`sdd-decompose`): Dependency-ordered atomic task decomposition in `tasks.md`.
+     - `/sdd-discover` (`sdd-discover`): Cross-artifact consistency and quality audit across `spec.md`, `plan.md`, and `tasks.md`.
+     - `/sdd-validate` (`sdd-validate`): Custom acceptance checklist generation and requirements audit.
+     - `/sdd-execute` (`sdd-execute`): Task plan execution under strict TDD cycles in isolated worktrees.
+     - `/sdd-resolve` (`sdd-resolve`): Codebase assessment against specifications and convergence of remaining unbuilt work.
+     - `/sdd-publish-issues` (`sdd-publish-issues`): Idempotent task publication and synchronization to GitHub Issues.
    - Explicit lifecycle workflows in `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
    - Dedicated subagents in `.claude/agents/` (`gauntlet-critic.md`, `spec-reviewer.md`).
 

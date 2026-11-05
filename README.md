@@ -311,8 +311,19 @@ Detected Environments: Antigravity, Claude Code, Codex
    - Regras Escopadas (`.claude/rules/`): Regras ativadas por caminho (`rust-crates.md` para `crates/**`, `specs-governance.md` para `specs/**`, e `governance-invariants.md`).
 
 2. Skills & Commands (17/17 pts):
-   - Skills especializadas em `.agents/skills/` e `skills/`.
-   - Comandos explícitos de ciclo em `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
+   - Thin Skill Principal: `trustkit-sdd` para governanca deterministica de ciclo, worktrees e Gauntlet.
+   - Suite de Thin Skills e Slash Commands do Framework SDD (`.agents/skills/`):
+     - `/sdd-define` (`sdd-define`): Definicao de requisitos, Product Trio e especificacao funcional em `spec.md`.
+     - `/sdd-refine` (`sdd-refine`): Esclarecimento e desambiguacao interativa de requisitos.
+     - `/sdd-principles` (`sdd-principles`): Governanca da constituicao do projeto (`constitution.md`) e regras arquiteturais.
+     - `/sdd-planning` (`sdd-planning`): Planejamento arquitetural, contratos de interfaces e modelo de dados em `plan.md`.
+     - `/sdd-decompose` (`sdd-decompose`): Decomposicao ordenada por dependencias em tarefas atomicas (`tasks.md`).
+     - `/sdd-discover` (`sdd-discover`): Auditoria cruzada de consistencia e qualidade entre `spec.md`, `plan.md` e `tasks.md`.
+     - `/sdd-validate` (`sdd-validate`): Geracao e auditoria de checklists customizados de aceitacao.
+     - `/sdd-execute` (`sdd-execute`): Execucao orientada do plano de tarefas sob ciclo TDD estrito e worktrees.
+     - `/sdd-resolve` (`sdd-resolve`): Avaliacao comparativa do codigo desenvolvido e convergencia de tarefas pendentes.
+     - `/sdd-publish-issues` (`sdd-publish-issues`): Sincronizacao idempotente de tarefas no GitHub Issues.
+   - Comandos explicitos de ciclo em `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
    - Subagentes dedicados em `.claude/agents/` (`gauntlet-critic.md`, `spec-reviewer.md`).
 
 3. Hooks & Guardrails (14/14 pts):

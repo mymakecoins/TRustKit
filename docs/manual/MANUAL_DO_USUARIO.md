@@ -13,6 +13,7 @@
    - [1.1 O que e o TRustKit?](#11-o-que-e-o-trustkit)
    - [1.2 Para quem se destina este manual?](#12-para-quem-se-destina-este-manual)
    - [1.3 O Paradigma Hybrid Rust Core + Thin Skill](#13-o-paradigma-hybrid-rust-core--thin-skill)
+     - [1.3.1 Catalogo das Thin Skills e Slash Commands do Framework SDD](#131-catalogo-das-thin-skills-e-slash-commands-do-framework-sdd)
    - [1.4 Principios Constitucionais de Governanca](#14-principios-constitucionais-de-governanca)
 2. [Primeiros Passos](#2-primeiros-passos)
    - [2.1 Requisitos do Sistema](#21-requisitos-do-sistema)
@@ -90,6 +91,24 @@ Para aliar a flexibilidade do raciocinio humano e agêntico a solidez de regras 
 |   - Servidor MCP Nativo, Grafo de Conhecimento e Memoria Wiki FTS5 |
 +--------------------------------------------------------------------+
 ```
+
+### 1.3.1 Catalogo das Thin Skills e Slash Commands do Framework SDD
+
+As Thin Skills residem em `.agents/skills/` e guiam os assistentes agênticos (Claude Code, Cursor, Antigravity) atraves de slash commands conceituais, delegando a execucao mecanica ao binario nativo `trustkit`:
+
+| Slash Command | Thin Skill (`SKILL.md`) | Gate Principal | Finalidade e Entregaveis |
+| :--- | :--- | :--- | :--- |
+| `/sdd-define` | `sdd-define` | Gate 1 | Formulacao da especificacao funcional em `spec.md`, personas do Product Trio e criterios BDD. |
+| `/sdd-refine` | `sdd-refine` | Gate 1 | Identificacao de ambiguidades na especificacao e rodadas interativas de perguntas/respostas. |
+| `/sdd-principles` | `sdd-principles` | Gate 2 | Gestao da constituicao do projeto (`constitution.md`), diretrizes arquiteturais e regras inegociaveis. |
+| `/sdd-planning` | `sdd-planning` | Gate 2 | Planejamento de arquitetura, contratos de interfaces e modelagem de dados em `plan.md`. |
+| `/sdd-decompose` | `sdd-decompose` | Gate 3 | Decomposicao sequenciada por dependencias em tarefas atomicas isoladas em `tasks.md`. |
+| `/sdd-discover` | `sdd-discover` | Gate 3 | Auditoria nao destrutiva de consistencia cruzada entre `spec.md`, `plan.md` e `tasks.md`. |
+| `/sdd-execute` | `sdd-execute` | Gate 4 | Execucao orientada das tarefas atomicas sob TDD estrito e isolamento em Git Worktrees. |
+| `/sdd-resolve` | `sdd-resolve` | Gate 4 | Avaliacao comparativa do codigo construido contra os requisitos e convergencia de tarefas pendentes. |
+| `/sdd-validate` | `sdd-validate` | Gate 5 | Geracao de checklists de qualidade de requisitos e homologacao previa ao Gauntlet Loop. |
+| `/sdd-publish-issues` | `sdd-publish-issues` | Gate 6 | Sincronizacao idempotente de tarefas no GitHub Issues e boards de projetos. |
+| N/A | `trustkit-sdd` | Transversal | Thin Skill mestre de governanca SDD, worktrees com CoW e consenso Gauntlet V2 em Rust nativo. |
 
 ### 1.4 Principios Constitucionais de Governanca
 
@@ -327,6 +346,14 @@ trustkit init
 
 Nesta etapa, o objetivo e documentar a regra de negocio com precisao cirurgica antes de escrever qualquer linha de codigo de producao.
 
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gates 1 & 2):**  
+> Assistentes de IA e desenvolvedores podem utilizar os slash commands conceituais:
+> - `/sdd-define`: Formulacao completa do `spec.md` com Product Trio, requisitos e criterios BDD.
+> - `/sdd-refine`: Rodada interativa de perguntas e respostas para esclarecer lacunas e ambiguidades.
+> - `/sdd-principles`: Alinhamento e registro de principios inegociaveis em `.specify/memory/constitution.md`.
+> - `/sdd-planning`: Criacao do plano de arquitetura, contratos e modelos de dados em `plan.md`.
+
 #### Passo 1: Gerar o esqueleto da especificacao
 
 Para que o TRustKit monte uma estrutura inicial enriquecida com informacoes do grafo do projeto e da memoria viva:
@@ -382,6 +409,12 @@ trustkit spec lock
 
 Com a regra selada, decompomos a entrega em tarefas atomicas de implementacao salvas no diretorio `tasks/` (ex: `tasks/TASK-001.md`, `tasks/TASK-002.md`).
 
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 3):**  
+> Antes de consolidar o plano no motor nativo com `trustkit wave plan`, utilize:
+> - `/sdd-decompose`: Granularizacao e ordenacao das tarefas atomicas em `tasks.md`.
+> - `/sdd-discover`: Verificacao automatizada de consistencia e completude entre `spec.md`, `plan.md` e `tasks.md`.
+
 #### Passo 1: Gerar o plano topologico de execucao
 
 Execute o planejador de ondas:
@@ -410,6 +443,12 @@ O TRustKit le todas as tarefas atomicas, extrai suas dependencias declaradas, an
 ### 3.4 Tarefa 4: Execucao Paralela, Worktrees e Ciclo TDD Estrito (Gate 4)
 
 No Gate 4, o codigo ganha vida. O TRustKit isola cada tarefa em uma arvore de trabalho propria (Git Worktree efemera) e fiscaliza mecanicamente o ciclo de Test-Driven Development (TDD).
+
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 4):**  
+> Durante o ciclo de codificacao em worktree, utilize:
+> - `/sdd-execute`: Execucao dirigida das tarefas atomicas sequenciadas em `tasks.md`.
+> - `/sdd-resolve`: Comparacao continua da arvore de codigo contra os requisitos para convergir tarefas pendentes.
 
 #### Passo 1: Despachar a onda de trabalho
 
@@ -466,6 +505,11 @@ O TRustKit consolida o commit da tarefa no formato oficial, encerra a worktree e
 ### 3.5 Tarefa 5: Submeter ao Gauntlet Loop e Revisao de Seguranca (Gate 5)
 
 O Gauntlet e a esteira de verificacao mais rigorosa do sistema. Ele impede que defeitos, vulnerabilidades ou quebras de regras atinjam os ramos estaveis do projeto.
+
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 5):**  
+> Para garantir a conformidade dos criterios de aceitacao antes do Gauntlet:
+> - `/sdd-validate`: Geracao de checklists customizados de aceitacao e auditoria de requisitos.
 
 #### Passo 1: Executar a Auditoria Sintatica Instantanea (Camada 0)
 
@@ -524,6 +568,11 @@ trustkit gauntlet run --skip-security-review
 ### 3.6 Tarefa 6: Certificacao, Merge e Abertura de Pull Request (Gate 6)
 
 Com todos os testes, invariantes e suites aprovadas, consolidamos a entrega.
+
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 6):**  
+> Na fase de publicacao e sincronizacao de demandas:
+> - `/sdd-publish-issues`: Conversao e publicacao idempotente das tarefas atomicas no GitHub Issues.
 
 #### Passo 1: Gerar o Relatorio de Certificacao e Comentario da Issue
 
@@ -778,3 +827,6 @@ Para assegurar clareza e alinhamento em toda a comunicacao tecnica, utilize os t
 * **`Git Worktree`:** Arvore de trabalho adicional e independente vinculada ao mesmo repositorio Git, permitindo manter multiplas branches ativas ao mesmo tempo sem alternancia de contexto destrutiva.
 * **`AST (Abstract Syntax Tree)`:** Representacao estruturada em arvore do codigo-fonte utilizada pelo validador Tree-Sitter para verificar assercoes e regras lexicas em microssegundos.
 * **`Modo Agente`:** Formato de execucao do CLI ativado via `--json` que entrega respostas estruturadas sem decoracoes e estritamente livres de campos nulos (`null`).
+* **`Thin Skill`:** Guia instrucional conciso em Markdown que orienta raciocinios de alto nivel e orquestracao no contexto do agente sem inflar tokens nem invalidar o KV-Cache.
+* **`Slash Commands SDD`:** Conjunto de comandos acionaveis (`/sdd-define`, `/sdd-refine`, `/sdd-principles`, `/sdd-planning`, `/sdd-decompose`, `/sdd-discover`, `/sdd-validate`, `/sdd-execute`, `/sdd-resolve`, `/sdd-publish-issues`) que padronizam a conducao das fases conceituais do ciclo SDD.
+* **`Gauntlet Loop V2`:** Bateria de verificacao adversarial multi-agente que audita integridade estatica, TDD, Playwright E2E e analise de seguranca antes do merge.
