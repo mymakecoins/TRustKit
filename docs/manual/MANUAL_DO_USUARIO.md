@@ -29,6 +29,7 @@
    - [3.5 Tarefa 5: Submeter ao Gauntlet Loop e Revisao de Seguranca (Gate 5)](#35-tarefa-5-submeter-ao-gauntlet-loop-e-revisao-de-seguranca-gate-5)
    - [3.6 Tarefa 6: Certificacao, Merge e Abertura de Pull Request (Gate 6)](#36-tarefa-6-certificacao-merge-e-abertura-de-pull-request-gate-6)
    - [3.7 Exemplo Pratico: Ciclo Completo de Feature com 3 Waves](#37-exemplo-pratico-ciclo-completo-de-feature-com-3-waves)
+   - [3.8 Orquestracao Autonoma de Ponta a Ponta (trustkit auto)](#38-orquestracao-autonoma-de-ponta-a-ponta-trustkit-auto)
 4. [Recursos Avancados e Modulos Especializados](#4-recursos-avancados-e-modulos-especializados)
    - [4.1 Memoria Perene do Projeto (`trustkit memory`)](#41-memoria-perene-do-projeto-trustkit-memory)
    - [4.2 Inteligencia de Grafo Estrutural (`trustkit graph`)](#42-inteligencia-de-grafo-estrutural-trustkit-graph)
@@ -736,6 +737,50 @@ trustkit pr --target develop
 | **Gate 4 (Onda 3)** | Execucao Paralela & TDD | `trustkit wave run --wave 3` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-004 |
 | **Gate 5** | Auditoria e Gauntlet | `trustkit gauntlet ast-audit` -> `trustkit gauntlet run` |
 | **Gate 6** | Certificacao e Entrega | `trustkit done` -> `trustkit merge --target develop` -> `trustkit pr --target develop` |
+| **Auto** | Orquestracao Autonoma Completa | `trustkit auto --issue <ID>` ou `trustkit auto --spec <CAMINHO>` |
+
+---
+
+### 3.8 Orquestracao Autonoma de Ponta a Ponta (`trustkit auto`)
+
+Para situacoes em que uma funcionalidade ja possui requisitos claros ou uma especificacao pronta, o TRustKit disponibiliza o comando unificado `trustkit auto`. Ele atua como um maestro deterministico, orquestrando sequencialmente todos os Gates (0 ao 6) sem exigir comandos manuais intermediarios:
+
+1. **Gate 0 (Setup & Init):** Inspeciona a identidade Git, branches e baseline limpo, inicializando a sessao no SQLite WAL.
+2. **Gate 1 (Spec Lint):** Valida a especificacao com o linter nativo AST em microssegundos (sem emojis, formato Gherkin e matriz fechada).
+3. **Gate 2 (Spec Lock):** Sela a especificacao congelada com hash BLAKE3 criptografico.
+4. **Gate 3 (Wave Plan):** Le as tarefas atomicas em `tasks/`, analisa o grafo DAG e calcula o escalonamento em ondas topologicas.
+5. **Gate 4 (Multi-Wave TDD Loop):** Executa o ciclo TDD (RED -> GREEN -> REFACTOR) em worktrees efemeras e conclui as tarefas da feature.
+6. **Gate 5 (Gauntlet V2):** Executa a auditoria sintatica Camada 0 e consolida os vereditos dos criticos de verificacao.
+7. **Gate 6 (Certify & Merge):** Emite o relatorio oficial `gauntlet-report.md`, atualiza o board e realiza o merge deterministico na branch de destino.
+
+#### Como Executar
+
+**A partir de uma issue remota do GitHub:**
+```bash
+trustkit auto --issue 45 --target develop
+```
+
+**A partir de um arquivo local de especificacao:**
+```bash
+trustkit auto --spec docs/specs/minha-feature/spec.md --target develop
+```
+
+**Com runtime explicito e saida JSON para integracao agentica:**
+```bash
+trustkit auto --spec docs/specs/minha-feature/spec.md --target develop --runtime native --json
+```
+
+**Exemplo de Saida Determinista (JSON sem null):**
+```json
+{
+  "verdict": "PASS",
+  "cycle_id": "issue-45-202611051800",
+  "target_branch": "develop",
+  "gates_cleared": [0, 1, 2, 3, 4, 5, 6],
+  "total_waves": 3,
+  "total_tasks": 5
+}
+```
 
 ---
 

@@ -59,9 +59,9 @@
       "lane": "orch",
       "col": 0,
       "type": "frontend",
-      "label": "Init",
-      "sublabel": "gate 0 identity",
-      "tag": "trustkit init"
+      "label": "Init & Auto",
+      "sublabel": "gate 0 or auto loop",
+      "tag": "init / auto"
     },
     {
       "id": "gate1_spec",
@@ -184,7 +184,7 @@
       "dot": "cyan",
       "title": "Deterministic Governance & Spec Scaffold",
       "items": [
-        "Thin Skills (/sdd-define, /sdd-refine, /sdd-principles, /sdd-planning) guide prompt design and architecture",
+        "trustkit auto orchestrates Gates 0-6 end-to-end, or step-by-step via Thin Skills (/sdd-*)",
         "Gate 1 scaffolds prompts with AST context slicing and sub-3ms Rust linter; Gate 2 locks spec with BLAKE3"
       ]
     },

@@ -89,6 +89,16 @@ O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 [Pre-Release] Auditoria Defensiva Global em 6 Fases (trustkit audit security)
 ```
 
+### Modo Autonomo de Ponta a Ponta (`trustkit auto`)
+Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue remota ou especificacao local:
+```bash
+# Executa ciclo completo a partir de uma issue remota do GitHub
+trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
+
+# Executa ciclo completo a partir de uma especificacao local
+trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
+```
+
 ### Gate 0: Inicializacao do Ciclo
 Valida identidade GitHub, branches, estado da arvore de trabalho e inicializa o ciclo no banco SQLite WAL:
 ```bash
@@ -369,6 +379,7 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | Grafo AST de codigo e documentacao, multi-hop slicer, detector de God Nodes e GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Revisao semantica multi-angulo (refactor), security review opcional e auditoria defensiva em 6 fases. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e autonomia completa. |
+| `010-trustkit-auto-orchestrator` | Motor Autonomo trustkit auto | Orquestracao unificada Gates 0 a 6, loop de ondas topologicas com isolamento de worktree e TDD estrito. |
 
 ---
 

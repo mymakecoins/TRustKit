@@ -608,6 +608,7 @@
         <li><a href="#gate-5" class="nav-link">Gate 5: Gauntlet Loop V2</a></li>
         <li><a href="#gate-6" class="nav-link">Gate 6: Certificacao & Merge</a></li>
         <li><a href="#exemplo-3-waves" class="nav-link">Exemplo Pratico: 3 Waves</a></li>
+        <li><a href="#modo-autonomo" class="nav-link">Orquestracao Autonoma (auto)</a></li>
 
         <li class="nav-group-title">Recursos Avancados</li>
         <li><a href="#memoria-perene" class="nav-link">Memoria Perene (Wiki FTS5)</a></li>
@@ -1363,8 +1364,53 @@ trustkit pr --target develop</code></pre>
                 <td>Certificacao e Entrega</td>
                 <td><code>trustkit done</code> &rarr; <code>trustkit merge --target develop</code> &rarr; <code>trustkit pr --target develop</code></td>
               </tr>
+              <tr>
+                <td><strong>Auto</strong></td>
+                <td>Orquestracao Autonoma Completa</td>
+                <td><code>trustkit auto --issue &lt;ID&gt;</code> ou <code>trustkit auto --spec &lt;CAMINHO&gt;</code></td>
+              </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- 3.8 Modo Autonomo de Ponta a Ponta -->
+      <div id="modo-autonomo" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+        <h3>3.8 Orquestracao Autonoma de Ponta a Ponta (<code>trustkit auto</code>)</h3>
+        <p>Para fluxos em que os requisitos ja foram formulados ou a especificacao formal ja esta pronta, o comando unificado <code>trustkit auto</code> orquestra todos os 7 gates (0 ao 6) de forma 100% deterministica e ininterrupta:</p>
+        
+        <ul style="margin: 14px 0 24px 28px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Gate 0 (Setup &amp; Init):</strong> Inspeciona identidade Git, branches e baseline limpo, inicializando no SQLite WAL.</li>
+          <li><strong>Gate 1 (Spec Lint):</strong> Valida o linter nativo AST em microssegundos (sem emojis, Gherkin e matriz fechada).</li>
+          <li><strong>Gate 2 (Spec Lock):</strong> Sela a especificacao congelada com hash BLAKE3 criptografico.</li>
+          <li><strong>Gate 3 (Wave Plan):</strong> Le tarefas atomicas em <code>tasks/</code> e calcula as ondas topologicas DAG.</li>
+          <li><strong>Gate 4 (Multi-Wave TDD Loop):</strong> Executa o ciclo TDD (RED &rarr; GREEN &rarr; REFACTOR) em worktrees efemeras.</li>
+          <li><strong>Gate 5 (Gauntlet V2):</strong> Executa auditoria Camada 0 e consolida vereditos dos criticos.</li>
+          <li><strong>Gate 6 (Certify &amp; Merge):</strong> Emite <code>gauntlet-report.md</code> e realiza merge deterministico na branch alvo.</li>
+        </ul>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>A partir de uma issue remota do GitHub</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit auto --issue 45 --target develop</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>A partir de um arquivo local de especificacao</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit auto --spec docs/specs/minha-feature/spec.md --target develop</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Modo Agente com saida JSON determinista (livre de null)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit auto --spec docs/specs/minha-feature/spec.md --target develop --runtime native --json</code></pre>
         </div>
       </div>
     </section>

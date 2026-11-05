@@ -64,7 +64,7 @@
       "id": "rust_core",
       "type": "backend",
       "label": "trustkit Core",
-      "sublabel": "Deterministic Binary",
+      "sublabel": "Binary & Auto Engine",
       "pos": [480, 220],
       "size": [130, 60]
     },

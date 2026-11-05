@@ -22,6 +22,16 @@ Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes determ
 
 ## Jornada dos Gates
 
+### Modo Autonomo Unificado (Gates 0 ao 6)
+Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais:
+```bash
+# Execucao autonoma a partir de issue remota
+trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] --json
+
+# Execucao autonoma a partir de especificacao local
+trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] --json
+```
+
 ### Gate 0: Inicializacao do Ciclo
 Execute a inicializacao para validar identidade, branches e registrar a sessao:
 ```bash

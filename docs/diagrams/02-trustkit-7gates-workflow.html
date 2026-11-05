@@ -4616,8 +4616,8 @@
         <path data-edge-from="gauntlet_veto" data-edge-to="gate4_tdd" data-edge-label="remedy" data-edge-key="6" data-edge-id="veto-to-g4" data-composition-points="454,739;356,739;356,491;384,491" d="M 454 739 L 356 739 L 356 491 L 384 491" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
 
         <!-- Nodes -->
-        <g id="node-gate0_init" data-node-id="gate0_init" data-node-label="Init" tabindex="0" role="button" aria-label="Focus Init, gate 0 identity, Session Governance › Spec &amp; Lock" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="gate 0 identity" data-node-tag="trustkit init" data-node-context="Session Governance › Spec &amp; Lock">
-          <title>Init · gate 0 identity · Session Governance › Spec &amp; Lock · trustkit init</title>
+        <g id="node-gate0_init" data-node-id="gate0_init" data-node-label="Init &amp; Auto" tabindex="0" role="button" aria-label="Focus Init &amp; Auto, gate 0 or auto loop, Session Governance › Spec &amp; Lock" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="gate 0 or auto loop" data-node-tag="init / auto" data-node-context="Session Governance › Spec &amp; Lock">
+          <title>Init &amp; Auto · gate 0 or auto loop · Session Governance › Spec &amp; Lock · init / auto</title>
           <rect x="42" y="85" width="92" height="68" rx="6" class="c-mask"/>
           <rect x="42" y="85" width="92" height="68" rx="6" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(48 91) scale(0.6875)">
@@ -4626,9 +4626,9 @@
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-detail-anchor x="88" y="106" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Init</text>
-          <text data-detail="context" x="88" y="123" class="t-muted" font-size="8" text-anchor="middle">gate 0 identity</text>
-        <text data-detail="fine" x="88" y="141" class="t-frontend" font-size="7" text-anchor="middle">trustkit init</text>
+          <text data-detail-anchor x="88" y="106" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Init &amp; Auto</text>
+          <text data-detail="context" x="88" y="123" class="t-muted" font-size="7.3" text-anchor="middle">gate 0 or auto loop</text>
+        <text data-detail="fine" x="88" y="141" class="t-frontend" font-size="7" text-anchor="middle">init / auto</text>
         </g>
 
         <g id="node-gate1_spec" data-node-id="gate1_spec" data-node-label="Prompt &amp; Lint" tabindex="0" role="button" aria-label="Focus Prompt &amp; Lint, scaffold + ast lint, Specification › Spec &amp; Lock" aria-pressed="false" data-node-kind="security" data-node-sublabel="scaffold + ast lint" data-node-tag="gate 1-2 lock" data-node-context="Specification › Spec &amp; Lock">
@@ -4932,7 +4932,7 @@
           <h3>Deterministic Governance &amp; Spec Scaffold</h3>
         </div>
         <ul>
-          <li>&bull; Thin Skills (/sdd-define, /sdd-refine, /sdd-principles, /sdd-planning) guide prompt design and architecture</li>
+          <li>&bull; trustkit auto orchestrates Gates 0-6 end-to-end, or step-by-step via Thin Skills (/sdd-*)</li>
           <li>&bull; Gate 1 scaffolds prompts with AST context slicing and sub-3ms Rust linter; Gate 2 locks spec with BLAKE3</li>
         </ul>
       </div>

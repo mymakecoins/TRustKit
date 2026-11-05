@@ -89,6 +89,16 @@ The software development lifecycle is governed by 7 deterministic gates:
 [Pre-Release] Global 6-Phase Defensive Security Audit (trustkit audit security)
 ```
 
+### End-to-End Autonomous Execution (`trustkit auto`)
+For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a remote GitHub issue or local specification:
+```bash
+# Execute full deterministic cycle from a remote GitHub issue
+trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
+
+# Execute full deterministic cycle from a local specification file
+trustkit auto --spec <SPEC_PATH> [--target develop] [--runtime auto|pty|native] [--json]
+```
+
 ### Gate 0: Cycle Initialization
 Validates GitHub profile identity, branches, working tree cleanliness, and initializes session state in SQLite:
 ```bash
@@ -369,6 +379,7 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | AST code/wiki graph, multi-hop slicer, God Node detector, and GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Multi-angle semantic review (refactor phase), optional security review, and 6-phase pre-release audit. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Native prompt scaffolding, FTS5/AST context slicing, sub-3ms pre-lock linter, MCP tools, and sdd decoupling. |
+| `010-trustkit-auto-orchestrator` | Autonomous Orchestrator trustkit auto | Unified Gates 0 to 6 orchestration, topological wave loop with worktree isolation and strict TDD. |
 
 ---
 
