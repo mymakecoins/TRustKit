@@ -8,7 +8,7 @@ paths:
 
 When reading or modifying files under specs/:
 
-1. Spec Kit Artifact Hierarchy:
+1. SDD Artifact Hierarchy:
    - Every feature must maintain spec.md, plan.md, and tasks.md under its respective spec directory.
    - Do not manually fabricate completion marks. Status transitions are verified mechanically via `trustkit gate` commands.
 

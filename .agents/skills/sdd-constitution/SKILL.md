@@ -1,9 +1,9 @@
 ---
-name: "speckit-constitution"
+name: "sdd-constitution"
 description: "Create or update the project constitution from interactive or provided principle inputs."
-compatibility: "Requires spec-kit project structure with .specify/ directory"
+compatibility: "Requires SDD project structure with .specify/ directory"
 metadata:
-  author: "github-spec-kit"
+  author: "trustkit"
   source: "templates/commands/constitution.md"
 ---
 
@@ -31,8 +31,8 @@ and commands read the constitution at runtime and are not modified here.
 - If it is unclear whether an instruction is constitution content, ask for clarification before
   making changes.
 - After completing the constitution update, include a `Next Actions` section for each deferred
-  intent. List the original intent and suggest the appropriate follow-up Spec Kit command, such
-  as `/speckit-specify`, without invoking it.
+  intent. List the original intent and suggest the appropriate follow-up SDD command, such
+  as `/sdd-specify`, without invoking it.
 - If there are no non-governance intents, omit the `Next Actions` section.
 
 ## Pre-Execution Checks
@@ -45,7 +45,7 @@ and commands read the constitution at runtime and are not modified here.
 - For each remaining hook, do **not** attempt to interpret or evaluate hook `condition` expressions:
   - If the hook has no `condition` field, or it is null/empty, treat the hook as executable
   - If the hook defines a non-empty `condition`, skip the hook and leave condition evaluation to the HookExecutor implementation
-- When constructing command invocations from hook command names, replace dots (`.`) with hyphens (`-`). For example, `speckit.git.commit` → `/speckit-git-commit`.
+- When constructing command invocations from hook command names, replace dots (`.`) with hyphens (`-`). For example, `sdd.git.commit` → `/sdd-git-commit`.
 - For each executable hook, output the following based on its `optional` flag:
   - **Optional hook** (`optional: true`):
     ```
@@ -68,13 +68,13 @@ and commands read the constitution at runtime and are not modified here.
 
     Wait for the result of the hook command before proceeding to the Outline.
     ```
-    After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
+    After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:sdd-...` or `$sdd-...`). Emitting the block alone does not run the hook.
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
 
 ## Outline
 
 You are updating the project constitution at `.specify/memory/constitution.md`. The active
-constitution scaffold is resolved at command time from `constitution-template` through the Spec Kit
+constitution scaffold is resolved at command time from `constitution-template` through the SDD
 preset/template resolution stack.
 
 Follow this execution flow:
@@ -154,7 +154,7 @@ Check if `.specify/extensions.yml` exists in the project root.
 - For each remaining hook, do **not** attempt to interpret or evaluate hook `condition` expressions:
   - If the hook has no `condition` field, or it is null/empty, treat the hook as executable
   - If the hook defines a non-empty `condition`, skip the hook and leave condition evaluation to the HookExecutor implementation
-- When constructing command invocations from hook command names, replace dots (`.`) with hyphens (`-`). For example, `speckit.git.commit` → `/speckit-git-commit`.
+- When constructing command invocations from hook command names, replace dots (`.`) with hyphens (`-`). For example, `sdd.git.commit` → `/sdd-git-commit`.
 - For each executable hook, output the following based on its `optional` flag:
   - **Optional hook** (`optional: true`):
     ```
@@ -175,5 +175,5 @@ Check if `.specify/extensions.yml` exists in the project root.
     Executing: `/{command}`
     EXECUTE_COMMAND: {command}
     ```
-    After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
+    After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:sdd-...` or `$sdd-...`). Emitting the block alone does not run the hook.
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently

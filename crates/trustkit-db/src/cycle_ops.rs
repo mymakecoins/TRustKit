@@ -35,7 +35,7 @@ pub fn save_cycle(conn: &Connection, c: &SddCycle) -> Result<(), DomainViolation
     };
     let methodology = match &c.methodology_profile {
         MethodologyProfile::StandardGauntletV2 => "STANDARD_GAUNTLET_V2",
-        MethodologyProfile::SpecKitIntegrated { .. } => "SPECKIT_INTEGRATED",
+        MethodologyProfile::StructuredSdd { .. } => "STRUCTURED_SDD",
     };
     let status = match c.lifecycle_status {
         CycleStatus::Active => "ACTIVE",

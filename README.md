@@ -96,7 +96,7 @@ trustkit init --issue <ISSUE_ID> [--from-prd <CAMINHO_PRD>] [--json]
 ```
 
 ### Gate 1 & 2: Especificacao Nativa, Linting e Congelamento (Spec Lock)
-O TRustKit e 100% auto-suficiente para formulacao de especificacoes sem depender do ecossistema externo Spec Kit:
+O TRustKit e 100% auto-suficiente para formulacao de especificacoes sem depender do ecossistema externo:
 ```bash
 # Gera o prompt estruturado com fatiamento de contexto AST e busca FTS5 na memoria viva
 trustkit spec prompt --idea "<DESCRICAO_DA_FEATURE>" [--context-hops 2] [--budget 4000] [--json]
@@ -357,7 +357,7 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | `005-project-knowledge-memory` | Project Knowledge Memory | Base wiki persistente, FTS5 BM25, wikilinks bidirecionais e ingestao de incidentes. |
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | Grafo AST de codigo e documentacao, multi-hop slicer, detector de God Nodes e GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Revisao semantica multi-angulo (refactor), security review opcional e auditoria defensiva em 6 fases. |
-| `008-native-specification-and-speckit-independence` | Native Spec & SpecKit Independence | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e emancipacao do speckit. |
+| `008-native-specification-and-autonomy` | Native Spec & Autonomy | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e autonomia completa. |
 
 ---
 

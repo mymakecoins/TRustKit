@@ -25,7 +25,7 @@ Fornecer um motor determinístico de altíssima velocidade compilado nativamente
 5. **Ausência de Prova Criptográfica e Event Sourcing:** Sem um banco de eventos transacional, o lema *"O log de eventos prova"* fica restrito a relatórios em texto que o próprio agente gerador poderia editar manualmente.
 
 ### 1.4. Público-Alvo
-* **Engenheiros de Software Sênior & Arquitetos AI-First:** Desenvolvedores que operam fluxos de *Spec-Driven Development* (SDD) e *Spec Kit* em repositórios corporativos e exigem velocidade máxima sem abrir mão de governança rígida.
+* **Engenheiros de Software Sênior & Arquitetos AI-First:** Desenvolvedores que operam fluxos de *Spec-Driven Development* (SDD) e *SDD* em repositórios corporativos e exigem velocidade máxima sem abrir mão de governança rígida.
 * **Agentes Codificadores Hospedeiros (Claude Code, Antigravity, Codex):** Consumidores primários da interface CLI/MCP em modo `--json`, que delegam ao binário `trustkit` toda validação determinística, manipulação de Git/GitHub Projects e despacho de ondas paralelas.
 * **Tech Leaders & QA / Homologadores:** Stakeholders que auditam Pull Requests, relatórios de certificação (`gauntlet-report.md`), comentários de encerramento em issues e matrizes de rastreabilidade ponta a ponta.
 
@@ -99,7 +99,7 @@ Atualmente, a equipe utiliza as skills declarativas `mmc-gauntlet-sdd` (v2.2.0) 
 ```text
 1. Dev invoca `/trustkit auto https://github.com/org/repo/issues/45 --from-prd docs/PRD.md`.
 2. A Thin Skill executa `trustkit init --issue 45 --from-prd docs/PRD.md --json`.
-   -> Em < 180ms (I/O de rede concorrente em Rust): valida conta GitHub ativa, checa árvore Git, detecta Spec Kit, cria `docs/specs/issue-45-AAAAMMDDHHMM/`, move card no GitHub Projects para `In progress`, pré-processa o PRD upstream e abre a sessão no `.trustkit/state.db`.
+   -> Em < 180ms (I/O de rede concorrente em Rust): valida conta GitHub ativa, checa árvore Git, cria `docs/specs/issue-45-AAAAMMDDHHMM/`, move card no GitHub Projects para `In progress`, pré-processa o PRD upstream e abre a sessão no `.trustkit/state.db`.
 3. O Agente preenche a Spec V2 e roda `trustkit spec lock`.
    -> Em 2ms: o Rust valida a presença do flowchart Mermaid, a sintaxe dos blocos Gherkin, o fechamento matemático da Matriz (RN -> RF -> TASK -> E2E) e grava o hash BLAKE3 da Spec congelada no SQLite.
 4. O Agente gera as tarefas e roda `trustkit wave plan`.
@@ -125,7 +125,7 @@ O `trustkit` **não possui interface TUI nem servidor Web**, concentrando 100% d
 #### 5.1.1. Core de Domínio & Repositório de Eventos (`trustkit-core` & `trustkit-db`)
 * Máquina de estados determinística dos **7 Gates** (`Gate 0` a `Gate 6` + etapas de Comentário, Decisão de Merge e PR sob demanda).
 * Repositório transacional **SQLite Embarcado em modo WAL** (`.trustkit/state.db`) para *Event Sourcing* imutável, controle do *Circuit Breaker* (limite de 5 loops), assinaturas `BLAKE3` de arquivos congelados e auditoria de ciclos `RED -> GREEN -> REFACTOR`.
-* Detecção nativa e suporte completo ao **Modo Spec Kit** (`.specify/memory/constitution.md`, `specs/<NNN>-<nome>/spec.md`, `plan.md`, `tasks.md`).
+* Detecção nativa e suporte completo ao **Modo SDD Estruturado** (`.specify/memory/constitution.md`, `specs/<NNN>-<nome>/spec.md`, `plan.md`, `tasks.md`).
 
 #### 5.1.2. Ingestor Upstream, Validador de Spec V2 & Planejador de Ondas (`trustkit-spec`)
 * Ingestor `--from-prd <path>` que extrai Regras de Negócio (`RN`), Requisitos Funcionais (`RF`), entidades e jornadas de documentos PRD/ADR em Markdown, gerando o esqueleto pré-populado da Spec V2.
@@ -192,7 +192,7 @@ O `trustkit` **não possui interface TUI nem servidor Web**, concentrando 100% d
 | **Spec ainda em elaboração (antes do Gate 2)** | `spec_blake3_hash: null` | `SpecLockState::DraftUnverified` (transiciona para `SpecLockState::Frozen { blake3_digest }` no Gate 2) | Qualquer tentativa de iniciar o Gate 4 (`wave run`) recebe o estado `DraftUnverified` e recusa a execução com mensagem instrutiva: `"Execute 'trustkit spec lock' antes de iniciar os Builders"`. |
 | **Tarefa Atômica ainda não iniciada em Worktree** | `worktree_path: null`, `commit_sha: null`, `red_exit_code: null` | `TaskExecutionContext::NotProvisioned` e `TddLifecycleState::AwaitingRedPhase` | Comandos de status e relatórios renderizam `"AWAITING_RED_PHASE"` em vez de campos vazios ou `N/A`. |
 | **Árvore Git 100% limpa no Gate 0 ou Auditoria AST sem violações** | `pre_existing_dirty: null` ou `violations: null` | Lista imutável vazia `pre_existing_dirty: []` e objeto `AstAuditVerdict::CleanPass { violations: [] }` | Iteradores nos consumidores processam a lista vazia sem ramificações `if (x != null)`. |
-| **Repositório sem Spec Kit (`.specify/` ausente)** | `speckit_config: null` | `MethodologyProfile::StandardGauntletV2` (vs `MethodologyProfile::SpecKitIntegrated { feature_dir }`) | Polimorfismo via enum despacha o validador da Spec V2 padrão sem checagens condicionais espalhadas pelo código. |
+| **Repositório sem SDD (`.specify/` ausente)** | `sdd_config: null` | `MethodologyProfile::StandardGauntletV2` (vs `MethodologyProfile::StructuredSdd { feature_dir }`) | Polimorfismo via enum despacha o validador da Spec V2 padrão sem checagens condicionais espalhadas pelo código. |
 | **Falha de comunicação temporária com a API do GitHub** | Retornar erro genérico ou `board_status: null` | `BoardSyncOutcome::DeferredOffline { queued_transition: "In progress", retry_after_ms: 5000 }` | Registra a transição pendente no SQLite local e permite que o desenvolvedor continue trabalhando no Gate 1/2 sem bloqueio de rede. |
 
 ---
@@ -215,7 +215,7 @@ O `trustkit` **não possui interface TUI nem servidor Web**, concentrando 100% d
 
 | ID | Regra | Descrição Invariante |
 | :--- | :--- | :--- |
-| **RN-001** | **Sem Código Sem Spec Congelada (V2)** | Nenhum commit ou execução de Builder (Gate 4) é permitido se o ciclo não estiver com `SpecLockState::Frozen` no `.trustkit/state.db`. No perfil `StandardGauntletV2`, exige Spec com Product Trio, Mermaid, Gherkin e Matriz de Rastreabilidade. No perfil `SpecKitIntegrated`, exige `spec.md`, `plan.md`, `tasks.md` e `gauntlet-rubric.md`. |
+| **RN-001** | **Sem Código Sem Spec Congelada (V2)** | Nenhum commit ou execução de Builder (Gate 4) é permitido se o ciclo não estiver com `SpecLockState::Frozen` no `.trustkit/state.db`. No perfil `StandardGauntletV2`, exige Spec com Product Trio, Mermaid, Gherkin e Matriz de Rastreabilidade. No perfil `StructuredSdd`, exige `spec.md`, `plan.md`, `tasks.md` e `gauntlet-rubric.md`. |
 | **RN-002** | **Evidência sobre Asserção** | Nenhum Gate de execução (TDD RED/GREEN, Lint, Build, Playwright E2E) pode ser marcado como concluído por declaração textual do agente; o próprio binário `trustkit` deve capturar o comando, o `stdout`/`stderr`, a duração e o `Exit Code` real no banco de eventos. |
 | **RN-003** | **Aprovação Unânime Cumulativa** | A certificação (Gate 6) exige, cumulativamente: Camada 0 (AST) `CleanPass`, todos os 4 Críticos do Gauntlet `PASS`, `npm run test:e2e` com `Exit Code: 0` e `npm run lint && npm run build` com `Exit Code: 0` em cada aplicação tocada. |
 | **RN-004** | **Integridade Imutável de Testes (Anti-Cheat)** | É proibido remover, comentar ou enfraquecer asserções de testes pré-existentes sem autorização humana formal registrada via `trustkit contract unlock`. |
@@ -260,7 +260,7 @@ O `trustkit` **não possui interface TUI nem servidor Web**, concentrando 100% d
 **`SddCycle`**
 * `cycle_id` (`CycleId` — ex.: `issue-45-202610271230`)
 * `issue_linkage` (`IssueLinkage` — `LinkedIssue { number, url, board_column }` | `UnlinkedLocalCycle { directory_slug }`)
-* `methodology_profile` (`MethodologyProfile` — `StandardGauntletV2` | `SpecKitIntegrated { feature_dir }`)
+* `methodology_profile` (`MethodologyProfile` — `StandardGauntletV2` | `StructuredSdd { feature_dir }`)
 * `current_gate` (`GateStage` — `Gate0Discovery` .. `Gate6Certification`)
 * `lifecycle_status` (`CycleStatus` — `Active` | `Paused` | `CircuitBreakerTripped` | `Certified` | `Merged`)
 * `gauntlet_attempt` (`GauntletAttemptCount` — inteiro limitado ao intervalo `0..=5`)

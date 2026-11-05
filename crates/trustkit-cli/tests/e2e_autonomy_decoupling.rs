@@ -1,4 +1,4 @@
-// E2E Test verifying full decoupling and independence from external Spec Kit (TASK-008).
+// E2E Test verifying full autonomy and decoupling in specification lifecycle (TASK-008).
 // Constitutional Principle I: Strict Hexagonal Isolation.
 // Constitutional Principle II: Absolute Prohibition of NULL.
 // Constitutional Principle III: Test-First, Anti-Cheat & Deterministic Equivalence.
@@ -17,7 +17,7 @@ const VALID_SPEC_DECOUPLED: &str = r#"# Especificacao: 099-native-feature
 
 ## 1. Product Trio
 
-- **PM**: Gestao de regras de negocio nativas sem speckit.
+- **PM**: Gestao de regras de negocio nativas.
 - **Tech Lead**: Arquitetura em Rust sem dependencias probabilisticas no core.
 - **Design / QA**: Criterios de aceitacao BDD e integridade estatica.
 
@@ -35,13 +35,13 @@ flowchart LR
 
 - **Dado** o ambiente com binario nativo trustkit disponivel
 - **Quando** o desenvolvedor gera prompt, valida com linter e congela a especificacao
-- **Entao** todos os gates sao aprovados sem requisitar o ecossistema externo speckit.
+- **Entao** todos os gates sao aprovados sem requisitar ecossistemas externos.
 
 ## 4. Matriz de Rastreabilidade
 
 | Regra Negocio | Requisito Funcional | Tarefa | No Mermaid | Teste Unitario / Integracao | Evidencia / Verificacao |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| RN-001 | RF-001 | TASK-001 | Node1 | crates/trustkit-cli/tests/e2e_speckit_decoupling.rs | EV-001-decoupled.json |
+| RN-001 | RF-001 | TASK-001 | Node1 | crates/trustkit-cli/tests/e2e_autonomy_decoupling.rs | EV-001-decoupled.json |
 "#;
 
 fn init_git_repo(path: &Path) {
@@ -63,7 +63,7 @@ fn init_git_repo(path: &Path) {
 }
 
 #[test]
-fn test_e2e_native_specification_and_speckit_independence_lifecycle() {
+fn test_e2e_native_specification_and_autonomy_lifecycle() {
     let dir = tempdir().expect("tempdir");
     let base_dir = dir.path();
     init_git_repo(base_dir);
@@ -80,6 +80,7 @@ fn test_e2e_native_specification_and_speckit_independence_lifecycle() {
     let init_out = String::from_utf8(init_assert.get_output().stdout.clone()).unwrap();
     assert!(!init_out.contains(": null"));
     let init_json: Value = serde_json::from_str(&init_out).expect("json");
+    assert_eq!(init_json["methodology_profile"], "STRUCTURED_SDD");
     let spec_dir_rel = init_json["spec_dir"].as_str().expect("spec_dir");
     let spec_dir = base_dir.join(spec_dir_rel);
 
@@ -91,7 +92,7 @@ fn test_e2e_native_specification_and_speckit_independence_lifecycle() {
             "spec",
             "prompt",
             "--idea",
-            "Autenticacao JWT nativa sem speckit",
+            "Autenticacao JWT nativa",
             "--context-hops",
             "2",
             "--json",

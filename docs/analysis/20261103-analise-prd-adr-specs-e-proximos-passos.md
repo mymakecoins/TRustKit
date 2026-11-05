@@ -24,7 +24,7 @@ Em 28 de outubro de 2026, foram diagnosticados 4 gaps e estruturado um plano de 
 
 ## 2. Diagnostico do Estado Atual (As-Is em 03/11/2026)
 
-Desde 28 de outubro, o TRustKit completou 4 novas fases cruciais de evolucao, alcancando a **emancipacao total do ecossistema legado Spec Kit**:
+Desde 28 de outubro, o TRustKit completou 4 novas fases cruciais de evolucao, alcancando a **emancipacao total do framework legado**:
 
 ```mermaid
 flowchart LR
@@ -55,7 +55,7 @@ flowchart LR
 | **`005-project-knowledge-memory`** | Fase 5 (Evolucao) | Mergeada (`develop`) | Memoria perene Markdown Git em `.trustkit/wiki` (Single Source of Truth); Indice SQLite FTS5 BM25; Extrator de `[[wikilinks]]`; Ingestao automatica nos Gates 2, 4, 5 e 6; CLI `trustkit memory` e MCP tools. |
 | **`006-structural-graph-intelligence`** | Fase 6 (Evolucao) | Mergeada (`develop`) | Grafo estrutural combinando AST e `petgraph`; SQLite WAL com manifesto incremental `BLAKE3` e protecao Shrink-Guard; Deteccao de God Nodes e links orfaos; Slicer multi-hop BFS/DFS; CLI `trustkit graph` e MCP tools. |
 | **`007-semantic-review-and-security-gates`** | Fase 7 (Evolucao) | Mergeada (`develop`) | Revisao semantica multi-angulo no Gate 4; Inspecao de seguranca AppSec nos Gates 5 e 6 com corte de ruido (confianca >= 8); Auditoria defensiva `trustkit audit security`; Flags de governanca CLI; Docs bilingues e Archify. |
-| **`008-native-specification-and-speckit-independence`** | Fase 8 (Emancipacao) | Mergeada (`develop`) | Emancipacao total do Spec Kit; Scaffolding nativo deterministico (`trustkit spec prompt`); Linter pre-lock (`trustkit spec lint`); Thin Skill unificada `trustkit-sdd`; Expurgo completo de dependencias legadas. |
+| **`008-native-specification-and-autonomy`** | Fase 8 (Emancipacao) | Mergeada (`develop`) | Emancipacao total do SDD; Scaffolding nativo deterministico (`trustkit spec prompt`); Linter pre-lock (`trustkit spec lint`); Thin Skill unificada `trustkit-sdd`; Expurgo completo de dependencias legadas. |
 
 ---
 

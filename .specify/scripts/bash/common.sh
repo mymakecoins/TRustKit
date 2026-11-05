@@ -2,7 +2,7 @@
 # Common functions and variables for all scripts
 
 # Find repository root by searching upward for .specify directory
-# This is the primary marker for spec-kit projects
+# This is the primary marker for sdd projects
 find_specify_root() {
     local dir="${1:-$(pwd)}"
     # Normalize to absolute path to prevent infinite loop with relative paths
@@ -25,7 +25,7 @@ find_specify_root() {
 }
 
 # Resolve an explicit SPECIFY_INIT_DIR project override (the directory that
-# *contains* .specify/), for non-interactive / CI use — e.g. running a Spec Kit
+# *contains* .specify/), for non-interactive / CI use — e.g. running a SDD
 # command against a member project from a monorepo root without cd.
 #
 # Precondition: SPECIFY_INIT_DIR is non-empty. Echoes the validated absolute
@@ -45,14 +45,14 @@ resolve_specify_init_dir() {
         return 1
     fi
     if [[ ! -d "$init_root/.specify" ]]; then
-        echo "ERROR: SPECIFY_INIT_DIR is not a Spec Kit project (no .specify/ directory): $init_root" >&2
+        echo "ERROR: SPECIFY_INIT_DIR is not a SDD project (no .specify/ directory): $init_root" >&2
         return 1
     fi
     printf '%s\n' "$init_root"
 }
 
 # Get repository root, prioritizing .specify directory
-# This prevents using a parent repository when spec-kit is initialized in a subdirectory
+# This prevents using a parent repository when sdd is initialized in a subdirectory
 get_repo_root() {
     # Explicit project override wins (see resolve_specify_init_dir).
     if [[ -n "${SPECIFY_INIT_DIR:-}" ]]; then
@@ -60,7 +60,7 @@ get_repo_root() {
         return
     fi
 
-    # First, look for .specify directory (spec-kit's own marker)
+    # First, look for .specify directory (sdd's own marker)
     local specify_root
     if specify_root=$(find_specify_root); then
         echo "$specify_root"
@@ -354,7 +354,7 @@ PY
     printf '%s\n' "$separator"
 }
 
-format_speckit_command() {
+format_sdd_command() {
     local command_name="$1"
     local repo_root="${2:-$(get_repo_root)}"
     local separator
@@ -367,11 +367,11 @@ format_speckit_command() {
     fi
 
     command_name="${command_name#/}"
-    command_name="${command_name#speckit.}"
-    command_name="${command_name#speckit-}"
+    command_name="${command_name#sdd.}"
+    command_name="${command_name#sdd-}"
     command_name="${command_name//./$separator}"
 
-    printf '/speckit%s%s\n' "$separator" "$command_name"
+    printf '/sdd%s%s\n' "$separator" "$command_name"
 }
 
 # Escape a string for safe embedding in a JSON value (fallback when jq is unavailable).
@@ -428,11 +428,11 @@ _sorted_extension_ids() {
         read -r -a python_cmd <<< "$python_spec"
         local py_stderr sorted_ids
         py_stderr=$(mktemp)
-        if sorted_ids=$(SPECKIT_EXTENSIONS="$ext_dir" "${python_cmd[@]}" -c "
+        if sorted_ids=$(SPEC_EXTENSIONS="$ext_dir" "${python_cmd[@]}" -c "
 import json, os, re, sys
 from pathlib import Path
 
-root = Path(os.environ['SPECKIT_EXTENSIONS'])
+root = Path(os.environ['SPEC_EXTENSIONS'])
 registered = {}
 registry = root / '.registry'
 if os.path.lexists(registry):
@@ -530,10 +530,10 @@ resolve_template() {
             # The python3 call is wrapped in an if-condition so that set -e does not
             # abort the function when python3 exits non-zero (e.g. invalid JSON).
             local sorted_presets=""
-            if sorted_presets=$(SPECKIT_REGISTRY="$registry_file" "${python_cmd[@]}" -c "
+            if sorted_presets=$(SPEC_REGISTRY="$registry_file" "${python_cmd[@]}" -c "
 import json, re, sys, os
 try:
-    with open(os.environ['SPECKIT_REGISTRY'], encoding='utf-8') as f:
+    with open(os.environ['SPEC_REGISTRY'], encoding='utf-8') as f:
         data = json.load(f)
     presets = data.get('presets', {})
     def priority(meta):
@@ -649,10 +649,10 @@ resolve_template_content() {
             read -r -a python_cmd <<< "$python_spec"
         fi
         if [ -f "$registry_file" ] && [ "${#python_cmd[@]}" -gt 0 ]; then
-            if sorted_presets=$(SPECKIT_REGISTRY="$registry_file" "${python_cmd[@]}" -c "
+            if sorted_presets=$(SPEC_REGISTRY="$registry_file" "${python_cmd[@]}" -c "
 import json, re, sys, os
 try:
-    with open(os.environ['SPECKIT_REGISTRY'], encoding='utf-8') as f:
+    with open(os.environ['SPEC_REGISTRY'], encoding='utf-8') as f:
         data = json.load(f)
     presets = data.get('presets', {})
     def priority(meta):
@@ -697,7 +697,7 @@ except Exception:
                     local py_stderr
                     local parse_status
                     py_stderr=$(mktemp)
-                    if result=$(SPECKIT_MANIFEST="$manifest" SPECKIT_TMPL="$template_name" "${python_cmd[@]}" -c "
+                    if result=$(SPEC_MANIFEST="$manifest" SPEC_TMPL="$template_name" "${python_cmd[@]}" -c "
 import sys, os
 try:
     import yaml
@@ -705,7 +705,7 @@ except ImportError:
     print('yaml_missing', file=sys.stderr)
     sys.exit(2)
 try:
-    with open(os.environ['SPECKIT_MANIFEST'], encoding='utf-8') as f:
+    with open(os.environ['SPEC_MANIFEST'], encoding='utf-8') as f:
         data = yaml.safe_load(f)
     if not isinstance(data, dict):
         raise ValueError('manifest root must be a mapping')
@@ -742,7 +742,7 @@ try:
         if t['type'] == 'script' and strategy not in ('replace', 'wrap'):
             raise ValueError('invalid manifest script strategy')
     for t in templates:
-        if t.get('name') == os.environ['SPECKIT_TMPL'] and t.get('type', 'template') == 'template':
+        if t.get('name') == os.environ['SPEC_TMPL'] and t.get('type', 'template') == 'template':
             file_value = t.get('file', '')
             strategy = t.get('strategy', 'replace')
             print('found\t' + strategy + '\t' + file_value)

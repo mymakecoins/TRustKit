@@ -1,9 +1,9 @@
-# Especificacao: 008-native-specification-and-speckit-independence
+# Especificacao: 008-native-specification-and-autonomy
 
 ## 1. Product Trio
 
-- **PM**: Emancipacao completa do TRustKit em relacao ao ecossistema externo Spec Kit na fase de especificacao orientada a linguagem natural, transformando o TRustKit em uma plataforma 100% auto-suficiente para criacao, contextualizacao, linting e congelamento de especificacoes sem violar os principios de determinismo, ausencia de dependencias probabilisticas no core e desempenho nativo em Rust.
-- **Tech Lead**: Extensao do Cargo Workspace nos crates `trustkit-core`, `trustkit-db`, `trustkit-ast`, `trustkit-orch` e `trustkit-cli`, introduzindo: tipos de dominio para scaffolding de prompt sem `null`; extrator de contexto fatiado acoplado a busca FTS5 BM25 em `.trustkit/wiki`; comandos CLI `trustkit spec prompt` e `trustkit spec lint`; exposicao de ferramentas MCP nativas (`trustkit_spec_template`, `trustkit_spec_context`, `trustkit_spec_lint`); absorcao dos fluxos de especificacao na Thin Skill `trustkit-sdd`; e expurgo das dependencias legadas de `.agents/skills/speckit-*`.
+- **PM**: Emancipacao completa do TRustKit em relacao ao ecossistema externo na fase de especificacao orientada a linguagem natural, transformando o TRustKit em uma plataforma 100% auto-suficiente para criacao, contextualizacao, linting e congelamento de especificacoes sem violar os principios de determinismo, ausencia de dependencias probabilisticas no core e desempenho nativo em Rust.
+- **Tech Lead**: Extensao do Cargo Workspace nos crates `trustkit-core`, `trustkit-db`, `trustkit-ast`, `trustkit-orch` e `trustkit-cli`, introduzindo: tipos de dominio para scaffolding de prompt sem `null`; extrator de contexto fatiado acoplado a busca FTS5 BM25 em `.trustkit/wiki`; comandos CLI `trustkit spec prompt` e `trustkit spec lint`; exposicao de ferramentas MCP nativas (`trustkit_spec_template`, `trustkit_spec_context`, `trustkit_spec_lint`); absorcao dos fluxos de especificacao na Thin Skill `trustkit-sdd`; e expurgo das dependencias legadas de `.agents/skills/sdd-*`.
 - **Design / QA**: Criterios de aceitacao BDD/Gherkin validando a composicao deterministica de prompts (< 10ms), linter de especificacao (< 3ms) com emissao de diagnosticos semanticos estruturados, conformidade das ferramentas MCP em JSON-RPC 2.0, paridade bilingue na documentacao e atualizacao dos diagramas interativos Archify.
 
 ## 2. Diagrama de Fluxo (Mermaid)
@@ -16,7 +16,7 @@ flowchart LR
     Node4 --> Node5[Comando CLI trustkit spec lint]
     Node5 --> Node6[Ferramentas MCP Nativas de Especificacao]
     Node6 --> Node7[Thin Skill Unificada trustkit-sdd]
-    Node7 --> Node8[Desacoplamento e Remocao de speckit]
+    Node7 --> Node8[Desacoplamento e Remocao de Dependencias Legadas]
     Node8 --> Node9[Atualizacao Bilingue README.md e README.en.md]
     Node9 --> Node10[Atualizacao dos Diagramas Interativos Archify]
 ```
@@ -65,15 +65,15 @@ flowchart LR
 - **Quando** um agente de IA e instruido a especificar uma nova feature
 - **Entao** a skill `trustkit-sdd` orquestra diretamente a criacao do `spec.md` utilizando as ferramentas nativas (`trustkit spec prompt`, `trustkit spec lint` e `trustkit spec lock`), sem requisitar qualquer skill externa.
 
-### Cenario 8: Desacoplamento e Remocao das Skills Legadas do Spec Kit (Atendimento de RF-050)
+### Cenario 8: Desacoplamento e Remocao das Skills Legadas do SDD (Atendimento de RF-050)
 
-- **Dado** o repositorio contendo historico de skills sob `.agents/skills/speckit-*`
+- **Dado** o repositorio contendo historico de skills sob `.agents/skills/sdd-*`
 - **Quando** a migracao para o fluxo nativo for finalizada
-- **Entao** as skills legadas do Spec Kit sao removidas ou arquivadas sem quebrar nenhum teste automatizado, comando CLI, rotina de CI ou integracao com GitHub Projects.
+- **Entao** as skills legadas sao removidas ou arquivadas sem quebrar nenhum teste automatizado, comando CLI, rotina de CI ou integracao com GitHub Projects.
 
 ### Cenario 9: Atualizacao Bilingue da Documentacao (`README.md` e `README.en.md`) (Atendimento de RF-051)
 
-- **Dado** a introducao dos comandos `trustkit spec prompt`, `trustkit spec lint` e a emancipacao em relacao ao Spec Kit
+- **Dado** a introducao dos comandos `trustkit spec prompt`, `trustkit spec lint` e a consolidacao da autonomia nativa
 - **Quando** a documentacao raiz (`README.md` e `README.en.md`) for atualizada
 - **Entao** ambos os manuais refletem em estrita paridade bilingue a jornada de especificacao nativa do Gate 1 e Gate 2, preservando ausencia total de emojis e de trailers de IA.
 
@@ -94,6 +94,6 @@ flowchart LR
 | RN-005 | RF-047 | TASK-005 | Node5 | crates/trustkit-cli/tests/cli_spec_lint_tests.rs | EV-005-cli-spec-lint.json |
 | RN-006 | RF-048 | TASK-006 | Node6 | crates/trustkit-orch/tests/mcp_spec_tools_tests.rs | EV-006-mcp-spec-tools.json |
 | RN-007 | RF-049 | TASK-007 | Node7 | crates/trustkit-ast/tests/skill_trustkit_sdd_tests.rs | EV-007-thin-skill-unified.json |
-| RN-008 | RF-050 | TASK-008 | Node8 | crates/trustkit-cli/tests/e2e_speckit_decoupling.rs | EV-008-speckit-decoupling.json |
+| RN-008 | RF-050 | TASK-008 | Node8 | crates/trustkit-cli/tests/e2e_autonomy_decoupling.rs | EV-008-autonomy-decoupling.json |
 | RN-009 | RF-051 | TASK-009 | Node9 | crates/trustkit-cli/src/cli_contract_help_tests.rs | EV-009-bilingual-docs-sync.json |
 | RN-010 | RF-052 | TASK-010 | Node10 | crates/trustkit-ast/tests/lexical_scanner_tests.rs | EV-010-archify-diagrams-sync.json |

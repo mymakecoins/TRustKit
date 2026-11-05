@@ -13,7 +13,7 @@ test_file: crates/trustkit-ast/tests/skill_trustkit_sdd_tests.rs
 ---
 
 ## Contexto
-Com a disponibilidade dos comandos nativos `trustkit spec prompt`, `trustkit spec lint` e das ferramentas MCP no binario, a Thin Skill do TRustKit (`.agents/skills/trustkit-sdd/SKILL.md`) deve ser atualizada para instruir agentes sobre o fluxo completo de especificacao nativa do Gate 1 e Gate 2, tornando desnecessario o uso de `speckit-specify`.
+Com a disponibilidade dos comandos nativos `trustkit spec prompt`, `trustkit spec lint` e das ferramentas MCP no binario, a Thin Skill do TRustKit (`.agents/skills/trustkit-sdd/SKILL.md`) deve ser atualizada para instruir agentes sobre o fluxo completo de especificacao nativa do Gate 1 e Gate 2, tornando desnecessario o uso de `sdd-specify`.
 
 ## Escopo
 Atualizar `.agents/skills/trustkit-sdd/SKILL.md`:

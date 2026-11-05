@@ -1,6 +1,6 @@
 # Guia de Bootstrapping & Self-Hosting do TRustKit
 
-**Documento:** Estratégia de Construção em 2 Estágios (Spec Kit + `mmc-gauntlet-sdd-v2` $\rightarrow$ `trustkit` Nativo)  
+**Documento:** Estratégia de Construção em 2 Estágios (SDD + `mmc-gauntlet-sdd-v2` $\rightarrow$ `trustkit` Nativo)  
 **Localização:** `/home/mmc/00_code/00_tools/TRustKit/docs/BOOTSTRAPPING_E_SELF_HOSTING.md`  
 **Data:** Outubro/2026  
 **Status:** Oficial / Pronto para Execução  
@@ -11,14 +11,14 @@
 
 Na construção de compiladores (como o próprio `rustc`) e ferramentas críticas de infraestrutura, utiliza-se o padrão de **Bootstrapping seguido de Self-Hosting (Dogfooding)**:
 
-1. **Estágio 0 (Semente / Bootstrap):** Utiliza-se o harness atual (**Spec Kit + `mmc-gauntlet-sdd-v2`**) para especificar, planejar, quebrar em tarefas e construir o núcleo funcional mínimo do **TRustKit** (**Fases 1 e 2** do ADR-001).
+1. **Estágio 0 (Semente / Bootstrap):** Utiliza-se o harness atual (**SDD + `mmc-gauntlet-sdd-v2`**) para especificar, planejar, quebrar em tarefas e construir o núcleo funcional mínimo do **TRustKit** (**Fases 1 e 2** do ADR-001).
 2. **Ponto de Virada de Chave (The Cutover Gate):** Ao final da Fase 2, o binário `./target/release/trustkit` já compila e é capaz de executar os Gates de inicialização, bloqueio de hooks (`< 3ms`), congelamento criptográfico de Spec (`BLAKE3`), planejamento de ondas via DAG e fiscalização do ciclo TDD (`RED -> GREEN`).
 3. **Estágio 1 (Self-Hosting / Dogfooding):** A partir da **Fase 3**, o próprio binário `trustkit` assume o controle do repositório `/home/mmc/00_code/00_tools/TRustKit`, governando a implementação das **Fases 3 e 4** dele mesmo.
 
 ```text
 +-----------------------------------------------------------------------------------+
 | ESTAGIO 0: BOOTSTRAP (Semanas 1 e 2 - Fases 1 e 2)                                |
-| Harness Ativo: Spec Kit (.specify/) + Skill `/mmc-gauntlet-sdd-v2`                |
+| Harness Ativo: SDD (.specify/) + Skill `/mmc-gauntlet-sdd-v2`                |
 |                                                                                   |
 |  [PRD_TRustKit.md + ADR_001]                                                      |
 |        |                                                                          |
@@ -53,14 +53,14 @@ Na construção de compiladores (como o próprio `rustc`) e ferramentas crítica
 
 ---
 
-## 2. Por Que Usar Spec Kit + `mmc-gauntlet-sdd-v2` no Estágio 0?
+## 2. Por Que Usar SDD + `mmc-gauntlet-sdd-v2` no Estágio 0?
 
 1. **Blindagem Arquitetural via `constitution.md`:**
-   Sem um harness no Estágio 0, um agente codificador trabalhando diretamente sobre o PRD/ADR tenderia a tomar atalhos (importar `rusqlite` ou `clap` dentro de `trustkit-core`, usar `unwrap()` em produção ou criar colunas `NULL` no SQLite). No Spec Kit, a `constitution.md` atua como lei suprema no Gate 2 (`/speckit-plan` e `/speckit-analyze`) e no Gate 5 (Gauntlet), bloqueando qualquer desvio do `ADR_001_TRustKit_Architecture.md`.
+   Sem um harness no Estágio 0, um agente codificador trabalhando diretamente sobre o PRD/ADR tenderia a tomar atalhos (importar `rusqlite` ou `clap` dentro de `trustkit-core`, usar `unwrap()` em produção ou criar colunas `NULL` no SQLite). No SDD, a `constitution.md` atua como lei suprema no Gate 2 (`/sdd-plan` e `/sdd-analyze`) e no Gate 5 (Gauntlet), bloqueando qualquer desvio do `ADR_001_TRustKit_Architecture.md`.
 2. **O Próprio Repositório Serve como Massa de Teste Real:**
-   O `TRustKit` precisa suportar nativamente o **Modo Spec Kit** (detectar `.specify/`, ler `constitution.md`, `spec.md`, `plan.md` e `tasks.md`). Ao construí-lo com o Spec Kit desde o dia 1, o repositório `/home/mmc/00_code/00_tools/TRustKit` terá artefatos reais de `.specify/` e `specs/001-.../` que servirão de *fixtures* autênticas para a suíte de testes de integração do próprio `trustkit`.
+   O `TRustKit` precisa suportar nativamente o **Modo SDD Estruturado** (detectar `.specify/`, ler `constitution.md`, `spec.md`, `plan.md` e `tasks.md`). Ao construí-lo com o SDD desde o dia 1, o repositório `/home/mmc/00_code/00_tools/TRustKit` terá artefatos reais de `.specify/` e `specs/001-.../` que servirão de *fixtures* autênticas para a suíte de testes de integração do próprio `trustkit`.
 3. **Decomposição Controlada por Crate:**
-   Em vez de tentar gerar as 6 crates simultaneamente, cada Fase do cronograma do PRD vira uma feature numerada no Spec Kit (`001-core-db-cli`, `002-spec-seal-dag`, `003-ast-anticheat-slicer`, `004-worktree-swarm-mcp`), mantendo o contexto enxuto e determinístico.
+   Em vez de tentar gerar as 6 crates simultaneamente, cada Fase do cronograma do PRD vira uma feature numerada no SDD (`001-core-db-cli`, `002-spec-seal-dag`, `003-ast-anticheat-slicer`, `004-worktree-swarm-mcp`), mantendo o contexto enxuto e determinístico.
 
 ---
 
@@ -80,7 +80,7 @@ A skill `mmc-gauntlet-sdd-v2` foi originalmente calibrada para aplicações full
 
 ## 4. Constituição Oficial do Repositório (`.specify/memory/constitution.md`)
 
-Ao inicializar o Spec Kit em `/home/mmc/00_code/00_tools/TRustKit`, grave o conteúdo abaixo em `.specify/memory/constitution.md` para que tanto o `/speckit-analyze` quanto os Críticos do `mmc-gauntlet-sdd-v2` fiscalizem as regras de *Clean Code* do `ADR-001`:
+Ao inicializar o SDD em `/home/mmc/00_code/00_tools/TRustKit`, grave o conteúdo abaixo em `.specify/memory/constitution.md` para que tanto o `/sdd-analyze` quanto os Críticos do `mmc-gauntlet-sdd-v2` fiscalizem as regras de *Clean Code* do `ADR-001`:
 
 ```markdown
 # Constituicao Arquitetural do Projeto TRustKit (trustkit)
@@ -116,7 +116,7 @@ Ao inicializar o Spec Kit em `/home/mmc/00_code/00_tools/TRustKit`, grave o cont
 
 ## 5. Roteiro Passo a Passo — Estágio 0 (Construindo as Fases 1 e 2)
 
-No **Estágio 0**, você utilizará o pipeline **Spec Kit + `/mmc-gauntlet-sdd-v2`** (no Modo Spec Kit ou Modo Padrão com `--from-prd`) para construir as duas primeiras fases:
+No **Estágio 0**, você utilizará o pipeline **SDD + `/mmc-gauntlet-sdd-v2`** (no Modo SDD Estruturado ou Modo Padrão com `--from-prd`) para construir as duas primeiras fases:
 
 ### Passo 0.1: Preparação do Repositório Git e `.specify/`
 1. Inicializar o repositório Git em `/home/mmc/00_code/00_tools/TRustKit` com branch base `develop`.
@@ -126,14 +126,14 @@ No **Estágio 0**, você utilizará o pipeline **Spec Kit + `/mmc-gauntlet-sdd-v
 ### Passo 0.2: Execução da Fase 1 (`001-core-db-cli`)
 **Escopo da Fase 1:** Workspace Cargo + `trustkit-core` (Entidades PORS, Special Cases, Ports, `DomainViolation`, `gates_fsm`) + `trustkit-db` (`SqliteWalRepositoryAdapter` e `Blake3ParallelSealerAdapter`) + `trustkit-cli` (`bootstrap`, `error_handler`, `trustkit init`, `trustkit status`, `trustkit hook pre-tool`) + `trustkit-gh` (`GitHubIdentityGuard` e `ProjectBoardSynchronizer`).
 
-1. **Se usar Spec Kit + Gauntlet:**
-   * `/speckit-specify` $\rightarrow$ Gera `specs/001-core-db-cli/spec.md` extraindo os requisitos `RF-001`, `RF-013` e a modelagem SQLite do `PRD_TRustKit.md` e `ADR_001_TRustKit_Architecture.md`.
-   * `/speckit-plan` $\rightarrow$ Gera `specs/001-core-db-cli/plan.md` validado contra a `constitution.md`.
-   * `/speckit-tasks` $\rightarrow$ Gera `specs/001-core-db-cli/tasks.md` organizado por ondas TDD.
+1. **Se usar SDD + Gauntlet:**
+   * `/sdd-specify` $\rightarrow$ Gera `specs/001-core-db-cli/spec.md` extraindo os requisitos `RF-001`, `RF-013` e a modelagem SQLite do `PRD_TRustKit.md` e `ADR_001_TRustKit_Architecture.md`.
+   * `/sdd-plan` $\rightarrow$ Gera `specs/001-core-db-cli/plan.md` validado contra a `constitution.md`.
+   * `/sdd-tasks` $\rightarrow$ Gera `specs/001-core-db-cli/tasks.md` organizado por ondas TDD.
    * `/mmc-gauntlet-sdd-v2 spec` $\rightarrow$ Gera a rubrica adversarial `gauntlet-rubric.md`.
    * `/mmc-gauntlet-sdd-v2 start` $\rightarrow$ Os Builders implementam em ciclo TDD (`RED -> GREEN -> REFACTOR` via `cargo test`).
    * `/mmc-gauntlet-sdd-v2 test-gauntlet` $\rightarrow$ Os 4 Críticos validam pureza do `trustkit-core`, ausência de `NULL` no SQLite, zero `unwrap()` e *cold-start* `< 3ms` do `trustkit hook`.
-2. **Se usar diretamente `/mmc-gauntlet-sdd-v2` com `--from-prd` (Sem Spec Kit):**
+2. **Se usar diretamente `/mmc-gauntlet-sdd-v2` com `--from-prd` (Sem SDD):**
    * `/mmc-gauntlet-sdd-v2 spec "Fase 1: Nucleo Hexagonal, SQLite WAL, Init e Fast Hooks" --from-prd docs/PRD_TRustKit.md`
    * `/mmc-gauntlet-sdd-v2 atomizer`
    * `/mmc-gauntlet-sdd-v2 start`

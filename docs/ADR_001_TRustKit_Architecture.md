@@ -207,7 +207,7 @@ Para respeitar o **Princípio Aberto/Fechado (OCP)** e evitar que erros de baixo
    |-- Paralelo (tokio::join! via Adapters injetados):
    |     1. `GitHubIdentityGuard`: confirma conta ativa no gh
    |     2. `GitWorktreeReflinkAdapter`: inspeciona `git status --porcelain` (isola `PreExistingDirtyFiles`)
-   |     3. Detecta `.specify/` (seleciona `SpecKitIntegrated` ou `StandardGauntletV2`)
+   |     3. Detecta `.specify/` (seleciona `StructuredSdd` ou `StandardGauntletV2`)
    |     4. `GitHubProjectsGraphQlAdapter`: move card para `In progress` (ou usa `UnlinkedLocalCycle`)
    |     5. Cria/reabre `docs/specs/<issue-id>-AAAAMMDDHHMM/` e grava `SddCycle` no `.trustkit/state.db`
    v
@@ -221,7 +221,7 @@ Para respeitar o **Princípio Aberto/Fechado (OCP)** e evitar que erros de baixo
    |-- Persiste `ArtifactSeal` na tabela `artifact_seals` -> Transiciona para `SpecLockState::Frozen`
    v
 [Gate 3: trustkit atomize & trustkit wave plan]
-   |-- Le `TASK-NNN.md` e `INDEX.md` (ou `tasks.md` no perfil `SpecKitIntegrated`)
+   |-- Le `TASK-NNN.md` e `INDEX.md` (ou `tasks.md` no perfil `StructuredSdd`)
    |-- `PetgraphTopologyAdapter` monta DAG: valida aciclicidade, cobertura de 100% das RNs e separa tarefas com arquivos conflitantes
    |-- Agrupa tarefas em `ExecutionWaves` (Onda 1: Banco/Setup, Onda 2: Dominio/Servicos, Onda 3: API, Onda 4: E2E)
    v
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS sdd_cycles (
     project_board_id        TEXT NOT NULL DEFAULT 'UNLINKED_LOCAL_CYCLE',
     project_item_id         TEXT NOT NULL DEFAULT 'UNLINKED_LOCAL_CYCLE',
     board_column            TEXT NOT NULL DEFAULT 'UNLINKED_LOCAL_CYCLE',
-    methodology_profile     TEXT NOT NULL CHECK (methodology_profile IN ('STANDARD_GAUNTLET_V2', 'SPECKIT_INTEGRATED')),
+    methodology_profile     TEXT NOT NULL CHECK (methodology_profile IN ('STANDARD_GAUNTLET_V2', 'STRUCTURED_SDD')),
     current_gate            INTEGER NOT NULL DEFAULT 0 CHECK (current_gate BETWEEN 0 AND 6),
     lifecycle_status        TEXT NOT NULL CHECK (lifecycle_status IN ('ACTIVE', 'PAUSED', 'CIRCUIT_BREAKER_TRIPPED', 'CERTIFIED', 'MERGED')),
     gauntlet_attempt        INTEGER NOT NULL DEFAULT 0 CHECK (gauntlet_attempt BETWEEN 0 AND 5),
@@ -427,7 +427,7 @@ trustkit/
 | Comando CLI | Gate | Caso de Uso / Port Acionado pelo Binário Rust |
 | :--- | :---: | :--- |
 | `trustkit init [url\|id] [--json]` | **Gate 0** | Aciona `InitializeCycleUseCase` $\rightarrow$ `ProjectBoardGatewayPort` (conta ativa + `In progress`), `WorktreeIsolationPort` (isola `PreExistingDirtyFiles`) e grava `SddCycle` no `CycleEvidenceRepositoryPort`. |
-| `trustkit spec init [--from-prd <p>]` | **Gate 0a/1** | Aciona `PrdSpecificationIngestor` para gerar `<topico>-spec.md` (ou `gauntlet-rubric.md` no perfil `SpecKitIntegrated`). |
+| `trustkit spec init [--from-prd <p>]` | **Gate 0a/1** | Aciona `PrdSpecificationIngestor` para gerar `<topico>-spec.md` (ou `gauntlet-rubric.md` no perfil `StructuredSdd`). |
 | `trustkit spec lock [--json]` | **Gate 1 & 2** | Aciona `SealSpecificationUseCase` $\rightarrow$ valida Mermaid `flowchart LR`, Gherkin e Matriz $\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E}$ via `SyntaxTreeAuditorPort` e grava `ArtifactSeal` via `ArtifactHasherPort`. |
 | `trustkit wave plan [--json]` | **Gate 3** | Aciona `PlanExecutionWavesUseCase` $\rightarrow$ `WaveTopologyPlannerPort` constrói o DAG, previne colisão de arquivos e retorna `WaveSchedule`. |
 | `trustkit wave run --wave <N>` | **Gate 4** | Aciona `DispatchWaveUseCase` $\rightarrow$ provisiona worktrees via `WorktreeIsolationPort`, fatia contexto via `AstContextSlicer` e executa Builders. |

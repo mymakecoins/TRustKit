@@ -32,4 +32,4 @@
 ## Notes
 
 - Especificacao validada com sucesso em sua primeira iteracao sem lacunas conceituais.
-- Artefato pronto para a fase de planejamento (`/speckit-plan`).
+- Artefato pronto para a fase de planejamento (`/sdd-plan`).
