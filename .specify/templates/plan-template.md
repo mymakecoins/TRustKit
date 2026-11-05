@@ -4,7 +4,7 @@
 
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-**Note**: This template is filled in by the `/sdd-plan` command; its definition describes the execution workflow.
+**Note**: This template is filled in by the `/sdd-planning` command; its definition describes the execution workflow.
 
 ## Summary
 
@@ -48,12 +48,12 @@
 
 ```text
 specs/[###-feature]/
-├── plan.md              # This file (/sdd-plan command output)
-├── research.md          # Phase 0 output (/sdd-plan command)
-├── data-model.md        # Phase 1 output (/sdd-plan command)
-├── quickstart.md        # Phase 1 output (/sdd-plan command)
-├── contracts/           # Phase 1 output (/sdd-plan command)
-└── tasks.md             # Phase 2 output (/sdd-tasks command - NOT created by /sdd-plan)
+├── plan.md              # This file (/sdd-planning command output)
+├── research.md          # Phase 0 output (/sdd-planning command)
+├── data-model.md        # Phase 1 output (/sdd-planning command)
+├── quickstart.md        # Phase 1 output (/sdd-planning command)
+├── contracts/           # Phase 1 output (/sdd-planning command)
+└── tasks.md             # Phase 2 output (/sdd-decompose command - NOT created by /sdd-planning)
 ```
 
 ### Source Code (repository root)

@@ -10,7 +10,7 @@ Escopo: Avaliacao dos requisitos tecnicos e arquiteturais necessarios para que o
 
 No ecossistema atual de Spec-Driven Development (SDD) do TRustKit, ha uma clara divisao entre:
 - **Motor de Governanca Deterministico (Rust Core)**: responsavel pela fiscalizacao mecanica (AST, Git Worktrees, SQLite WAL, selo BLAKE3, invariantes anti-cheat e Gauntlet Loop).
-- **Capacidade Cognitiva / Redacao de Especificacao (Skills de IA)**: delegada a um conjunto de skills herdadas do framework SDD (`.agents/skills/sdd-*`), em especial `sdd-specify`.
+- **Capacidade Cognitiva / Redacao de Especificacao (Skills de IA)**: delegada a um conjunto de skills herdadas do framework SDD (`.agents/skills/sdd-*`), em especial `sdd-define`.
 
 O principio constitucional basico do nucleo em Rust do TRustKit estabelece:
 > Zero LLM calls, zero heavy regex, zero panic.
@@ -21,9 +21,9 @@ Esta analise detalha como tornar o TRustKit 100% auto-suficiente na fase de espe
 
 ---
 
-## 2. Divisao Atual: TRustKit vs sdd-specify
+## 2. Divisao Atual: TRustKit vs sdd-define
 
-| Etapa | sdd-specify (Skill / Agente LLM) | trustkit (Binario Rust Core) |
+| Etapa | sdd-define (Skill / Agente LLM) | trustkit (Binario Rust Core) |
 |---|---|---|
 | Ponto de partida | Ideia abstrata ou requisito em linguagem natural. | Documento Markdown estruturado (PRD ou rascunho de spec). |
 | Papel | Autor Criativo / Raciocinio: projeta a arquitetura, cria cenarios Gherkin (Given/When/Then) e desenha diagramas de sequencia Mermaid. | Arbitro / Fiscalizador: parsing mecanico via Tree-sitter, validacao de contratos sintaticos e selagem criptografica. |

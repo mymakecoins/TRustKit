@@ -4,7 +4,7 @@ workflow:
   name: "Full SDD Cycle"
   version: "1.0.1"
   author: "GitHub"
-  description: "Runs specify → plan → tasks → implement with review gates"
+  description: "Runs define → planning → decompose → execute with review gates"
 
 requires:
   # 0.8.5 is the first release with engine-side resolution of the
@@ -12,7 +12,7 @@ requires:
   # as a literal integration key and fail at dispatch.
   sdd_version: ">=0.8.5"
   integrations:
-    # The four commands below (specify, plan, tasks, implement) are core
+    # The four commands below (define, planning, decompose, execute) are core
     # sdd commands provided by every integration. The list here is an
     # advisory, non-exhaustive compatibility hint following the documented
     # ``any: [...]`` schema -- it is NOT a closed set. The workflow runs
@@ -38,7 +38,7 @@ inputs:
 
 steps:
   - id: specify
-    command: sdd.specify
+    command: sdd.define
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"
@@ -50,7 +50,7 @@ steps:
     on_reject: abort
 
   - id: plan
-    command: sdd.plan
+    command: sdd.planning
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"
@@ -62,13 +62,13 @@ steps:
     on_reject: abort
 
   - id: tasks
-    command: sdd.tasks
+    command: sdd.decompose
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"
 
   - id: implement
-    command: sdd.implement
+    command: sdd.execute
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"

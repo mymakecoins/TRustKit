@@ -1,5 +1,5 @@
 ---
-name: "sdd-converge"
+name: "sdd-resolve"
 description: "Assess the current codebase against the feature's spec, plan, and tasks, then append any remaining unbuilt work as new tasks to tasks.md so implement can complete it."
 compatibility: "Requires SDD project structure with .specify/ directory"
 metadata:
@@ -65,8 +65,8 @@ source of intent** (with the constitution as governing constraints), assess the 
 state of the code, determine which requirements, acceptance criteria, plan decisions, and
 existing tasks are unmet, incomplete, or only partially satisfied, and **append each piece
 of remaining work as a new, traceable task** at the bottom of `tasks.md` so that
-`/sdd-implement` can complete it. This command MUST run only after
-`/sdd-implement` has run on the current `tasks.md`, and after `/sdd-tasks` has produced a complete `tasks.md`.
+`/sdd-execute` can complete it. This command MUST run only after
+`/sdd-execute` has run on the current `tasks.md`, and after `/sdd-decompose` has produced a complete `tasks.md`.
 
 This is **not** a diff tool and does **not** track changes. It assesses the present state
 of the code relative to the feature's artifacts — no git, no branch comparison, no history.
@@ -80,7 +80,7 @@ of the code relative to the feature's artifacts — no git, no branch comparison
 - rewrite, renumber, reorder, or delete any existing task (including tasks from a prior
   Convergence phase);
 - modify, create, or delete any application code — completing the appended tasks is the
-  job of `/sdd-implement`.
+  job of `/sdd-execute`.
 
 When the codebase already satisfies everything, the command MUST leave `tasks.md`
 **byte-for-byte unchanged** (no empty Convergence header) and report a clean result.
@@ -101,8 +101,8 @@ Run `.specify/scripts/bash/check-prerequisites.sh --json --require-spec --requir
 - TASKS = FEATURE_DIR/tasks.md
 - CONSTITUTION = `.specify/memory/constitution.md` (if present)
 If `spec.md`, `plan.md`, or `tasks.md` is missing, STOP with a clear, actionable message naming the
-prerequisite command to run (`/sdd-specify` for a missing spec, `/sdd-plan` for a missing plan,
-`/sdd-tasks` for missing tasks). Do not produce partial output.
+prerequisite command to run (`/sdd-define` for a missing spec, `/sdd-planning` for a missing plan,
+`/sdd-decompose` for missing tasks). Do not produce partial output.
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 ### 2. Load Artifacts (Progressive Disclosure)
@@ -237,7 +237,7 @@ Append to the **end** of `tasks.md`, per the append contract:
 ### 8. Provide Next Actions (Handoff)
 
 - On `tasks_appended`: state how many tasks were appended under which phase, and recommend
-  running `/sdd-implement` to complete them; note that a follow-up converge
+  running `/sdd-execute` to complete them; note that a follow-up converge
   run will find fewer or no remaining items.
 - On `converged`: recommend proceeding to review / opening a PR. No further implement pass
   is needed for this feature's specified scope.
