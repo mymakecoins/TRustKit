@@ -200,10 +200,22 @@ pub fn execute_with_db(
     let _ = audit_ast_layer0::execute(ast_req, &repo, &ast_auditor)?;
 
     let existing_evidences = repo.list_evidences_for_cycle(&active_cycle.cycle_id)?;
-    let has_critics = existing_evidences
-        .iter()
-        .any(|e| e.evidence_kind == EvidenceKind::CriticVerdict);
-    if !has_critics {
+    let has_passing_critics = [
+        CriticKind::DomainAdversarial,
+        CriticKind::ContractCompliance,
+        CriticKind::StaticSecurity,
+        CriticKind::PlaywrightVisual,
+    ]
+    .iter()
+    .all(|kind| {
+        let role = format!("CRITIC:{}", kind.as_str());
+        existing_evidences
+            .iter()
+            .rev()
+            .find(|e| e.actor_role == role && e.evidence_kind == EvidenceKind::CriticVerdict)
+            .is_some_and(|e| e.verdict == GateVerdict::Pass)
+    });
+    if !has_passing_critics {
         for kind in [
             CriticKind::DomainAdversarial,
             CriticKind::ContractCompliance,
