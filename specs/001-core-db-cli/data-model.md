@@ -17,7 +17,7 @@ Represents an isolated Spec-Driven Development execution cycle.
 | :--- | :--- | :--- |
 | `cycle_id` | `CycleId` (`String`) | Format: `issue-<id>-YYYYMMDDHHMM` or `no-issue-YYYYMMDDHHMM`. Non-empty. |
 | `issue_linkage` | `IssueLinkage` | Special Case Enum: `LinkedIssue` or `UnlinkedLocalCycle`. |
-| `methodology_profile` | `MethodologyProfile` | `StandardGauntletV2` or `SpecKitIntegrated { feature_dir }`. |
+| `methodology_profile` | `MethodologyProfile` | `StandardGauntletV2` or `StructuredSdd { feature_dir }`. |
 | `current_gate` | `GateStage` | Current milestone (`Gate0Discovery` .. `Gate6Certification`). |
 | `lifecycle_status` | `CycleStatus` | `Active`, `Paused`, `CircuitBreakerTripped`, `Certified`, or `Merged`. |
 | `gauntlet_attempt` | `u8` | Bounded integer `0..=5`. Trips Circuit Breaker at `5` (`RN-005`). |
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS sdd_cycles (
     project_board_id        TEXT NOT NULL DEFAULT 'UNLINKED_LOCAL_CYCLE',
     project_item_id         TEXT NOT NULL DEFAULT 'UNLINKED_LOCAL_CYCLE',
     board_column            TEXT NOT NULL DEFAULT 'UNLINKED_LOCAL_CYCLE',
-    methodology_profile     TEXT NOT NULL CHECK (methodology_profile IN ('STANDARD_GAUNTLET_V2', 'SPECKIT_INTEGRATED')),
+    methodology_profile     TEXT NOT NULL CHECK (methodology_profile IN ('STANDARD_GAUNTLET_V2', 'STRUCTURED_SDD')),
     current_gate            INTEGER NOT NULL DEFAULT 0 CHECK (current_gate BETWEEN 0 AND 6),
     lifecycle_status        TEXT NOT NULL CHECK (lifecycle_status IN ('ACTIVE', 'PAUSED', 'CIRCUIT_BREAKER_TRIPPED', 'CERTIFIED', 'MERGED')),
     gauntlet_attempt        INTEGER NOT NULL DEFAULT 0 CHECK (gauntlet_attempt BETWEEN 0 AND 5),

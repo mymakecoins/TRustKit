@@ -7,7 +7,7 @@ use crate::special_cases::{ContractUnlockState, TraceVerificationState};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MethodologyProfile {
     StandardGauntletV2,
-    SpecKitIntegrated { feature_dir: String },
+    StructuredSdd { feature_dir: String },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

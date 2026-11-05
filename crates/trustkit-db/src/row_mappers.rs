@@ -88,8 +88,8 @@ pub fn map_row_to_cycle(row: &Row) -> rusqlite::Result<SddCycle> {
         SpecLockState::DraftUnverified
     };
 
-    let methodology_profile = if methodology == "SPECKIT_INTEGRATED" {
-        MethodologyProfile::SpecKitIntegrated {
+    let methodology_profile = if methodology == "STRUCTURED_SDD" {
+        MethodologyProfile::StructuredSdd {
             feature_dir: spec_dir.clone(),
         }
     } else {

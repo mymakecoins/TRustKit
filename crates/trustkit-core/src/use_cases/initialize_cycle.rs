@@ -75,7 +75,7 @@ pub fn execute(
     let cycle = SddCycle {
         cycle_id: cycle_id.clone(),
         issue_linkage: linkage,
-        methodology_profile: MethodologyProfile::SpecKitIntegrated {
+        methodology_profile: MethodologyProfile::StructuredSdd {
             feature_dir: spec_dir.clone(),
         },
         current_gate: GateStage::Gate0Discovery,

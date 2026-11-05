@@ -4,7 +4,7 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
 use serde::Serialize;
-use trustkit_core::entities::CycleStatus;
+use trustkit_core::entities::{CycleStatus, MethodologyProfile};
 use trustkit_core::special_cases::{
     ActiveCycleLookup, BoardSyncOutcome, IssueLinkage, SpecLockState,
 };
@@ -118,11 +118,16 @@ impl Presenter {
                 }
             };
 
+            let methodology_profile_str = match &outcome.cycle.methodology_profile {
+                MethodologyProfile::StandardGauntletV2 => "STANDARD_GAUNTLET_V2",
+                MethodologyProfile::StructuredSdd { .. } => "STRUCTURED_SDD",
+            };
+
             let payload = JsonInitResponse {
                 verdict: "PASS".to_string(),
                 gate: outcome.cycle.current_gate.label().to_string(),
                 cycle_id: outcome.cycle.cycle_id.clone(),
-                methodology_profile: "SPECKIT_INTEGRATED".to_string(),
+                methodology_profile: methodology_profile_str.to_string(),
                 spec_dir: outcome.cycle.spec_dir.clone(),
                 spec_file_path: outcome.cycle.spec_file_path.clone(),
                 work_branch: outcome.cycle.work_branch.clone(),
@@ -143,6 +148,13 @@ impl Presenter {
             out.push_str(&format!(
                 "Gate Stage        : {}\n",
                 outcome.cycle.current_gate.label()
+            ));
+            out.push_str(&format!(
+                "Methodology Profile: {}\n",
+                match &outcome.cycle.methodology_profile {
+                    MethodologyProfile::StandardGauntletV2 => "STANDARD_GAUNTLET_V2",
+                    MethodologyProfile::StructuredSdd { .. } => "STRUCTURED_SDD",
+                }
             ));
             out.push_str(&format!("Spec Directory    : {}\n", outcome.cycle.spec_dir));
             out.push_str(&format!(

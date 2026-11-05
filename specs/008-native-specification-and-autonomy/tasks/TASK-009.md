@@ -14,7 +14,7 @@ test_file: crates/trustkit-cli/src/cli_contract_help_tests.rs
 ---
 
 ## Contexto
-Com a emancipacao em relacao ao Spec Kit e a adicao dos comandos `trustkit spec prompt` e `trustkit spec lint`, os manuais principais do projeto (`README.md` em portugues e `README.en.md` em ingles) devem ser atualizados em perfeita paridade de conteudo e sem emojis.
+Com a consolidacao da autonomia nativa e a adicao dos comandos `trustkit spec prompt` e `trustkit spec lint`, os manuais principais do projeto (`README.md` em portugues e `README.en.md` em ingles) devem ser atualizados em perfeita paridade de conteudo e sem emojis.
 
 ## Escopo
 Atualizar `README.md` e `README.en.md`:
