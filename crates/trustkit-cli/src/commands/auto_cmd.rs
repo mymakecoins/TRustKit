@@ -145,7 +145,16 @@ pub fn execute_with_db(
     let tasks_dir = spec_dir.join("tasks");
     let mut total_tasks = 0;
     let mut total_waves = 0;
-    if tasks_dir.exists() {
+    let existing_tasks = repo.list_atomic_tasks(&active_cycle.cycle_id)?;
+
+    if !existing_tasks.is_empty() {
+        total_tasks = existing_tasks.len();
+        let mut waves: Vec<u32> = existing_tasks.iter().map(|t| t.wave_index).collect();
+        waves.sort_unstable();
+        waves.dedup();
+        total_waves = waves.len();
+        gates_cleared.push(3);
+    } else if tasks_dir.exists() {
         if let Ok(parsed_tasks) = WaveExecutionPlanner::parse_tasks_dir(&tasks_dir) {
             if !parsed_tasks.is_empty() {
                 total_tasks = parsed_tasks.len();
