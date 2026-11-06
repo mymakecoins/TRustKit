@@ -1,0 +1,4 @@
+[governance.gauntlet]
+# Modos: "prompt", "always", "disabled"
+security_review_mode = "prompt"
+min_confidence_threshold = 8

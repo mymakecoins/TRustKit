@@ -10,7 +10,7 @@ use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonGauntletRunResponse};
 use std::fs;
 use std::io::{self, BufRead, IsTerminal, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_core::entities::{
     SecurityReviewDecision, SecurityReviewVerdict, SecuritySkipReason, SemanticReviewFinding,
@@ -96,17 +96,28 @@ fn current_timestamp_iso() -> String {
 }
 
 pub fn load_project_security_policy(working_dir: &Path) -> SecurityReviewPolicyConfig {
-    let toml_path = working_dir.join("trustkit.toml");
-    if let Ok(raw) = fs::read_to_string(&toml_path)
-        && let Ok(cfg) = parse_security_review_policy(&raw)
-    {
-        return cfg;
+    let mut check_dirs = Vec::new();
+    check_dirs.push(working_dir.to_path_buf());
+    for ancestor in working_dir.ancestors() {
+        if ancestor != working_dir && ancestor != Path::new("") {
+            check_dirs.push(ancestor.to_path_buf());
+        }
     }
-    let json_path = working_dir.join(".trustkit").join("config.json");
-    if let Ok(raw) = fs::read_to_string(&json_path)
-        && let Ok(cfg) = parse_security_review_policy(&raw)
-    {
-        return cfg;
+    check_dirs.push(PathBuf::from("."));
+
+    for dir in check_dirs {
+        let toml_path = dir.join("trustkit.toml");
+        if let Ok(raw) = fs::read_to_string(&toml_path)
+            && let Ok(cfg) = parse_security_review_policy(&raw)
+        {
+            return cfg;
+        }
+        let json_path = dir.join(".trustkit").join("config.json");
+        if let Ok(raw) = fs::read_to_string(&json_path)
+            && let Ok(cfg) = parse_security_review_policy(&raw)
+        {
+            return cfg;
+        }
     }
     SecurityReviewPolicyConfig::default()
 }
@@ -121,7 +132,10 @@ pub fn execute_with_db(
     json_mode: bool,
     db_path: &Path,
 ) -> Result<DomainOutcome, DomainViolation> {
-    let is_tty = io::stdin().is_terminal() && !json_mode && !args.json;
+    let is_tty = io::stdin().is_terminal()
+        && !json_mode
+        && !args.json
+        && std::env::var("TRUSTKIT_AGENT_MODE").is_err();
     let prompt = StdioInteractivePrompt;
     let reviewer = DefaultSecurityDiffReviewer;
     execute_with_prompt(args, json_mode, db_path, is_tty, &prompt, &reviewer)

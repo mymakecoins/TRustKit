@@ -22,6 +22,16 @@ Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes determ
 
 ## Jornada dos Gates
 
+### Modo Autonomo Unificado (Gates 0 ao 6)
+Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais:
+```bash
+# Execucao autonoma a partir de issue remota
+trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] --json
+
+# Execucao autonoma a partir de especificacao local
+trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] --json
+```
+
 ### Gate 0: Inicializacao do Ciclo
 Execute a inicializacao para validar identidade, branches e registrar a sessao:
 ```bash
@@ -57,11 +67,11 @@ Elabore as tarefas atomicas em `tasks/TASK-NNN.md` e planeje o DAG de ondas para
 trustkit wave plan --json
 ```
 
-### Gate 4: Execucao em Git Worktrees e TDD Estrito
-Execute as tarefas da onda com isolamento de worktree e garanta as fases TDD:
+### Gate 4: Execucao em Git Worktrees, Multiplexacao de Terminais e TDD Estrito
+Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (multiplexador PTY ou nativo) e garanta as fases TDD:
 ```bash
-# Executa a onda com isolamento de worktree
-trustkit wave run --wave <WAVE_INDEX> --json
+# Executa a onda com isolamento de worktree e runtime de terminais (auto, pty, native)
+trustkit wave run --wave <WAVE_INDEX> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] --json
 
 # Registra a fase RED (falha obrigatoria comprovada)
 trustkit task test <TASK_ID> --phase red --json
@@ -72,6 +82,11 @@ trustkit task test <TASK_ID> --phase green --json
 # Conclui a tarefa atomica
 trustkit task complete <TASK_ID> --json
 ```
+
+Ferramentas MCP de monitoramento e controle de terminais de agentes estao disponiveis:
+- `trustkit_wave_status`: consulta status agregado de tarefas e terminais da onda.
+- `trustkit_terminal_inspect`: inspeciona estado semantico e buffer recente sanitizado da tarefa.
+- `trustkit_terminal_send`: envia entradas ao stdin do terminal para destravar agentes em estado Blocked.
 
 ### Gate 5: Gauntlet V2 (Auditoria AST e Swarm de Criticos)
 Execute a auditoria lexica/AST da Camada 0 e os criticos da Camada 1:

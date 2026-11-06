@@ -591,6 +591,7 @@
       <ul id="navList">
         <li class="nav-group-title">Introducao</li>
         <li><a href="#visao-geral" class="nav-link">1. Visao Geral</a></li>
+        <li><a href="#thin-skills" class="nav-link">1.3 Thin Skills e Slash Commands</a></li>
         <li><a href="#principios" class="nav-link">1.4 Principios de Governanca</a></li>
 
         <li class="nav-group-title">Comecando</li>
@@ -606,6 +607,8 @@
         <li><a href="#gate-4" class="nav-link">Gate 4: Worktrees & TDD Estrito</a></li>
         <li><a href="#gate-5" class="nav-link">Gate 5: Gauntlet Loop V2</a></li>
         <li><a href="#gate-6" class="nav-link">Gate 6: Certificacao & Merge</a></li>
+        <li><a href="#exemplo-3-waves" class="nav-link">Exemplo Pratico: 3 Waves</a></li>
+        <li><a href="#modo-autonomo" class="nav-link">Orquestracao Autonoma (auto)</a></li>
 
         <li class="nav-group-title">Recursos Avancados</li>
         <li><a href="#memoria-perene" class="nav-link">Memoria Perene (Wiki FTS5)</a></li>
@@ -694,14 +697,96 @@
         </div>
       </div>
 
-      <h3>1.3 O Paradigma Hybrid Rust Core + Thin Skill</h3>
+      <h3 id="thin-skills">1.3 O Paradigma Hybrid Rust Core + Thin Skill</h3>
       <p>
-        O TRustKit opera sob uma composicao equilibrada:
+        O TRustKit opera sob uma composicao equilibrada em duas camadas:
       </p>
       <ul>
         <li><strong>Thin Skill Declarativa (Prompt):</strong> Guia instrucional enxuta em Markdown que reside na memoria do agente/desenvolvedor para raciocinio de negocio sem sobrecarregar a janela de tokens.</li>
         <li><strong>Native Rust Core (Binario trustkit):</strong> Motor compilado responsavel por 100% das mutacoes fisicas de arquivos, git, verificacoes de TDD e hashes criptograficos.</li>
       </ul>
+
+      <h4>Catalogo das Thin Skills e Slash Commands do Framework SDD</h4>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Slash Command</th>
+              <th>Thin Skill (<code>SKILL.md</code>)</th>
+              <th>Gate Principal</th>
+              <th>Finalidade e Entregaveis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/sdd-define</code></td>
+              <td><code>sdd-define</code></td>
+              <td><span class="badge badge-info">Gate 1</span></td>
+              <td>Formulacao da especificacao funcional em <code>spec.md</code>, personas do Product Trio e criterios BDD.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-refine</code></td>
+              <td><code>sdd-refine</code></td>
+              <td><span class="badge badge-info">Gate 1</span></td>
+              <td>Identificacao de ambiguidades na especificacao e rodadas interativas de perguntas/respostas.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-principles</code></td>
+              <td><code>sdd-principles</code></td>
+              <td><span class="badge badge-info">Gate 2</span></td>
+              <td>Gestao da constituicao do projeto (<code>constitution.md</code>), diretrizes arquiteturais e regras inegociaveis.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-planning</code></td>
+              <td><code>sdd-planning</code></td>
+              <td><span class="badge badge-info">Gate 2</span></td>
+              <td>Planejamento de arquitetura, contratos de interfaces e modelagem de dados em <code>plan.md</code>.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-decompose</code></td>
+              <td><code>sdd-decompose</code></td>
+              <td><span class="badge badge-info">Gate 3</span></td>
+              <td>Decomposicao sequenciada por dependencias em tarefas atomicas isoladas em <code>tasks.md</code>.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-discover</code></td>
+              <td><code>sdd-discover</code></td>
+              <td><span class="badge badge-info">Gate 3</span></td>
+              <td>Auditoria nao destrutiva de consistencia cruzada entre <code>spec.md</code>, <code>plan.md</code> e <code>tasks.md</code>.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-execute</code></td>
+              <td><code>sdd-execute</code></td>
+              <td><span class="badge badge-warn">Gate 4</span></td>
+              <td>Execucao orientada das tarefas atomicas sob TDD estrito e isolamento em Git Worktrees.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-resolve</code></td>
+              <td><code>sdd-resolve</code></td>
+              <td><span class="badge badge-warn">Gate 4</span></td>
+              <td>Avaliacao comparativa do codigo construido contra os requisitos e convergencia de tarefas pendentes.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-validate</code></td>
+              <td><code>sdd-validate</code></td>
+              <td><span class="badge badge-pass">Gate 5</span></td>
+              <td>Geracao de checklists de qualidade de requisitos e homologacao previa ao Gauntlet Loop.</td>
+            </tr>
+            <tr>
+              <td><code>/sdd-publish-issues</code></td>
+              <td><code>sdd-publish-issues</code></td>
+              <td><span class="badge badge-pass">Gate 6</span></td>
+              <td>Sincronizacao idempotente de tarefas no GitHub Issues e boards de projetos.</td>
+            </tr>
+            <tr>
+              <td><em>Transversal</em></td>
+              <td><code>trustkit-sdd</code></td>
+              <td><span class="badge badge-pass">Todos</span></td>
+              <td>Thin Skill mestre de governanca SDD, worktrees com CoW e consenso Gauntlet V2 em Rust nativo.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div id="principios" class="callout alert">
         <div class="callout-title">Principios Constitucionais de Governanca</div>
@@ -1072,6 +1157,262 @@ trustkit gauntlet run --skip-security-review</code></pre>
           <pre><code>trustkit pr --target develop</code></pre>
         </div>
       </div>
+
+      <!-- Exemplo Pratico: Ciclo Completo de Feature com 3 Waves -->
+      <div id="exemplo-3-waves" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+        <h3>Exemplo Pratico: Ciclo Completo de Feature com 3 Waves</h3>
+        <p>Abaixo esta demonstrada a sequencia deterministica exata de comandos para executar uma funcionalidade do inicio ao fim (Gate 0 ao Gate 6), considerando um plano decomposto em 3 waves topologicas no DAG:</p>
+        
+        <ul style="margin: 14px 0 24px 28px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Onda 1 (Base e contratos):</strong> <code>TASK-001</code> (Core Domain) e <code>TASK-002</code> (Adaptador de Persistencia)</li>
+          <li><strong>Onda 2 (Regra de negocio / Servicos):</strong> <code>TASK-003</code> (Servico de Autenticacao / Dominio)</li>
+          <li><strong>Onda 3 (Interface e bordas):</strong> <code>TASK-004</code> (Handlers CLI / Integracao)</li>
+        </ul>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 0: Inicializacao do Ciclo e Setup de Ambiente</h4>
+        <p>Valida a identidade GitHub, protege arquivos pre-existentes na arvore Git e inicializa a sessao no banco transacional SQLite WAL:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Inicializar ciclo associado a issue</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit init --issue 42</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 1: Formulacao e Validacao da Especificacao (Spec V2)</h4>
+        <p>Gera o esqueleto estruturado da especificacao e valida continuamente as regras constitucionais via linter estatico antes do congelamento:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Scaffolding estruturado e linter imediato</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Gera o prompt estruturado e o esqueleto de spec.md com contexto fatiado da AST e da wiki
+trustkit spec prompt --idea "Implementar modulo de autenticacao multifator TOTP" --budget 4000
+
+# 2. Executa o linter estatico imediato para validar Gherkin, Mermaid e matriz de rastreabilidade
+trustkit spec lint</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 2: Congelamento Criptografico (Spec Lock)</h4>
+        <p>Sela a especificacao com digest BLAKE3 apos validacao completa da Matriz de Rastreabilidade ponta a ponta (RN -> RF -> TASK -> E2E):</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Selo criptografico BLAKE3</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit spec lock</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 3: Decomposicao e Planejamento Topologico em Ondas (DAG)</h4>
+        <p>Apos a elaboracao das tarefas atomicas em <code>tasks/TASK-NNN.md</code>, compila o grafo de dependencias e calcula as 3 ondas de execucao paralela:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Compilar DAG e ondas de tarefas</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit wave plan</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 4: Execucao das 3 Ondas com Git Worktrees e TDD Estrito</h4>
+        <p>Cada tarefa atomica e isolada em uma Git Worktree dedicada (<code>.trustkit/worktrees/</code>) e deve cumprir obrigatoriamente o ciclo TDD: <strong>RED comprovado antes de GREEN</strong>.</p>
+
+        <h5 style="margin: 18px 0 8px 0; color: var(--text-primary); font-size: 1.05rem;">Execucao da Onda 1</h5>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Onda 1: Despachar worktrees e ciclo TDD</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Despacha e provisiona os worktrees isolados da Onda 1
+trustkit wave run --wave 1
+
+# --- Execucao da TASK-001 ---
+# Registra comprovacao obrigatoria de falha do teste (fase RED)
+trustkit task test TASK-001 --phase red
+
+# Apos codificar a solucao, registra comprovacao obrigatoria de sucesso (fase GREEN)
+trustkit task test TASK-001 --phase green
+
+# Revisao semantica multi-angulo do diff antes da conclusao (fase REFACTOR)
+trustkit task review TASK-001 --effort medium
+
+# Conclui a tarefa atomica e integra na branch de trabalho da feature
+trustkit task complete TASK-001
+
+# --- Execucao da TASK-002 ---
+trustkit task test TASK-002 --phase red
+trustkit task test TASK-002 --phase green
+trustkit task review TASK-002 --effort medium
+trustkit task complete TASK-002</code></pre>
+        </div>
+
+        <h5 style="margin: 18px 0 8px 0; color: var(--text-primary); font-size: 1.05rem;">Execucao da Onda 2</h5>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Onda 2: Despachar worktrees e ciclo TDD</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 2. Despacha os worktrees da Onda 2 (dependentes da conclusao da Onda 1)
+trustkit wave run --wave 2
+
+# --- Execucao da TASK-003 ---
+trustkit task test TASK-003 --phase red
+trustkit task test TASK-003 --phase green
+trustkit task review TASK-003 --effort medium
+trustkit task complete TASK-003</code></pre>
+        </div>
+
+        <h5 style="margin: 18px 0 8px 0; color: var(--text-primary); font-size: 1.05rem;">Execucao da Onda 3</h5>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Onda 3: Despachar worktrees e ciclo TDD</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 3. Despacha os worktrees da Onda 3 (dependentes da conclusao da Onda 2)
+trustkit wave run --wave 3
+
+# --- Execucao da TASK-004 ---
+trustkit task test TASK-004 --phase red
+trustkit task test TASK-004 --phase green
+trustkit task review TASK-004 --effort medium
+trustkit task complete TASK-004</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 5: Gauntlet Loop V2 (Auditoria AST e Swarm de Criticos)</h4>
+        <p>Executa a esteira de validacao adversarial mais rigorosa do sistema:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Auditoria AST e Swarm de Criticos</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Camada 0: Inspecao AST sintatica (&lt; 5ms) via Tree-Sitter (anti-cheat, zero emojis, sem trailers de IA)
+trustkit gauntlet ast-audit
+
+# 2. Camada 1: Suite de testes de integracao, build release, Playwright E2E e swarm de criticos
+trustkit gauntlet run</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 8px 0; color: var(--accent-primary);">Gate 6: Certificacao, Merge e Abertura de Pull Request Sob Demanda</h4>
+        <p>Consolida as evidencias, integra o codigo na branch alvo e publica o PR apenas sob demanda humana explicita:</p>
+        <div class="code-container">
+          <div class="code-header">
+            <span>Certificacao, merge e PR sob demanda</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># 1. Consolida o relatorio oficial gauntlet-report.md e publica comentario na issue
+trustkit done
+
+# 2. Realiza o merge deterministico na branch de destino (ex: develop) e limpa a branch de feature
+trustkit merge --target develop
+
+# 3. Abre o Pull Request formal no repositorio (somente sob solicitacao humana explicita)
+trustkit pr --target develop</code></pre>
+        </div>
+
+        <h4 style="margin: 24px 0 12px 0; color: var(--accent-primary);">Quadro Resumo dos Comandos</h4>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Gate</th>
+                <th>Objetivo</th>
+                <th>Comandos Sequenciais</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Gate 0</strong></td>
+                <td>Inicializacao</td>
+                <td><code>trustkit init --issue &lt;ID&gt;</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 1</strong></td>
+                <td>Especificacao</td>
+                <td><code>trustkit spec prompt ...</code> &rarr; <code>trustkit spec lint</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 2</strong></td>
+                <td>Congelamento Criptografico</td>
+                <td><code>trustkit spec lock</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 3</strong></td>
+                <td>Planejamento em Ondas (DAG)</td>
+                <td><code>trustkit wave plan</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4 (Onda 1)</strong></td>
+                <td>Execucao Paralela &amp; TDD</td>
+                <td><code>trustkit wave run --wave 1</code> &rarr; (<code>test --phase red</code> &rarr; <code>test --phase green</code> &rarr; <code>review</code> &rarr; <code>complete</code>) para TASK-001 e TASK-002</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4 (Onda 2)</strong></td>
+                <td>Execucao Paralela &amp; TDD</td>
+                <td><code>trustkit wave run --wave 2</code> &rarr; (<code>test --phase red</code> &rarr; <code>test --phase green</code> &rarr; <code>review</code> &rarr; <code>complete</code>) para TASK-003</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 4 (Onda 3)</strong></td>
+                <td>Execucao Paralela &amp; TDD</td>
+                <td><code>trustkit wave run --wave 3</code> &rarr; (<code>test --phase red</code> &rarr; <code>test --phase green</code> &rarr; <code>review</code> &rarr; <code>complete</code>) para TASK-004</td>
+              </tr>
+              <tr>
+                <td><strong>Gate 5</strong></td>
+                <td>Auditoria e Gauntlet</td>
+                <td><code>trustkit gauntlet ast-audit</code> &rarr; <code>trustkit gauntlet run</code></td>
+              </tr>
+              <tr>
+                <td><strong>Gate 6</strong></td>
+                <td>Certificacao e Entrega</td>
+                <td><code>trustkit done</code> &rarr; <code>trustkit merge --target develop</code> &rarr; <code>trustkit pr --target develop</code></td>
+              </tr>
+              <tr>
+                <td><strong>Auto</strong></td>
+                <td>Orquestracao Autonoma Completa</td>
+                <td><code>trustkit auto --issue &lt;ID&gt;</code> ou <code>trustkit auto --spec &lt;CAMINHO&gt;</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3.8 Modo Autonomo de Ponta a Ponta -->
+      <div id="modo-autonomo" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+        <h3>3.8 Orquestracao Autonoma de Ponta a Ponta (<code>trustkit auto</code>)</h3>
+        <p>Para fluxos em que os requisitos ja foram formulados ou a especificacao formal ja esta pronta, o comando unificado <code>trustkit auto</code> orquestra todos os 7 gates (0 ao 6) de forma 100% deterministica e ininterrupta:</p>
+        
+        <ul style="margin: 14px 0 24px 28px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Gate 0 (Setup &amp; Init):</strong> Inspeciona identidade Git, branches e baseline limpo, inicializando no SQLite WAL.</li>
+          <li><strong>Gate 1 (Spec Lint):</strong> Valida o linter nativo AST em microssegundos (sem emojis, Gherkin e matriz fechada).</li>
+          <li><strong>Gate 2 (Spec Lock):</strong> Sela a especificacao congelada com hash BLAKE3 criptografico.</li>
+          <li><strong>Gate 3 (Wave Plan):</strong> Le tarefas atomicas em <code>tasks/</code> e calcula as ondas topologicas DAG.</li>
+          <li><strong>Gate 4 (Multi-Wave TDD Loop):</strong> Executa o ciclo TDD (RED &rarr; GREEN &rarr; REFACTOR) em worktrees efemeras.</li>
+          <li><strong>Gate 5 (Gauntlet V2):</strong> Executa auditoria Camada 0 e consolida vereditos dos criticos.</li>
+          <li><strong>Gate 6 (Certify &amp; Merge):</strong> Emite <code>gauntlet-report.md</code> e realiza merge deterministico na branch alvo.</li>
+        </ul>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>A partir de uma issue remota do GitHub</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit auto --issue 45 --target develop</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>A partir de um arquivo local de especificacao</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit auto --spec docs/specs/minha-feature/spec.md --target develop</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>Modo Agente com saida JSON determinista (livre de null)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>trustkit auto --spec docs/specs/minha-feature/spec.md --target develop --runtime native --json</code></pre>
+        </div>
+      </div>
     </section>
 
     <!-- 4. Recursos Avancados -->
@@ -1351,6 +1692,18 @@ trustkit context slice --file crates/trustkit-core/src/entities.rs --hops 2 --st
             <tr>
               <td><strong>Modo Agente</strong></td>
               <td>Execucao do CLI via flag <code>--json</code> com saida estritamente livre de campos nulos (null).</td>
+            </tr>
+            <tr>
+              <td><strong>Thin Skill</strong></td>
+              <td>Guia instrucional conciso em Markdown que orienta raciocinios de alto nivel no contexto do agente sem invalidar o KV-Cache.</td>
+            </tr>
+            <tr>
+              <td><strong>Slash Commands SDD</strong></td>
+              <td>Conjunto de comandos conceituais (<code>/sdd-define</code>, <code>/sdd-planning</code>, <code>/sdd-execute</code>, etc.) que padronizam o fluxo SDD.</td>
+            </tr>
+            <tr>
+              <td><strong>Gauntlet Loop V2</strong></td>
+              <td>Bateria de verificacao adversarial multi-agente que audita integridade estatica, TDD, Playwright E2E e seguranca antes do merge.</td>
             </tr>
           </tbody>
         </table>

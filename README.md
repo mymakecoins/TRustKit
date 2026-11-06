@@ -89,6 +89,16 @@ O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 [Pre-Release] Auditoria Defensiva Global em 6 Fases (trustkit audit security)
 ```
 
+### Modo Autonomo de Ponta a Ponta (`trustkit auto`)
+Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue remota ou especificacao local:
+```bash
+# Executa ciclo completo a partir de uma issue remota do GitHub
+trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
+
+# Executa ciclo completo a partir de uma especificacao local
+trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
+```
+
 ### Gate 0: Inicializacao do Ciclo
 Valida identidade GitHub, branches, estado da arvore de trabalho e inicializa o ciclo no banco SQLite WAL:
 ```bash
@@ -311,8 +321,19 @@ Detected Environments: Antigravity, Claude Code, Codex
    - Regras Escopadas (`.claude/rules/`): Regras ativadas por caminho (`rust-crates.md` para `crates/**`, `specs-governance.md` para `specs/**`, e `governance-invariants.md`).
 
 2. Skills & Commands (17/17 pts):
-   - Skills especializadas em `.agents/skills/` e `skills/`.
-   - Comandos explícitos de ciclo em `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
+   - Thin Skill Principal: `trustkit-sdd` para governanca deterministica de ciclo, worktrees e Gauntlet.
+   - Suite de Thin Skills e Slash Commands do Framework SDD (`.agents/skills/`):
+     - `/sdd-define` (`sdd-define`): Definicao de requisitos, Product Trio e especificacao funcional em `spec.md`.
+     - `/sdd-refine` (`sdd-refine`): Esclarecimento e desambiguacao interativa de requisitos.
+     - `/sdd-principles` (`sdd-principles`): Governanca da constituicao do projeto (`constitution.md`) e regras arquiteturais.
+     - `/sdd-planning` (`sdd-planning`): Planejamento arquitetural, contratos de interfaces e modelo de dados em `plan.md`.
+     - `/sdd-decompose` (`sdd-decompose`): Decomposicao ordenada por dependencias em tarefas atomicas (`tasks.md`).
+     - `/sdd-discover` (`sdd-discover`): Auditoria cruzada de consistencia e qualidade entre `spec.md`, `plan.md` e `tasks.md`.
+     - `/sdd-validate` (`sdd-validate`): Geracao e auditoria de checklists customizados de aceitacao.
+     - `/sdd-execute` (`sdd-execute`): Execucao orientada do plano de tarefas sob ciclo TDD estrito e worktrees.
+     - `/sdd-resolve` (`sdd-resolve`): Avaliacao comparativa do codigo desenvolvido e convergencia de tarefas pendentes.
+     - `/sdd-publish-issues` (`sdd-publish-issues`): Sincronizacao idempotente de tarefas no GitHub Issues.
+   - Comandos explicitos de ciclo em `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
    - Subagentes dedicados em `.claude/agents/` (`gauntlet-critic.md`, `spec-reviewer.md`).
 
 3. Hooks & Guardrails (14/14 pts):
@@ -358,6 +379,7 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | Grafo AST de codigo e documentacao, multi-hop slicer, detector de God Nodes e GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Revisao semantica multi-angulo (refactor), security review opcional e auditoria defensiva em 6 fases. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e autonomia completa. |
+| `010-trustkit-auto-orchestrator` | Motor Autonomo trustkit auto | Orquestracao unificada Gates 0 a 6, loop de ondas topologicas com isolamento de worktree e TDD estrito. |
 
 ---
 

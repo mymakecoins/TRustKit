@@ -82,7 +82,8 @@ impl WorktreeIsolationProvider {
                 let source = self.repo_root.join(dir_name);
                 let dest = target_dir.join(dir_name);
                 if source.exists() && !dest.exists() {
-                    let _ = std::os::unix::fs::symlink(&source, &dest);
+                    let canonical = std::fs::canonicalize(&source).unwrap_or(source);
+                    let _ = std::os::unix::fs::symlink(&canonical, &dest);
                 }
             }
         }

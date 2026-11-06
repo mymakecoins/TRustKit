@@ -89,6 +89,16 @@ The software development lifecycle is governed by 7 deterministic gates:
 [Pre-Release] Global 6-Phase Defensive Security Audit (trustkit audit security)
 ```
 
+### End-to-End Autonomous Execution (`trustkit auto`)
+For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a remote GitHub issue or local specification:
+```bash
+# Execute full deterministic cycle from a remote GitHub issue
+trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
+
+# Execute full deterministic cycle from a local specification file
+trustkit auto --spec <SPEC_PATH> [--target develop] [--runtime auto|pty|native] [--json]
+```
+
 ### Gate 0: Cycle Initialization
 Validates GitHub profile identity, branches, working tree cleanliness, and initializes session state in SQLite:
 ```bash
@@ -311,7 +321,18 @@ Detected Environments: Antigravity, Claude Code, Codex
    - Scoped Rules (`.claude/rules/`): Path-activated rules (`rust-crates.md` for `crates/**`, `specs-governance.md` for `specs/**`, and `governance-invariants.md`).
 
 2. Skills & Commands (17/17 pts):
-   - Specialized skills under `.agents/skills/` and `skills/`.
+   - Primary Thin Skill: `trustkit-sdd` for deterministic lifecycle governance, worktrees, and Gauntlet loop.
+   - SDD Framework Thin Skills and Slash Commands suite (`.agents/skills/`):
+     - `/sdd-define` (`sdd-define`): Requirements definition, Product Trio, and structured feature specification in `spec.md`.
+     - `/sdd-refine` (`sdd-refine`): Targeted ambiguity clarification and interactive Q&A rounds.
+     - `/sdd-principles` (`sdd-principles`): Project constitution (`constitution.md`) and non-negotiable architectural principles.
+     - `/sdd-planning` (`sdd-planning`): Architectural planning, interface contracts, and data modeling in `plan.md`.
+     - `/sdd-decompose` (`sdd-decompose`): Dependency-ordered atomic task decomposition in `tasks.md`.
+     - `/sdd-discover` (`sdd-discover`): Cross-artifact consistency and quality audit across `spec.md`, `plan.md`, and `tasks.md`.
+     - `/sdd-validate` (`sdd-validate`): Custom acceptance checklist generation and requirements audit.
+     - `/sdd-execute` (`sdd-execute`): Task plan execution under strict TDD cycles in isolated worktrees.
+     - `/sdd-resolve` (`sdd-resolve`): Codebase assessment against specifications and convergence of remaining unbuilt work.
+     - `/sdd-publish-issues` (`sdd-publish-issues`): Idempotent task publication and synchronization to GitHub Issues.
    - Explicit lifecycle workflows in `.claude/commands/` (`sdd-gate.md`, `worktree-isolate.md`).
    - Dedicated subagents in `.claude/agents/` (`gauntlet-critic.md`, `spec-reviewer.md`).
 
@@ -358,6 +379,7 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | AST code/wiki graph, multi-hop slicer, God Node detector, and GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Multi-angle semantic review (refactor phase), optional security review, and 6-phase pre-release audit. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Native prompt scaffolding, FTS5/AST context slicing, sub-3ms pre-lock linter, MCP tools, and sdd decoupling. |
+| `010-trustkit-auto-orchestrator` | Autonomous Orchestrator trustkit auto | Unified Gates 0 to 6 orchestration, topological wave loop with worktree isolation and strict TDD. |
 
 ---
 

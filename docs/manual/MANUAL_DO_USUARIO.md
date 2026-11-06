@@ -13,6 +13,7 @@
    - [1.1 O que e o TRustKit?](#11-o-que-e-o-trustkit)
    - [1.2 Para quem se destina este manual?](#12-para-quem-se-destina-este-manual)
    - [1.3 O Paradigma Hybrid Rust Core + Thin Skill](#13-o-paradigma-hybrid-rust-core--thin-skill)
+     - [1.3.1 Catalogo das Thin Skills e Slash Commands do Framework SDD](#131-catalogo-das-thin-skills-e-slash-commands-do-framework-sdd)
    - [1.4 Principios Constitucionais de Governanca](#14-principios-constitucionais-de-governanca)
 2. [Primeiros Passos](#2-primeiros-passos)
    - [2.1 Requisitos do Sistema](#21-requisitos-do-sistema)
@@ -27,6 +28,8 @@
    - [3.4 Tarefa 4: Execucao Paralela, Worktrees e Ciclo TDD Estrito (Gate 4)](#34-tarefa-4-execucao-paralela-worktrees-e-ciclo-tdd-estrito-gate-4)
    - [3.5 Tarefa 5: Submeter ao Gauntlet Loop e Revisao de Seguranca (Gate 5)](#35-tarefa-5-submeter-ao-gauntlet-loop-e-revisao-de-seguranca-gate-5)
    - [3.6 Tarefa 6: Certificacao, Merge e Abertura de Pull Request (Gate 6)](#36-tarefa-6-certificacao-merge-e-abertura-de-pull-request-gate-6)
+   - [3.7 Exemplo Pratico: Ciclo Completo de Feature com 3 Waves](#37-exemplo-pratico-ciclo-completo-de-feature-com-3-waves)
+   - [3.8 Orquestracao Autonoma de Ponta a Ponta (trustkit auto)](#38-orquestracao-autonoma-de-ponta-a-ponta-trustkit-auto)
 4. [Recursos Avancados e Modulos Especializados](#4-recursos-avancados-e-modulos-especializados)
    - [4.1 Memoria Perene do Projeto (`trustkit memory`)](#41-memoria-perene-do-projeto-trustkit-memory)
    - [4.2 Inteligencia de Grafo Estrutural (`trustkit graph`)](#42-inteligencia-de-grafo-estrutural-trustkit-graph)
@@ -90,6 +93,24 @@ Para aliar a flexibilidade do raciocinio humano e agêntico a solidez de regras 
 |   - Servidor MCP Nativo, Grafo de Conhecimento e Memoria Wiki FTS5 |
 +--------------------------------------------------------------------+
 ```
+
+### 1.3.1 Catalogo das Thin Skills e Slash Commands do Framework SDD
+
+As Thin Skills residem em `.agents/skills/` e guiam os assistentes agênticos (Claude Code, Cursor, Antigravity) atraves de slash commands conceituais, delegando a execucao mecanica ao binario nativo `trustkit`:
+
+| Slash Command | Thin Skill (`SKILL.md`) | Gate Principal | Finalidade e Entregaveis |
+| :--- | :--- | :--- | :--- |
+| `/sdd-define` | `sdd-define` | Gate 1 | Formulacao da especificacao funcional em `spec.md`, personas do Product Trio e criterios BDD. |
+| `/sdd-refine` | `sdd-refine` | Gate 1 | Identificacao de ambiguidades na especificacao e rodadas interativas de perguntas/respostas. |
+| `/sdd-principles` | `sdd-principles` | Gate 2 | Gestao da constituicao do projeto (`constitution.md`), diretrizes arquiteturais e regras inegociaveis. |
+| `/sdd-planning` | `sdd-planning` | Gate 2 | Planejamento de arquitetura, contratos de interfaces e modelagem de dados em `plan.md`. |
+| `/sdd-decompose` | `sdd-decompose` | Gate 3 | Decomposicao sequenciada por dependencias em tarefas atomicas isoladas em `tasks.md`. |
+| `/sdd-discover` | `sdd-discover` | Gate 3 | Auditoria nao destrutiva de consistencia cruzada entre `spec.md`, `plan.md` e `tasks.md`. |
+| `/sdd-execute` | `sdd-execute` | Gate 4 | Execucao orientada das tarefas atomicas sob TDD estrito e isolamento em Git Worktrees. |
+| `/sdd-resolve` | `sdd-resolve` | Gate 4 | Avaliacao comparativa do codigo construido contra os requisitos e convergencia de tarefas pendentes. |
+| `/sdd-validate` | `sdd-validate` | Gate 5 | Geracao de checklists de qualidade de requisitos e homologacao previa ao Gauntlet Loop. |
+| `/sdd-publish-issues` | `sdd-publish-issues` | Gate 6 | Sincronizacao idempotente de tarefas no GitHub Issues e boards de projetos. |
+| N/A | `trustkit-sdd` | Transversal | Thin Skill mestre de governanca SDD, worktrees com CoW e consenso Gauntlet V2 em Rust nativo. |
 
 ### 1.4 Principios Constitucionais de Governanca
 
@@ -327,6 +348,14 @@ trustkit init
 
 Nesta etapa, o objetivo e documentar a regra de negocio com precisao cirurgica antes de escrever qualquer linha de codigo de producao.
 
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gates 1 & 2):**  
+> Assistentes de IA e desenvolvedores podem utilizar os slash commands conceituais:
+> - `/sdd-define`: Formulacao completa do `spec.md` com Product Trio, requisitos e criterios BDD.
+> - `/sdd-refine`: Rodada interativa de perguntas e respostas para esclarecer lacunas e ambiguidades.
+> - `/sdd-principles`: Alinhamento e registro de principios inegociaveis em `.specify/memory/constitution.md`.
+> - `/sdd-planning`: Criacao do plano de arquitetura, contratos e modelos de dados em `plan.md`.
+
 #### Passo 1: Gerar o esqueleto da especificacao
 
 Para que o TRustKit monte uma estrutura inicial enriquecida com informacoes do grafo do projeto e da memoria viva:
@@ -382,6 +411,12 @@ trustkit spec lock
 
 Com a regra selada, decompomos a entrega em tarefas atomicas de implementacao salvas no diretorio `tasks/` (ex: `tasks/TASK-001.md`, `tasks/TASK-002.md`).
 
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 3):**  
+> Antes de consolidar o plano no motor nativo com `trustkit wave plan`, utilize:
+> - `/sdd-decompose`: Granularizacao e ordenacao das tarefas atomicas em `tasks.md`.
+> - `/sdd-discover`: Verificacao automatizada de consistencia e completude entre `spec.md`, `plan.md` e `tasks.md`.
+
 #### Passo 1: Gerar o plano topologico de execucao
 
 Execute o planejador de ondas:
@@ -410,6 +445,12 @@ O TRustKit le todas as tarefas atomicas, extrai suas dependencias declaradas, an
 ### 3.4 Tarefa 4: Execucao Paralela, Worktrees e Ciclo TDD Estrito (Gate 4)
 
 No Gate 4, o codigo ganha vida. O TRustKit isola cada tarefa em uma arvore de trabalho propria (Git Worktree efemera) e fiscaliza mecanicamente o ciclo de Test-Driven Development (TDD).
+
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 4):**  
+> Durante o ciclo de codificacao em worktree, utilize:
+> - `/sdd-execute`: Execucao dirigida das tarefas atomicas sequenciadas em `tasks.md`.
+> - `/sdd-resolve`: Comparacao continua da arvore de codigo contra os requisitos para convergir tarefas pendentes.
 
 #### Passo 1: Despachar a onda de trabalho
 
@@ -466,6 +507,11 @@ O TRustKit consolida o commit da tarefa no formato oficial, encerra a worktree e
 ### 3.5 Tarefa 5: Submeter ao Gauntlet Loop e Revisao de Seguranca (Gate 5)
 
 O Gauntlet e a esteira de verificacao mais rigorosa do sistema. Ele impede que defeitos, vulnerabilidades ou quebras de regras atinjam os ramos estaveis do projeto.
+
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 5):**  
+> Para garantir a conformidade dos criterios de aceitacao antes do Gauntlet:
+> - `/sdd-validate`: Geracao de checklists customizados de aceitacao e auditoria de requisitos.
 
 #### Passo 1: Executar a Auditoria Sintatica Instantanea (Camada 0)
 
@@ -525,6 +571,11 @@ trustkit gauntlet run --skip-security-review
 
 Com todos os testes, invariantes e suites aprovadas, consolidamos a entrega.
 
+> [!TIP]
+> **Assistência Agêntica com Thin Skills (Gate 6):**  
+> Na fase de publicacao e sincronizacao de demandas:
+> - `/sdd-publish-issues`: Conversao e publicacao idempotente das tarefas atomicas no GitHub Issues.
+
 #### Passo 1: Gerar o Relatorio de Certificacao e Comentario da Issue
 
 ```bash
@@ -552,6 +603,184 @@ trustkit pr --target develop
 ```
 
 O comando configura automaticamente os revisores oficiais, os links de rastreabilidade e move o card do quadro para a coluna `In review`.
+
+---
+
+### 3.7 Exemplo Pratico: Ciclo Completo de Feature com 3 Waves
+
+Abaixo esta demonstrada a sequencia deterministica exata de comandos para executar uma funcionalidade do inicio ao fim (Gate 0 ao Gate 6), considerando um plano decomposto em 3 waves topologicas no DAG:
+* **Onda 1 (Base e contratos):** `TASK-001` (Core Domain) e `TASK-002` (Adaptador de Persistencia)
+* **Onda 2 (Regra de negocio / Servicos):** `TASK-003` (Servico de Autenticacao / Dominio)
+* **Onda 3 (Interface e bordas):** `TASK-004` (Handlers CLI / Integracao)
+
+#### Gate 0: Inicializacao do Ciclo e Setup de Ambiente
+Valida a identidade GitHub, protege arquivos pre-existentes na arvore Git e inicializa a sessao no banco transacional SQLite WAL:
+
+```bash
+trustkit init --issue 42
+```
+*(Caso derive de um documento funcional pre-existente: `trustkit init --issue 42 --from-prd docs/PRD_TRustKit.md`)*
+
+#### Gate 1: Formulacao e Validacao da Especificacao (Spec V2)
+Gera o esqueleto estruturado da especificacao e valida continuamente as regras constitucionais via linter estatico antes do congelamento:
+
+```bash
+# 1. Gera o prompt estruturado e o esqueleto de spec.md com contexto fatiado da AST e da wiki
+trustkit spec prompt --idea "Implementar modulo de autenticacao multifator TOTP" --budget 4000
+
+# 2. Executa o linter estatico imediato para validar Gherkin, Mermaid e matriz de rastreabilidade
+trustkit spec lint
+```
+
+#### Gate 2: Congelamento Criptografico (Spec Lock)
+Sela a especificacao com digest BLAKE3 apos validacao completa da Matriz de Rastreabilidade ponta a ponta (RN -> RF -> TASK -> E2E):
+
+```bash
+trustkit spec lock
+```
+
+#### Gate 3: Decomposicao e Planejamento Topologico em Ondas (DAG)
+Apos a elaboracao das tarefas atomicas em `tasks/TASK-NNN.md`, compila o grafo de dependencias e calcula as 3 ondas de execucao paralela:
+
+```bash
+trustkit wave plan
+```
+
+#### Gate 4: Execucao das 3 Ondas com Git Worktrees e TDD Estrito
+Cada tarefa atomica e isolada em uma Git Worktree dedicada (`.trustkit/worktrees/`) e deve cumprir obrigatoriamente o ciclo TDD: RED comprovado antes de GREEN.
+
+##### Execucao da Onda 1
+```bash
+# 1. Despacha e provisiona os worktrees isolados da Onda 1
+trustkit wave run --wave 1
+
+# --- Execucao da TASK-001 ---
+# Registra comprovacao obrigatoria de falha do teste (fase RED)
+trustkit task test TASK-001 --phase red
+
+# Apos codificar a solucao, registra comprovacao obrigatoria de sucesso (fase GREEN)
+trustkit task test TASK-001 --phase green
+
+# Revisao semantica multi-angulo do diff antes da conclusao (fase REFACTOR)
+trustkit task review TASK-001 --effort medium
+
+# Conclui a tarefa atomica e integra na branch de trabalho da feature
+trustkit task complete TASK-001
+
+# --- Execucao da TASK-002 ---
+trustkit task test TASK-002 --phase red
+trustkit task test TASK-002 --phase green
+trustkit task review TASK-002 --effort medium
+trustkit task complete TASK-002
+```
+
+##### Execucao da Onda 2
+```bash
+# 2. Despacha os worktrees da Onda 2 (dependentes da conclusao da Onda 1)
+trustkit wave run --wave 2
+
+# --- Execucao da TASK-003 ---
+trustkit task test TASK-003 --phase red
+trustkit task test TASK-003 --phase green
+trustkit task review TASK-003 --effort medium
+trustkit task complete TASK-003
+```
+
+##### Execucao da Onda 3
+```bash
+# 3. Despacha os worktrees da Onda 3 (dependentes da conclusao da Onda 2)
+trustkit wave run --wave 3
+
+# --- Execucao da TASK-004 ---
+trustkit task test TASK-004 --phase red
+trustkit task test TASK-004 --phase green
+trustkit task review TASK-004 --effort medium
+trustkit task complete TASK-004
+```
+
+#### Gate 5: Gauntlet Loop V2 (Auditoria AST e Swarm de Criticos)
+Executa a esteira de validacao adversarial mais rigorosa do sistema:
+
+```bash
+# 1. Camada 0: Inspecao AST sintatica (< 5ms) via Tree-Sitter (anti-cheat, zero emojis, sem trailers de IA)
+trustkit gauntlet ast-audit
+
+# 2. Camada 1: Suite de testes de integracao, build release, Playwright E2E e swarm de criticos
+trustkit gauntlet run
+```
+*(Nota: e possivel definir explicitamente a revisao de seguranca de diff com `trustkit gauntlet run --security-review` ou `trustkit gauntlet run --skip-security-review`).*
+
+#### Gate 6: Certificacao, Merge e Abertura de Pull Request Sob Demanda
+Consolida as evidencias, integra o codigo na branch alvo e publica o PR apenas sob demanda humana explicita:
+
+```bash
+# 1. Consolida o relatorio oficial gauntlet-report.md e publica comentario na issue
+trustkit done
+
+# 2. Realiza o merge deterministico na branch de destino (ex: develop) e limpa a branch de feature
+trustkit merge --target develop
+
+# 3. Abre o Pull Request formal no repositorio (somente sob solicitacao humana explicita)
+trustkit pr --target develop
+```
+
+#### Quadro Resumo dos Comandos
+
+| Gate | Objetivo | Comandos Sequenciais |
+| :--- | :--- | :--- |
+| **Gate 0** | Inicializacao | `trustkit init --issue <ID>` |
+| **Gate 1** | Especificacao | `trustkit spec prompt ...` -> `trustkit spec lint` |
+| **Gate 2** | Congelamento Criptografico | `trustkit spec lock` |
+| **Gate 3** | Planejamento em Ondas (DAG) | `trustkit wave plan` |
+| **Gate 4 (Onda 1)** | Execucao Paralela & TDD | `trustkit wave run --wave 1` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-001 e TASK-002 |
+| **Gate 4 (Onda 2)** | Execucao Paralela & TDD | `trustkit wave run --wave 2` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-003 |
+| **Gate 4 (Onda 3)** | Execucao Paralela & TDD | `trustkit wave run --wave 3` -> (`test --phase red` -> `test --phase green` -> `review` -> `complete`) para TASK-004 |
+| **Gate 5** | Auditoria e Gauntlet | `trustkit gauntlet ast-audit` -> `trustkit gauntlet run` |
+| **Gate 6** | Certificacao e Entrega | `trustkit done` -> `trustkit merge --target develop` -> `trustkit pr --target develop` |
+| **Auto** | Orquestracao Autonoma Completa | `trustkit auto --issue <ID>` ou `trustkit auto --spec <CAMINHO>` |
+
+---
+
+### 3.8 Orquestracao Autonoma de Ponta a Ponta (`trustkit auto`)
+
+Para situacoes em que uma funcionalidade ja possui requisitos claros ou uma especificacao pronta, o TRustKit disponibiliza o comando unificado `trustkit auto`. Ele atua como um maestro deterministico, orquestrando sequencialmente todos os Gates (0 ao 6) sem exigir comandos manuais intermediarios:
+
+1. **Gate 0 (Setup & Init):** Inspeciona a identidade Git, branches e baseline limpo, inicializando a sessao no SQLite WAL.
+2. **Gate 1 (Spec Lint):** Valida a especificacao com o linter nativo AST em microssegundos (sem emojis, formato Gherkin e matriz fechada).
+3. **Gate 2 (Spec Lock):** Sela a especificacao congelada com hash BLAKE3 criptografico.
+4. **Gate 3 (Wave Plan):** Le as tarefas atomicas em `tasks/`, analisa o grafo DAG e calcula o escalonamento em ondas topologicas.
+5. **Gate 4 (Multi-Wave TDD Loop):** Executa o ciclo TDD (RED -> GREEN -> REFACTOR) em worktrees efemeras e conclui as tarefas da feature.
+6. **Gate 5 (Gauntlet V2):** Executa a auditoria sintatica Camada 0 e consolida os vereditos dos criticos de verificacao.
+7. **Gate 6 (Certify & Merge):** Emite o relatorio oficial `gauntlet-report.md`, atualiza o board e realiza o merge deterministico na branch de destino.
+
+#### Como Executar
+
+**A partir de uma issue remota do GitHub:**
+```bash
+trustkit auto --issue 45 --target develop
+```
+
+**A partir de um arquivo local de especificacao:**
+```bash
+trustkit auto --spec docs/specs/minha-feature/spec.md --target develop
+```
+
+**Com runtime explicito e saida JSON para integracao agentica:**
+```bash
+trustkit auto --spec docs/specs/minha-feature/spec.md --target develop --runtime native --json
+```
+
+**Exemplo de Saida Determinista (JSON sem null):**
+```json
+{
+  "verdict": "PASS",
+  "cycle_id": "issue-45-202611051800",
+  "target_branch": "develop",
+  "gates_cleared": [0, 1, 2, 3, 4, 5, 6],
+  "total_waves": 3,
+  "total_tasks": 5
+}
+```
 
 ---
 
@@ -778,3 +1007,6 @@ Para assegurar clareza e alinhamento em toda a comunicacao tecnica, utilize os t
 * **`Git Worktree`:** Arvore de trabalho adicional e independente vinculada ao mesmo repositorio Git, permitindo manter multiplas branches ativas ao mesmo tempo sem alternancia de contexto destrutiva.
 * **`AST (Abstract Syntax Tree)`:** Representacao estruturada em arvore do codigo-fonte utilizada pelo validador Tree-Sitter para verificar assercoes e regras lexicas em microssegundos.
 * **`Modo Agente`:** Formato de execucao do CLI ativado via `--json` que entrega respostas estruturadas sem decoracoes e estritamente livres de campos nulos (`null`).
+* **`Thin Skill`:** Guia instrucional conciso em Markdown que orienta raciocinios de alto nivel e orquestracao no contexto do agente sem inflar tokens nem invalidar o KV-Cache.
+* **`Slash Commands SDD`:** Conjunto de comandos acionaveis (`/sdd-define`, `/sdd-refine`, `/sdd-principles`, `/sdd-planning`, `/sdd-decompose`, `/sdd-discover`, `/sdd-validate`, `/sdd-execute`, `/sdd-resolve`, `/sdd-publish-issues`) que padronizam a conducao das fases conceituais do ciclo SDD.
+* **`Gauntlet Loop V2`:** Bateria de verificacao adversarial multi-agente que audita integridade estatica, TDD, Playwright E2E e analise de seguranca antes do merge.
