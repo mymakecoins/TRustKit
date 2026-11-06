@@ -13,7 +13,8 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_ast::{SpecValidator, WaveExecutionPlanner};
 use trustkit_core::entities::{
-    CriticKind, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict, SpecificationV2,
+    CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
+    SpecificationV2,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::CycleEvidenceRepositoryPort;
@@ -65,14 +66,34 @@ pub fn execute_with_db(
 
     let repo = SqliteWalRepositoryAdapter::open(db_path)?;
     let (now_iso, timestamp_slug) = current_timestamps();
+    let resolved_issue = args.resolved_issue();
+    let resolved_spec = args.resolved_spec();
 
     let active_cycle = match repo.find_active_cycle()? {
-        ActiveCycleLookup::Found(cycle) => *cycle,
+        ActiveCycleLookup::Found(cycle) => {
+            if cycle.lifecycle_status == CycleStatus::Merged {
+                let git_ctx = GitInspector::inspect(repo_dir)?;
+                let board = ProjectBoardSynchronizer::new();
+                let req = InitializeCycleRequest {
+                    issue_param: resolved_issue.clone(),
+                    from_prd: None,
+                    work_branch: git_ctx.work_branch,
+                    base_commit_sha: git_ctx.base_commit_sha,
+                    pre_existing_dirty_files: git_ctx.pre_existing_dirty_files,
+                    now_iso: now_iso.clone(),
+                    timestamp_slug,
+                };
+                let outcome = initialize_cycle::execute(req, &repo, &board)?;
+                outcome.cycle
+            } else {
+                *cycle
+            }
+        }
         ActiveCycleLookup::NoActiveCycle => {
             let git_ctx = GitInspector::inspect(repo_dir)?;
             let board = ProjectBoardSynchronizer::new();
             let req = InitializeCycleRequest {
-                issue_param: args.issue.clone(),
+                issue_param: resolved_issue.clone(),
                 from_prd: None,
                 work_branch: git_ctx.work_branch,
                 base_commit_sha: git_ctx.base_commit_sha,
@@ -88,7 +109,7 @@ pub fn execute_with_db(
     let spec_dir = Path::new(&active_cycle.spec_dir);
     let _ = fs::create_dir_all(spec_dir);
 
-    if let Some(ref source_spec) = args.spec {
+    if let Some(ref source_spec) = resolved_spec {
         let source_path = Path::new(source_spec);
         if source_path.exists() {
             let content = fs::read_to_string(source_path).map_err(|e| {

@@ -59,6 +59,7 @@ fn test_task_001_parse_auto_with_spec_and_custom_options() {
 #[test]
 fn test_task_001_validate_auto_without_issue_or_spec_fails() {
     let auto_args = AutoArgs {
+        target_ref: None,
         issue: None,
         spec: None,
         target: "develop".to_string(),
@@ -68,4 +69,28 @@ fn test_task_001_validate_auto_without_issue_or_spec_fails() {
     };
     let result = auto_args.validate();
     assert!(result.is_err());
+}
+
+#[test]
+fn test_task_005_auto_positional_issue_arg() {
+    let args = vec![
+        "trustkit",
+        "auto",
+        "https://github.com/mymakecoins/TRustKit/issues/7",
+    ];
+    let cli = Cli::try_parse_from(args).expect("Should parse positional auto target");
+    match cli.command {
+        Command::Auto(auto_args) => {
+            assert_eq!(
+                auto_args.target_ref.as_deref(),
+                Some("https://github.com/mymakecoins/TRustKit/issues/7")
+            );
+            assert_eq!(
+                auto_args.resolved_issue().as_deref(),
+                Some("https://github.com/mymakecoins/TRustKit/issues/7")
+            );
+            assert!(auto_args.validate().is_ok());
+        }
+        _ => panic!("Expected Command::Auto"),
+    }
 }

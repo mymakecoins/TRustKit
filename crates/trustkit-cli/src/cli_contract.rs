@@ -254,6 +254,9 @@ pub enum GauntletSubcommand {
 
 #[derive(Args, Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutoArgs {
+    #[arg(help = "Optional positional target: GitHub issue number/link or path to spec")]
+    pub target_ref: Option<String>,
+
     #[arg(long, help = "GitHub issue number, link or ID")]
     pub issue: Option<String>,
 
@@ -286,8 +289,32 @@ pub struct AutoArgs {
 }
 
 impl AutoArgs {
+    pub fn resolved_issue(&self) -> Option<String> {
+        if let Some(ref iss) = self.issue {
+            return Some(iss.clone());
+        }
+        if let Some(ref t) = self.target_ref {
+            if !t.ends_with(".md") && !std::path::Path::new(t).is_file() {
+                return Some(t.clone());
+            }
+        }
+        None
+    }
+
+    pub fn resolved_spec(&self) -> Option<String> {
+        if let Some(ref s) = self.spec {
+            return Some(s.clone());
+        }
+        if let Some(ref t) = self.target_ref {
+            if t.ends_with(".md") || std::path::Path::new(t).is_file() {
+                return Some(t.clone());
+            }
+        }
+        None
+    }
+
     pub fn validate(&self) -> Result<(), DomainViolation> {
-        if self.issue.is_none() && self.spec.is_none() {
+        if self.resolved_issue().is_none() && self.resolved_spec().is_none() {
             return Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "auto_cli".to_string(),
                 details: "Either --issue or --spec must be provided for trustkit auto".to_string(),

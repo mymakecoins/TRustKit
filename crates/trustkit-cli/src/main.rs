@@ -20,15 +20,20 @@ fn main() -> ExitCode {
             ExitCode::from(exit_code as u8)
         }
         Err(clap_err) => {
-            if json_mode {
+            if !clap_err.use_stderr() {
+                print!("{clap_err}");
+                ExitCode::from(0)
+            } else if json_mode {
+                let code = clap_err.exit_code();
                 eprintln!(
-                    "{{\"verdict\":\"FAIL\",\"exit_code\":1,\"violation\":{{\"kind\":\"CLI_PARSE_ERROR\",\"reason\":\"{}\"}}}}",
+                    "{{\"verdict\":\"FAIL\",\"exit_code\":{code},\"violation\":{{\"kind\":\"CLI_PARSE_ERROR\",\"reason\":\"{}\"}}}}",
                     clap_err.to_string().replace('"', "\\\"").replace('\n', " ")
                 );
+                ExitCode::from(code as u8)
             } else {
-                eprintln!("{clap_err}");
+                eprint!("{clap_err}");
+                ExitCode::from(clap_err.exit_code() as u8)
             }
-            ExitCode::from(1)
         }
     }
 }
