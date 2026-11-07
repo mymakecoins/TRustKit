@@ -225,6 +225,7 @@ fn test_parse_init_with_issue() {
         Command::Init(InitArgs {
             issue: Some("45".to_string()),
             from_prd: None,
+            milestone: None,
             json: true
         })
     );
@@ -257,5 +258,70 @@ fn test_parse_hook_pre_tool() {
             assert!(pre_tool.json);
         }
         _ => panic!("Expected hook pre-tool command"),
+    }
+}
+
+#[test]
+fn test_parse_init_with_milestone() {
+    let args = [
+        "trustkit",
+        "init",
+        "--milestone",
+        "docs/milestones/M01-fundacao.md",
+        "--json",
+    ];
+    let cli = Cli::try_parse_from(args).expect("parse should succeed");
+    assert!(cli.is_json_mode());
+    assert_eq!(
+        cli.command,
+        Command::Init(InitArgs {
+            issue: None,
+            from_prd: None,
+            milestone: Some("docs/milestones/M01-fundacao.md".to_string()),
+            json: true,
+        })
+    );
+}
+
+#[test]
+fn test_parse_milestones_plan_list_inspect() {
+    let plan_args = [
+        "trustkit",
+        "milestones",
+        "plan",
+        "--prd",
+        "docs/PRD.md",
+        "--adr",
+        "docs/ADR.md",
+        "--json",
+    ];
+    let cli_plan = Cli::try_parse_from(plan_args).expect("parse milestones plan");
+    assert!(cli_plan.is_json_mode());
+    match cli_plan.command {
+        Command::Milestones(MilestonesArgs {
+            action: MilestonesSubcommand::Plan(args),
+        }) => {
+            assert_eq!(args.prd, "docs/PRD.md");
+            assert_eq!(args.adr, "docs/ADR.md");
+            assert!(args.json);
+        }
+        _ => panic!("Expected milestones plan"),
+    }
+
+    let list_args = ["trustkit", "milestones", "list", "--json"];
+    let cli_list = Cli::try_parse_from(list_args).expect("parse milestones list");
+    assert!(cli_list.is_json_mode());
+
+    let inspect_args = ["trustkit", "milestones", "inspect", "M01", "--json"];
+    let cli_inspect = Cli::try_parse_from(inspect_args).expect("parse milestones inspect");
+    assert!(cli_inspect.is_json_mode());
+    match cli_inspect.command {
+        Command::Milestones(MilestonesArgs {
+            action: MilestonesSubcommand::Inspect(args),
+        }) => {
+            assert_eq!(args.milestone_id, "M01");
+            assert!(args.json);
+        }
+        _ => panic!("Expected milestones inspect"),
     }
 }

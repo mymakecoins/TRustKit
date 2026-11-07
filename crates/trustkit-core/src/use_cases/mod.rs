@@ -14,6 +14,7 @@ pub mod lock_specification;
 pub mod merge_cycle;
 pub mod open_pull_request;
 pub mod plan_execution_waves;
+pub mod plan_milestones;
 pub mod query_cycle_status;
 pub mod record_tdd_phase;
 pub mod review_task_code;

@@ -12,6 +12,7 @@ pub mod gauntlet_entities;
 pub mod graph_entities;
 pub mod invariants_policy;
 pub mod knowledge_entities;
+pub mod milestone_entities;
 pub mod osc7501_encoder;
 pub mod port_dtos;
 pub mod ports;

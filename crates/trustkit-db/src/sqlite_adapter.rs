@@ -7,16 +7,18 @@ use crate::cycle_ops;
 use crate::evidence_ops;
 use crate::knowledge_ops;
 use crate::migrations::initialize_database;
+use crate::milestone_ops;
 use crate::task_ops;
 use rusqlite::Connection;
 use std::path::Path;
 use std::sync::Mutex;
 use trustkit_core::entities::{
     ArtifactSeal, AtomicTask, CycleStatus, ExecutionEvidence, GateStage, KnowledgeDocument,
-    KnowledgeSearchOutcome, KnowledgeSearchQuery, SddCycle, TaskNode, WaveSchedule, WikiLink,
+    KnowledgeSearchOutcome, KnowledgeSearchQuery, Milestone, MilestoneStatus, SddCycle, TaskNode,
+    WaveSchedule, WikiLink,
 };
 use trustkit_core::errors::DomainViolation;
-use trustkit_core::ports::CycleEvidenceRepositoryPort;
+use trustkit_core::ports::{CycleEvidenceRepositoryPort, MilestoneRepositoryPort};
 use trustkit_core::special_cases::{ActiveCycleLookup, TddLifecycleState, WorktreeAllocation};
 
 pub struct SqliteWalRepositoryAdapter {
@@ -216,6 +218,36 @@ impl CycleEvidenceRepositoryPort for SqliteWalRepositoryAdapter {
     ) -> Result<Vec<ExecutionEvidence>, DomainViolation> {
         let conn = self.lock_conn()?;
         evidence_ops::list_certification_evidences(&conn, cycle_id)
+    }
+}
+
+impl MilestoneRepositoryPort for SqliteWalRepositoryAdapter {
+    fn save_milestone(&self, milestone: &Milestone) -> Result<(), DomainViolation> {
+        let conn = self.lock_conn()?;
+        milestone_ops::save_milestone(&conn, milestone)
+    }
+
+    fn find_milestone_by_id(
+        &self,
+        milestone_id: &str,
+    ) -> Result<Option<Milestone>, DomainViolation> {
+        let conn = self.lock_conn()?;
+        milestone_ops::find_milestone_by_id(&conn, milestone_id)
+    }
+
+    fn list_milestones(&self, plan_id: Option<&str>) -> Result<Vec<Milestone>, DomainViolation> {
+        let conn = self.lock_conn()?;
+        milestone_ops::list_milestones(&conn, plan_id)
+    }
+
+    fn update_milestone_status(
+        &self,
+        milestone_id: &str,
+        status: MilestoneStatus,
+        updated_at: &str,
+    ) -> Result<(), DomainViolation> {
+        let conn = self.lock_conn()?;
+        milestone_ops::update_milestone_status(&conn, milestone_id, status, updated_at)
     }
 }
 

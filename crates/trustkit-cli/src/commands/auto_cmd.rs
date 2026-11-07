@@ -77,6 +77,7 @@ pub fn execute_with_db(
                 let req = InitializeCycleRequest {
                     issue_param: resolved_issue.clone(),
                     from_prd: None,
+                    milestone_path: None,
                     work_branch: git_ctx.work_branch,
                     base_commit_sha: git_ctx.base_commit_sha,
                     pre_existing_dirty_files: git_ctx.pre_existing_dirty_files,
@@ -95,6 +96,7 @@ pub fn execute_with_db(
             let req = InitializeCycleRequest {
                 issue_param: resolved_issue.clone(),
                 from_prd: None,
+                milestone_path: None,
                 work_branch: git_ctx.work_branch,
                 base_commit_sha: git_ctx.base_commit_sha,
                 pre_existing_dirty_files: git_ctx.pre_existing_dirty_files,

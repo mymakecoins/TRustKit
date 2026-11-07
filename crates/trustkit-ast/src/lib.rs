@@ -7,6 +7,8 @@ pub mod graph_context_slicer;
 pub mod graph_health_auditor;
 pub mod knowledge_link_extractor;
 pub mod lexical_scanner;
+pub mod milestone_citation;
+pub mod milestone_extractor;
 pub mod prd_ingestor;
 pub mod rust_assertion_counter;
 pub mod rust_graph_extractor;
@@ -25,6 +27,11 @@ pub use context_slicer::AstContextSlicer;
 pub use graph_context_slicer::GraphContextSlicer;
 pub use graph_health_auditor::GraphHealthAuditor;
 pub use lexical_scanner::InvariantLexicalScanner;
+pub use milestone_citation::{
+    CitationValidationResult, CitationValidator, FormattedCitationBlock, MilestoneCitationReport,
+    ParsedCitation,
+};
+pub use milestone_extractor::{ExtractedMarkdownBlock, PrdAdrMilestoneExtractor};
 pub use prd_ingestor::PrdSpecificationIngestor;
 pub use rust_assertion_counter::RustAssertionCounter;
 pub use spec_linter::{SpecLintVerdict, SpecLintViolation, SpecLinter};

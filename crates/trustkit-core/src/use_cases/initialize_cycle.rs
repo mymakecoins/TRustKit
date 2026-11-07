@@ -17,6 +17,7 @@ use crate::special_cases::{
 pub struct InitializeCycleRequest {
     pub issue_param: Option<String>,
     pub from_prd: Option<String>,
+    pub milestone_path: Option<String>,
     pub work_branch: String,
     pub base_commit_sha: String,
     pub pre_existing_dirty_files: Vec<String>,
@@ -69,9 +70,13 @@ pub fn execute(
     };
 
     let spec_dir = format!("docs/specs/{cycle_id}");
-    let spec_file_path = req
-        .from_prd
-        .unwrap_or_else(|| format!("{spec_dir}/spec.md"));
+    let spec_file_path = if let Some(ref m_path) = req.milestone_path {
+        m_path.clone()
+    } else if let Some(ref prd) = req.from_prd {
+        prd.clone()
+    } else {
+        format!("{spec_dir}/spec.md")
+    };
     let cycle = SddCycle {
         cycle_id: cycle_id.clone(),
         issue_linkage: linkage,
@@ -235,6 +240,7 @@ mod tests {
         InitializeCycleRequest {
             issue_param: issue.map(String::from),
             from_prd: prd.map(String::from),
+            milestone_path: None,
             work_branch: branch.to_string(),
             base_commit_sha: "a".repeat(40),
             pre_existing_dirty_files: vec!["dirty.txt".to_string()],
@@ -305,5 +311,20 @@ mod tests {
             res.sync_outcome,
             BoardSyncOutcome::DeferredOffline { .. }
         ));
+    }
+
+    #[test]
+    fn test_init_with_milestone_spec_path() {
+        let repo = FakeRepo(Mutex::new(vec![]), Mutex::new(vec![]));
+        let board = FakeBoard(
+            IdentityVerification::Verified {
+                operator_handle: "operator".into(),
+            },
+            BoardSyncOutcome::SkippedUnlinkedCycle,
+        );
+        let mut req = sample_req(None, None, "develop");
+        req.milestone_path = Some("docs/milestones/M01-fundacao.md".to_string());
+        let res = execute(req, &repo, &board).unwrap();
+        assert_eq!(res.cycle.spec_file_path, "docs/milestones/M01-fundacao.md");
     }
 }

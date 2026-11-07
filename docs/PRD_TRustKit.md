@@ -1,374 +1,427 @@
 # PRD/ERS: TRustKit — Motor Determinístico em Rust para Spec-Driven Development & Gauntlet Loop
 
-**Versão:** 1.1 (Enriquecido com Diretrizes Clean Code — Robert C. Martin)  
-**Data:** Outubro/2026  
-**Autor:** Equipe de Produto & Engenharia (Analista de Requisitos + PM + UX/UI de CLI + QA Sênior)  
-**Status:** Pronto para Desenvolvimento  
+**Versão:** 2.0 (Motor Autônomo, Inteligência AST/Grafo, Memória FTS5 e Governança L4)  
+**Data:** Novembro/2026  
+**Autor:** Equipe Multidisciplinar de Produto & Engenharia (Analista de Requisitos + Gerente de Projetos + UX/UI CLI + QA Sênior + Arquiteto de Software)  
+**Status:** Implementado e Operacional em Produção  
 
 ---
 
 ## 1. Visão do Produto
 
 ### 1.1. Propósito
-Fornecer um motor determinístico de altíssima velocidade compilado nativamente em Rust (`trustkit`) que governa os 7 Gates e as 16 Invariantes do framework **MMC Gauntlet SDD V2**, combinando a fluidez de uma Skill enxuta com validação sintática via AST em microssegundos, isolamento paralelo de agentes em Git Worktrees e auditoria imutável em SQLite WAL.
+Fornecer um motor determinístico de altíssimo desempenho compilado nativamente em Rust (`trustkit`) que governa o ciclo de vida completo do desenvolvimento guiado por especificações (Spec-Driven Development — SDD) e a suíte adversarial multi-agente Gauntlet Loop V2, combinando orquestração autônoma ponta a ponta (`trustkit auto`), inteligência sintática via AST (`tree-sitter`) em microssegundos, isolamento físico de agentes em Git Worktrees com terminais multiplexados (PTY), memória perene indexada em SQLite FTS5 e governança de harness agêntico de maturidade máxima (Nível L4).
 
 ### 1.2. Nome Oficial e Identidade
 * **Nome do Produto:** `TRustKit`
 * **Binário CLI:** `trustkit`
 * **Slogan:** *"True Rust performance for trusted, spec-driven agentic execution."*
+* **Paradigma Central:** *Hybrid Rust Core + Thin Skill* (Skill declarativa ultraleve no contexto do agente + Binário estático nativo para mutações e auditoria).
 
 ### 1.3. Problema que Resolve
-1. **Latência Crítica de Harnesses Tradicionais (Python/Node.js):** Harnesses externos escritos em linguagens interpretadas pagam de `300ms` a `2.000ms` de *cold-start* a cada invocação de subprocesso ou *hook* (`PreToolUse`/`PostToolUse`), além de invalidarem o *Prompt Cache (KV-Cache)* do LLM ao reconstruírem sessões a cada transição de estado.
-2. **Fragilidade Probabilística de Skills Puramente Declarativas (`SKILL.md`):** Embora rápidas por rodarem dentro da sessão quente do agente, skills em Markdown dependem 100% da obediência do LLM ao prompt. O modelo ainda pode alucinar conformidade, enfraquecer asserções de testes (*test dilution*), esquecer linhas na Matriz de Rastreabilidade ou inserir emojis e trailers proibidos (`Co-Authored-By`).
-3. **Desperdício de Tokens e Tempo com Auditorias Mecânicas via LLM:** Acionar subagentes de IA (10s a 40s por turno) apenas para verificar se uma Spec possui blocos Mermaid/Gherkin, se um teste perdeu um `expect()` ou se arquivos fora de escopo foram tocados consome orçamento de tokens e degrada drasticamente o tempo de entrega.
-4. **Colisão na Árvore de Trabalho em Execuções Paralelas:** Quando múltiplos *Builder Subagents* tentam executar tarefas de uma mesma onda simultaneamente na mesma árvore Git, ocorrem condições de corrida, corrupção de índice e sobrescrita de evidências do Playwright.
-5. **Ausência de Prova Criptográfica e Event Sourcing:** Sem um banco de eventos transacional, o lema *"O log de eventos prova"* fica restrito a relatórios em texto que o próprio agente gerador poderia editar manualmente.
+1. **Latência Excessiva e Cold-Start de Runtimes Interpretados:** Harnesses em Python ou Node.js impõem de 300ms a 2.000ms de *cold-start* a cada invocação de subprocesso ou hook (`PreToolUse`/`PostToolUse`), degradando a experiência e invalidando o *Prompt Cache* (KV-Cache) do LLM.
+2. **Fragilidade Probabilística de Skills Exclusivamente Declarativas:** Skills baseadas apenas em prompts Markdown dependem da obediência volátil do modelo, permitindo que agentes pulem etapas do TDD, enfraqueçam asserções de testes (*test dilution*), alucinem conformidade na Matriz de Rastreabilidade ou insiram artefatos proibidos (emojis, trailers de IA).
+3. **Desperdício Massivo de Tokens em Auditorias Mecânicas:** Gastar turnos inteiros de inferência de LLM (10s a 40s) para validar sintaxe Mermaid, blocos Gherkin, remoção de `expect()` ou linting estático consome orçamento e desacelera o time-to-delivery.
+4. **Colisão de Recursos em Execuções Paralelas:** Quando múltiplos subagentes de implementação (*Builders*) operam concorrentemente na mesma árvore de arquivos, ocorrem condições de corrida no índice do Git, corrupção de caches de dependências e sobrescrita de evidências E2E.
+5. **Degradação Conversacional (Conversational Drift):** Sessões longas de chat provocam perda de atenção e desvios de arquitetura. O TRustKit resolve esse problema separando estruturalmente a formulação (The Elephant) da execução e revisão fria descartável (The Goldfish).
+6. **Ausência de Rastreabilidade Criptográfica e Event Sourcing:** Textos e relatórios convencionais podem ser editados pelo próprio agente gerador. O TRustKit impõe a verdade matemática com assinaturas BLAKE3 e log transacional imutável em SQLite WAL.
 
 ### 1.4. Público-Alvo
-* **Engenheiros de Software Sênior & Arquitetos AI-First:** Desenvolvedores que operam fluxos de *Spec-Driven Development* (SDD) e *SDD* em repositórios corporativos e exigem velocidade máxima sem abrir mão de governança rígida.
-* **Agentes Codificadores Hospedeiros (Claude Code, Antigravity, Codex):** Consumidores primários da interface CLI/MCP em modo `--json`, que delegam ao binário `trustkit` toda validação determinística, manipulação de Git/GitHub Projects e despacho de ondas paralelas.
-* **Tech Leaders & QA / Homologadores:** Stakeholders que auditam Pull Requests, relatórios de certificação (`gauntlet-report.md`), comentários de encerramento em issues e matrizes de rastreabilidade ponta a ponta.
+* **Engenheiros de Software Sênior & Arquitetos AI-First:** Desenvolvedores que operam fluxos de SDD em repositórios corporativos de alta criticidade e exigem velocidade máxima sem abdicar de governança estrita.
+* **Agentes Codificadores Autônomos (Claude Code, Antigravity, Codex):** Consumidores primários da interface CLI em modo `--json` e do servidor nativo MCP, que delegam ao binário `trustkit` toda validação mecânica, gestão de worktrees e sincronização de boards.
+* **Tech Leaders & Revisores de Arquitetura:** Stakeholders que auditam Pull Requests, relatórios de certificação (`gauntlet-report.md`) e árvores de rastreabilidade ponta a ponta ($	ext{RN} ightarrow 	ext{RF} ightarrow 	ext{TASK} ightarrow 	ext{E2E} ightarrow 	ext{Screenshot}$).
+* **Especialistas em Segurança de Aplicação (AppSec):** Auditores que utilizam a suíte pré-release de segurança em 6 fases para barrar vulnerabilidades CWE/OWASP antes da integração contínua.
 
 ### 1.5. Proposta de Valor
-O **TRustKit** estabelece a arquitetura **"Hybrid Rust Core + Thin Skill"**: mantém uma Skill declarativa mínima (para preservar o KV-Cache quente e guiar o raciocínio criativo de produto e código) enquanto transfere 100% do controle de estado, auditoria de AST (`tree-sitter`), validação de especificação, isolamento de *Git Worktrees* (`gix`/`git2`) e sincronização com o GitHub Projects v2 para um binário estático em Rust com tempo de inicialização de **1 a 3 milissegundos**.
+O TRustKit entrega uma infraestrutura mecatrônica e determinística em Rust nativo:
+* **Tempo de Inicialização Sub-3ms:** Hooks síncronos e verificações de linter executam sem latência perceptível no terminal.
+* **Auditoria AST Camada 0 em < 5ms:** Barramento instantâneo de trapaças em testes, violações léxicas e quebra de escopo antes de acionar turnos caros de LLM.
+* **Orquestração 100% Autônoma (`trustkit auto`):** Capacidade de receber uma issue remota ou arquivo local e transitar sozinho por todos os 7 gates, despachando waves e executando TDD rigoroso até a certificação final.
+* **Memória Perene de Projeto e Grafo Estrutural:** Recuperação imediata de contexto histórico via FTS5 BM25 e análise topológica de acoplamento diretamente no binário.
 
 ---
 
 ## 2. Contexto Atual
 
 ### 2.1. Processo Atual
-Atualmente, a equipe utiliza as skills declarativas `mmc-gauntlet-sdd` (v2.2.0) e `mmc-gauntlet-sdd-v2` (v3.0.0) compostas exclusivamente por arquivos Markdown (`SKILL.md` e `references/*.md`). O agente principal lê o manual, executa múltiplos comandos sequenciais de shell (`git`, `gh`, `npm`) para descobrir a stack e mover cards no GitHub Projects, redige documentos de especificação e tarefas, despacha subagentes sequencialmente ou em ondas na mesma árvore de diretórios e invoca 4 subagentes críticos (LLM) para inspecionar diffs em busca de violações.
+Historicamente, o desenvolvimento de software assistido por IA oscilava entre a lentidão de frameworks pesados (LangGraph, CrewAI) e a fragilidade de prompts em Markdown. Com o TRustKit V1, os 7 Gates foram consolidados em um binário estático. Agora, no TRustKit V2, o ecossistema evoluiu para maturidade agêntica de nível L4: suporte a execução autônoma headless, independência completa de runtimes externos para especificação, inteligência de grafo de código e memória semântica perene.
 
-### 2.2. Principais Dores
+### 2.2. Principais Dores e Impactos
 
-| Dor | Impacto |
-| :--- | :--- |
-| **Excesso de Turnos de LLM para Tarefas Mecânicas** | Operações como checar conta do GitHub, mover card no GraphQL do GitHub Projects, criar diretórios `docs/specs/<issue-id>-AAAAMMDDHHMM/` e validar templates exigem de 4 a 8 turnos sequenciais de ferramentas (20s a 45s perdidos apenas no Gate 0 e Gate 1). |
-| **Auditoria de Invariantes via Inferência** | Verificar se o Builder comentou um teste, usou `any`, adicionou emojis, usou `raw.githubusercontent.com` ou incluiu `Co-Authored-By` depende de um Crítico LLM ler o diff — lento, caro e sujeito a falsos negativos. |
-| **Conflito de Concorrência nas Ondas TDD (Gate 4)** | Sem isolamento físico de *worktrees* gerenciado por um motor nativo, Builders paralelos disputam o mesmo diretório `node_modules`/`.git/index`, forçando execução semi-sequencial. |
-| **Falta de Trava Criptográfica na Spec (Gate 2)** | O congelamento da Spec no Gate 2 é apenas conceitual; não há validação de hash (`BLAKE3`) em nível de binário que impeça ou detecte instantaneamente alterações não autorizadas na Spec ou em testes pré-existentes. |
-| **Ausência de Verificação Mecânica do Ciclo RED -> GREEN** | O agente Builder é instruído a rodar o teste falhando (RED) antes de implementar (GREEN), mas nenhum mecanismo externo impede que ele escreva o código e o teste juntos e declare conformidade. |
+| Dor Identificada | Impacto no Processo | Como o TRustKit V2 Elimina |
+| :--- | :--- | :--- |
+| **Interrupções manuais frequentes entre Gates** | Desenvolvedor precisa digitar comandos intermediários (`wave run`, `task test`, `gauntlet run`). | Comando unificado `trustkit auto` executa os 7 gates em sequência contínua com circuit breaker defensivo. |
+| **Dependência de ecossistemas externos de prompt/spec** | Necessidade de frameworks externos para gerar esqueletos de especificações. | Subcomandos nativos `trustkit spec prompt` e `trustkit spec lint` com fatiamento de contexto AST e FTS5. |
+| **Amnésia entre sessões de desenvolvimento** | Agentes recém-instanciados repetem erros de arquitetura ou esquecem lições aprendidas. | Módulo `trustkit memory` indexa lições aprendidas, incidentes e specs com busca textual FTS5 BM25 e links wiki. |
+| **Acoplamento oculto e God Nodes no código** | Tarefas paralelas modificam módulos hiper-conectados, gerando conflitos de merge e quebras em cascata. | Módulo `trustkit graph` mapeia dependências estruturais, calcula métricas de acoplamento (Ca/Ce, Instabilidade) e alerta god nodes. |
+| **Vulnerabilidades de segurança introduzidas por IA** | Injeções SQL, caminhos inseguros e permissões frouxas passam despercebidos por linters convencionais. | Módulo `trustkit audit security` audita diffs em 6 fases de segurança defensiva com filtro de confiança >= 8/10. |
+| **Travamento de processos interativos em CI/Headless** | Prompts de terminal bloqueiam aguardando stdin quando executados em pipelines ou subprocessos de agentes. | Tratamento estrito de exit codes (help/version com status 0 no stdout) e resolução não-interativa por política em modo headless. |
 
 ### 2.3. Oportunidades
-* **Zero-Token Gatekeeping (Camada 0 do Gauntlet):** Barrar 90% das violações estruturais, sintáticas e de contrato em `< 5ms` via análise estática nativa (`tree-sitter`) antes de gastar um único token com os 4 Críticos LLM.
-* **Execução Paralela Real por Ondas:** Usar *Git Worktrees* com *Copy-on-Write* (`reflink` em sistemas de arquivos Linux modernos) orquestradas via `tokio` para executar tarefas atômicas simultaneamente com isolamento total.
-* **Context Slicing Cirúrgico via AST:** Extrair apenas os símbolos, tipos e assinaturas relevantes para cada `TASK-NNN.md`, reduzindo o tamanho do prompt enviado aos Builders e acelerando o *Time-To-First-Token (TTFT)*.
-* **Auditoria Imutável em SQLite WAL:** Registrar cada transição de Gate, saída de comando (`Exit Code`), hash de arquivo e parecer de crítico em `.trustkit/state.db`, gerando o `gauntlet-report.md` e o comentário da issue de forma 100% determinística.
+* **Governança Agêntica L4 Autocertificada:** Garantir nota máxima (100%) em avaliações de harness agêntico (`harness-score`), unindo regras de contexto, interceptores síncronos e verificação contínua em CI.
+* **Execução em Swarm com Terminais PTY Reais:** Permitir que agentes builders operem em pseudo-terminais isolados com streaming de logs, socket IPC e controle de timeout individual.
+* **Auditoria de Segurança Integrada ao Ciclo de Release:** Bloquear a promoção de branches caso a análise de segurança identifique riscos de severidade alta/crítica.
 
 ---
 
 ## 3. Usuários e Personas
 
-### 3.1. Persona 1: Engenheiro de Software Sênior / Arquiteto de Sistemas AI-First
-* **Idade:** 36 anos
-* **Experiência:** 14+ anos em engenharia de software, arquitetura distribuída e automação agêntica.
-* **Objetivo:** Entregar funcionalidades complexas com qualidade impecável (TDD estrito, 100% das RNs cobertas, Playwright E2E com evidências visuais) no menor tempo de relógio possível.
-* **Dor Principal:** Harnesses tradicionais são lentos e burocráticos, enquanto skills puras em Markdown exigem vigilância constante para evitar que o modelo pule etapas ou viole invariantes.
-* **Necessidade:** Um binário CLI ultrarrápido (`trustkit`) que funcione em simbiose com uma Skill enxuta, impondo todas as regras de governança automaticamente em milissegundos.
+### 3.1. Persona 1: Engenheiro de Software Sênior / Arquiteto AI-First
+* **Idade:** 36 anos | **Experiência:** 14+ anos em sistemas distribuídos e engenharia de software.
+* **Objetivo:** Orquestrar agentes autônomos para construir features complexas mantendo TDD estrito e zero degradação de arquitetura.
+* **Dor Principal:** Ter que policiar manualmente agentes que esquecem de rodar testes em falha (RED) ou alteram testes existentes para forçar aprovação.
+* **Necessidade:** Um motor mecânico que bloqueie mutações inválidas em tempo de compilação e exija comprovação matemática de cada fase do ciclo.
 
-### 3.2. Persona 2: Agente Orquestrador Hospedeiro (Claude Code / Antigravity / Codex)
-* **Idade:** N/A (Agente de IA)
-* **Experiência:** Opera com janela de contexto limitada e custo proporcional ao volume de tokens lidos/gerados.
-* **Objetivo:** Cumprir os 7 Gates sem erros de ferramenta, sem poluir a janela de contexto com logs verbosos e sem desperdiçar turnos com operações repetitivas.
-* **Dor Principal:** Receber saídas de terminal gigantescas (milhares de linhas de stacktrace ou JSON bruto do GitHub) que degradam sua atenção e consomem o KV-Cache.
-* **Necessidade:** Subcomandos determinísticos (`trustkit init --json`, `trustkit gauntlet ast-audit --json`) que retornem payloads JSON enxutos, acionáveis, sem valores nulos (`null`) e com códigos de saída semânticos.
+### 3.2. Persona 2: Agente Orquestrador Hospedeiro (Claude Code, Antigravity, Cursor)
+* **Idade:** N/A (Agente de IA) | **Experiência:** Opera com janelas de contexto limitadas e sensíveis a ruído.
+* **Objetivo:** Percorrer a jornada dos 7 gates com economia máxima de tokens, sem alucinar passos e sem ser bloqueado por interfaces interativas.
+* **Dor Principal:** Receber stacktraces gigantescos ou payloads JSON contendo campos `null` e dados redundantes que poluem o KV-Cache.
+* **Necessidade:** Modos de saída puramente determinísticos (`--json`), códigos de saída POSIX semânticos e ferramentas MCP de alta granularidade.
 
-### 3.3. Persona 3: Tech Leader & Revisor de Arquitetura
-* **Idade:** 38 anos
-* **Experiência:** 15 anos em liderança técnica e governança de engenharia.
-* **Objetivo:** Revisar Pull Requests com confiança absoluta de que as Regras de Negócio (`RN`), os Contratos, os testes E2E e o quadro do GitHub Projects foram respeitados sem atalhos.
-* **Dor Principal:** Revisar código gerado por IA onde os testes foram sutilmente ajustados para passar ou onde falta rastreabilidade clara entre a regra de negócio e a tela testada.
-* **Necessidade:** Relatórios de certificação gerados a partir de um Event Log imutável, com Matriz de Rastreabilidade Ponta a Ponta ($\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E} \rightarrow \text{Screenshot}$) e garantia anti-cheat verificada por AST.
+### 3.3. Persona 3: Tech Leader & Revisor de Governança
+* **Idade:** 38 anos | **Experiência:** 15 anos em liderança técnica e qualidade corporativa.
+* **Objetivo:** Aprovar Pull Requests com velocidade sabendo que as Regras de Negócio e contratos foram 100% verificados.
+* **Dor Principal:** Diffs densos gerados por IA onde a intenção do requisito original se perdeu na implementação.
+* **Necessidade:** Relatórios oficiais imutáveis (`gauntlet-report.md`) gerados diretamente do banco de eventos, com links auditáveis para cada evidência.
+
+### 3.4. Persona 4: Especialista em Segurança de Aplicação (AppSec)
+* **Idade:** 34 anos | **Experiência:** 10 anos em testes de invasão e auditoria de código seguro.
+* **Objetivo:** Impedir que códigos gerados por IA introduzam vulnerabilidades OWASP ou quebrem o princípio do menor privilégio.
+* **Dor Principal:** Linters de segurança geram excesso de falsos positivos ou exigem varreduras lentas fora da esteira do desenvolvedor.
+* **Necessidade:** Portões de segurança nativos rápidos que avaliem o diff da branch contra vetores conhecidos de ataque com alta precisão.
 
 ---
 
-## 4. Jornada do Usuário (e Ergonomia de CLI)
+## 4. Jornada do Usuário
 
-### 4.1. Jornada Atual (Com Skill Pura em Markdown)
+### 4.1. Jornada Manual Supervisionada (7 Gates Tradicionais)
 ```text
-1. Dev invoca `/mmc-gauntlet-sdd-v2 auto https://github.com/org/repo/issues/45 --from-prd docs/PRD.md`.
-2. O LLM lê 420 linhas do SKILL.md + templates em references/.
-3. O LLM executa 5 a 7 comandos shell separados (`gh auth status`, `git status`, queries GraphQL `gh api` para achar o card no Projects e movê-lo para "In progress"). [~25s]
-4. O LLM redige a Spec V2 e as Tasks TASK-NNN.md manualmente. Se esquecer uma coluna na Matriz de Rastreabilidade, ninguém percebe até o Gate 5.
-5. Os Builders rodam na mesma árvore Git (risco de conflito) e o LLM avalia o próprio ciclo TDD.
-6. No Gate 5, 4 subagentes LLM são invocados para ler diffs procurando emojis, adulteração de testes e falhas de contrato. [~60s-120s]
-7. O LLM monta manualmente o relatório e posta o comentário na issue.
+1. Inicialização (Gate 0):
+   trustkit init --issue 45 [--from-prd docs/PRD.md] --json
+   -> Valida ambiente, branches, conta GitHub e registra ciclo no SQLite WAL em < 250ms.
+
+2. Especificação e Linting (Gate 1):
+   trustkit spec prompt --idea "Feature de Conciliação" --json
+   trustkit spec lint --file specs/010-feature/spec.md --json
+   -> Valida Product Trio, Gherkin, Mermaid e Matriz de Rastreabilidade.
+
+3. Congelamento Criptográfico (Gate 2):
+   trustkit spec lock --json
+   -> Sela o arquivo com hash BLAKE3 e captura nós de asserção AST dos testes existentes.
+
+4. Planejamento Topológico de Ondas (Gate 3):
+   trustkit wave plan --json
+   -> Petgraph constrói o DAG de tarefas atomicas, detecta ciclos e previne colisões de arquivos.
+
+5. Execução em Worktrees e TDD Supervisionado (Gate 4):
+   trustkit wave run --wave 1 --runtime pty --json
+   trustkit task test TASK-001 --phase red --json
+   trustkit task test TASK-001 --phase green --json
+   trustkit task review TASK-001 --effort MEDIUM --json
+   trustkit task complete TASK-001 --json
+
+6. Certificação Gauntlet Loop V2 (Gate 5):
+   trustkit gauntlet ast-audit --json      # Camada 0: AST nativa < 5ms (Zero Tokens)
+   trustkit audit security --strict --json # Auditoria global de segurança em 6 fases
+   trustkit gauntlet run --json            # Camada 1: Parallel Swarm de Críticos + Playwright
+
+7. Finalização e Integração (Gate 6):
+   trustkit done --json                    # Renderiza gauntlet-report.md e publica comentário
+   trustkit merge --target develop         # Transiciona card para Await Staging
+   trustkit pr --json                      # Opcional: abre PR exclusivamente sob demanda
 ```
 
-### 4.2. Jornada Futura (Com o TRustKit — Hybrid Rust Core + Thin Skill)
+### 4.2. Jornada Autônoma Ponta a Ponta (`trustkit auto`)
 ```text
-1. Dev invoca `/trustkit auto https://github.com/org/repo/issues/45 --from-prd docs/PRD.md`.
-2. A Thin Skill executa `trustkit init --issue 45 --from-prd docs/PRD.md --json`.
-   -> Em < 180ms (I/O de rede concorrente em Rust): valida conta GitHub ativa, checa árvore Git, cria `docs/specs/issue-45-AAAAMMDDHHMM/`, move card no GitHub Projects para `In progress`, pré-processa o PRD upstream e abre a sessão no `.trustkit/state.db`.
-3. O Agente preenche a Spec V2 e roda `trustkit spec lock`.
-   -> Em 2ms: o Rust valida a presença do flowchart Mermaid, a sintaxe dos blocos Gherkin, o fechamento matemático da Matriz (RN -> RF -> TASK -> E2E) e grava o hash BLAKE3 da Spec congelada no SQLite.
-4. O Agente gera as tarefas e roda `trustkit wave plan`.
-   -> Em 1ms: o Rust valida o grafo acíclico (DAG) de dependências e organiza as Ondas de Execução.
-5. O Agente dispara `trustkit wave run --wave 1`.
-   -> O Rust cria Git Worktrees efêmeras via CoW, fatia o contexto via AST (`tree-sitter`), despacha os Builders headless em paralelo (`tokio`), exige prova de falha (RED) seguida de sucesso (GREEN) no SQLite e faz o merge limpo na branch de trabalho da feature (`feat/45/...`).
-6. O Agente dispara `trustkit gauntlet run`.
-   -> Camada 0 (Rust Nativo, < 5ms): Audita AST contra test-cheating, `any`, emojis, `Co-Authored-By`, `raw.githubusercontent` e Spec Tamper. Se falhar, aborta em 5ms com diagnóstico exato sem gastar tokens!
-   -> Camada 1 (Parallel Swarm + Playwright): Dispara lint/build, Playwright E2E (restaurando screenshots de outras issues automaticamente) e os Críticos LLM de Domínio/Contrato em paralelo.
-7. Com 100% PASS, `trustkit done` compila `gauntlet-report.md` a partir do Event Log imutável, faz commit das evidências e publica o comentário oficial na issue com Matriz de Rastreabilidade e imagens autenticadas.
+1. Disparo Único pelo Desenvolvedor ou Agente:
+   trustkit auto --issue 45 [--target develop] [--runtime auto] --json
+   (ou via arquivo local: trustkit auto --spec docs/specs/010-feature/spec.md)
+
+2. Execução Autônoma pelo Motor:
+   - Inicializa sessão e valida árvore Git limpa (Gate 0).
+   - Audita especificação via spec lint nativo (Gate 1).
+   - Aplica selo BLAKE3 congelando a especificação (Gate 2).
+   - Gera o grafo DAG e organiza as ondas de execução (Gate 3).
+   - Para cada onda (1..N): provisiona worktrees, orquestra builders, exige prova RED antes de GREEN,
+     executa revisão semântica de diff e faz merge na branch de trabalho (Gate 4).
+   - Executa Camada 0 AST e dispara críticos do Gauntlet V2 (Gate 5).
+     * Se falhar: realimenta os builders (até 5 tentativas; aciona Circuit Breaker na 5ª).
+     * Se passar: prossegue para certificação.
+   - Gera gauntlet-report.md imutável a partir do log SQLite e realiza o merge final (Gate 6).
+
+3. Conclusão:
+   Relatório emitido no terminal e branch pronta para homologação sem intervenção manual intermediária.
 ```
 
 ### 4.3. Diretrizes de UX/UI para CLI Ultraleve (Dual-Audience Design)
-O `trustkit` **não possui interface TUI nem servidor Web**, concentrando 100% da ergonomia em uma CLI ultraleve com dois modos de saída:
-* **Modo Agente (`--json` ou detecção automática via `TRUSTKIT_AGENT_MODE=1`):** Saída JSON estritamente tipada, minificada, sem códigos ANSI e **sem campos `null`** (utilizando objetos de Caso Especial e listas vazias `[]`), projetada para ocupar o mínimo de tokens na janela de contexto do LLM.
-* **Modo Humano (TTY padrão):** Saída limpa em `stdout`/`stderr`, puramente textual e estruturada (respeitando a **Invariante #7 de proibição estrita de emojis e ícones gráficos**), usando alinhamento tabular ASCII e prefixos formais `[PASS]`, `[FAIL]`, `[GATE-0]..[GATE-6]`.
+* **Modo Agente (`--json`):** Saída minificada, estritamente tipada, livre de códigos de escape ANSI e **livre de valores `null`** (uso de Objetos de Caso Especial e arrays vazios `[]`), minimizando consumo de tokens.
+* **Modo Humano (TTY Padrão):** Saída estruturada em tabelas ASCII, com status claros `[PASS]`, `[FAIL]`, `[WARN]`, `[GATE-N]`, sem emojis ou caracteres gráficos extravagantes, garantindo legibilidade corporativa.
+* **Compatibilidade Headless:** Detecção automática de ausência de TTY (`atty::isnt`) para suprimir prompts interativos, adotando comportamentos seguros por política padrão.
 
 ---
 
-## 5. Escopo do MVP
+## 5. Escopo do Produto (Funcionalidades Implementadas V1 & V2)
 
 ### 5.1. Itens no Escopo
-#### 5.1.1. Core de Domínio & Repositório de Eventos (`trustkit-core` & `trustkit-db`)
-* Máquina de estados determinística dos **7 Gates** (`Gate 0` a `Gate 6` + etapas de Comentário, Decisão de Merge e PR sob demanda).
-* Repositório transacional **SQLite Embarcado em modo WAL** (`.trustkit/state.db`) para *Event Sourcing* imutável, controle do *Circuit Breaker* (limite de 5 loops), assinaturas `BLAKE3` de arquivos congelados e auditoria de ciclos `RED -> GREEN -> REFACTOR`.
-* Detecção nativa e suporte completo ao **Modo SDD Estruturado** (`.specify/memory/constitution.md`, `specs/<NNN>-<nome>/spec.md`, `plan.md`, `tasks.md`).
+#### 5.1.1. Core de Domínio, FSM de Gates & Repositório SQLite WAL (`trustkit-core` & `trustkit-db`)
+* Máquina de estados determinística dos 7 Gates com padrão *Typestate* em Rust puro (`std` only).
+* Banco embarcado SQLite 3 em modo WAL com 10 tabelas relacionais e 100% de colunas com restrição `NOT NULL`.
+* Controle do disjuntor de segurança (*Circuit Breaker*) limitando loops de correção a no máximo 5 tentativas.
+* Registro em log de eventos transacional (*Event Sourcing*) com hashes BLAKE3 de cada evidência de comando.
 
-#### 5.1.2. Ingestor Upstream, Validador de Spec V2 & Planejador de Ondas (`trustkit-spec`)
-* Ingestor `--from-prd <path>` que extrai Regras de Negócio (`RN`), Requisitos Funcionais (`RF`), entidades e jornadas de documentos PRD/ADR em Markdown, gerando o esqueleto pré-populado da Spec V2.
-* Validador estrutural instantâneo da Spec V2: verifica seções obrigatórias do Product Trio, sintaxe do diagrama Mermaid (`flowchart LR`), blocos formais Gherkin (`Dado / Quando / Então / E`) e integridade referencial da Matriz de Rastreabilidade ($\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E} \rightarrow \text{Screenshot}$).
-* Planejador de Ondas (`WaveExecutionPlanner`): valida tarefas atômicas (`TASK-NNN.md` e `INDEX.md`) com construção de Grafo Acíclico Direcionado (DAG) para cálculo determinístico das Ondas de Paralelismo.
+#### 5.1.2. Especificação Nativa, Spec Lint & Validador de DAG (`trustkit-spec` & `trustkit-ast`)
+* Subcomando `trustkit spec prompt`: montagem nativa de prompts com retroalimentação de contexto via AST e busca FTS5.
+* Subcomando `trustkit spec lint`: validador estático (< 3ms) de seções do Product Trio, sintaxe Mermaid, blocos Gherkin e integridade da Matriz de Rastreabilidade.
+* Subcomando `trustkit spec lock`: congelamento criptográfico da especificação via selo BLAKE3.
+* Validador topológico via `petgraph` com detecção de ciclos e agrupamento em ondas independentes.
 
-#### 5.1.3. Auditor Sintático via AST & Context Slicer (`trustkit-ast`)
-* Motor baseado em `tree-sitter` (suportando TypeScript/TSX, JavaScript, Python, Rust, SQL e Go) que executa a **Camada 0 do Gauntlet** em `< 5ms`:
-  * **Auditor de Integridade de Testes (`TestIntegrityAuditor` — Invariante #4):** Compara a AST dos arquivos de teste antes e depois do Builder; bloqueia se asserções (`expect`, `assert`, `assert_eq!`) foram removidas/enfraquecidas ou se modificadores `.skip` / `.only` / `@ignore` foram introduzidos.
-  * **Scanner de Invariantes Léxicos (`InvariantLexicalScanner`):** Bloqueia emojis/ícones Unicode em qualquer artefato/commit (Invariante #7), links `raw.githubusercontent.com` (Invariante #8), atribuições a IA como `Co-Authored-By: Claude` (Invariante #13) e uso não autorizado de `any` ou `@ts-ignore`.
-  * **Fatiador de Contexto (`AstContextSlicer`):** Extrai assinaturas de tipos, interfaces e funções públicas dos arquivos-alvo de uma `TASK-NNN` para enxugar o prompt enviado aos subagentes.
+#### 5.1.3. Auditoria Sintática AST Camada 0 & Context Slicer (`trustkit-ast`)
+* Motor Tree-sitter estático (suportando Rust, TypeScript, TSX, Python, Go e SQL):
+  * `TestIntegrityAuditor`: fiscaliza remoção de asserções (`expect`, `assert`, `assert_eq!`) e anotações `@ignore` / `.skip`.
+  * `InvariantLexicalScanner`: bloqueia emojis, trailers de autoria IA (`Co-Authored-By`), URLs `raw.githubusercontent` e `any`/`@ts-ignore`.
+  * `AstContextSlicer`: fatiamento cirúrgico de código extraindo assinaturas públicas e contratos para reduzir o consumo de tokens dos builders.
 
-#### 5.1.4. Isolador de Worktrees & Despachante de Agentes (`trustkit-orch`)
-* Provisor de **Git Worktrees efêmeras** (`WorktreeIsolationProvider` em `.trustkit/worktrees/task-NNN`) com suporte a cópia rápida e isolamento de execução por onda.
-* Despachante assíncrono (`tokio`) capaz de operar em **Modo Híbrido**:
-  * Expor ferramentas via **MCP (Model Context Protocol)** sobre `stdio` e subcomandos CLI para uma *Thin Skill* hospedeira.
-  * Despachar processos de agentes headless (`claude -p`, `codex exec`, ou comando customizado via config) em paralelo para executar as tarefas de uma Onda TDD (Gate 4) ou o Swarm de 4 Críticos Independentes (Gate 5).
-* Guardião de Evidências Visuais do Playwright (`VisualEvidenceGuard`): verifica a gravação das capturas de tela em `docs/specs/<issue-id>-AAAAMMDDHHMM/tests/evidence/` e **restaura automaticamente** via Git qualquer screenshot de outra issue que tenha sido regravada durante a bateria E2E (Invariante #8).
+#### 5.1.4. Isolador de Git Worktrees & Multiplexador PTY (`trustkit-orch`)
+* Provedor de worktrees efêmeras (`.trustkit/worktrees/TASK-NNN`) com compartilhamento reflink CoW e symlinks automáticos de pastas pesadas (`node_modules`, `target`).
+* Multiplexador de terminais virtuais (`pty-process`) para despacho concorrente de subagentes com streaming assíncrono e controle de I/O em tempo real.
+* Fiscalizador `TddPhaseGuard` exigindo prova física da fase RED (`Exit Code != 0`) antes de aceitar a fase GREEN (`Exit Code == 0`).
 
-#### 5.1.5. Sincronizador Git & GitHub Projects v2 (`trustkit-gh`)
-* Guardião de Identidade GitHub (`GitHubIdentityGuard`): verifica conta ativa autenticada no `gh` (ou perfil configurado via `TRUSTKIT_GITHUB_USER`) antes de qualquer operação de rede (Invariante #14).
-* Sincronizador do Quadro GitHub Projects v2 (`ProjectBoardSynchronizer`): movimentação de cards nas **9 Colunas Oficiais**, criação de issues tipadas pelo campo nativo `Type` (sem sub-issues de tarefa — Invariante #15), publicação do comentário de encerramento e abertura de Pull Request exclusivamente sob demanda (`trustkit pr`).
+#### 5.1.5. Memória Perene de Projeto & Busca FTS5 (`trustkit-db` & `trustkit-cli`)
+* Tabela virtual SQLite FTS5 (`knowledge_pages_fts`) com tokenizer Porter e BM25 ranking.
+* Gestão de links wiki bidirecionais (`knowledge_wiki_links`) com resolução automática de referências `[[slug]]`.
+* Subcomandos `trustkit memory index`, `trustkit memory search`, `trustkit memory show` e `trustkit memory link`.
 
-#### 5.1.6. Interceptador de Hooks de Ciclo de Vida (`trustkit hook`)
-* Subcomandos `trustkit hook pre-tool` e `trustkit hook post-tool` com tempo de execução `< 3ms` para bloquear em tempo real comandos proibidos pelo agente hospedeiro (`git stash`, `git add .`, `git add -A`, `git reset --hard`, commit direto em `main`/`staging`/`develop` sem flag de autorização explícita, ou `gh pr create` sem comando explícito do usuário).
+#### 5.1.6. Inteligência de Grafo Estrutural (`trustkit-ast` & `trustkit-db`)
+* Extração de nós e arestas arquiteturais a partir do código-fonte via Tree-sitter.
+* Persistência do grafo relacional (`structural_graph_nodes`, `structural_graph_edges`, `structural_graph_manifests`).
+* Análise de saúde topológica: identificação de *God Nodes* (grau de acoplamento excessivo), cálculo de acoplamento eferente/aferente (Ce/Ca) e instabilidade de Martin ($I = Ce / (Ca + Ce)$).
+* Subcomandos `trustkit graph build`, `trustkit graph query`, `trustkit graph god-nodes` e `trustkit graph coupling`.
 
-### 5.2. Itens Fora do Escopo (V2 ou Futuro)
-* Interface gráfica TUI (`ratatui`) ou Dashboard Web local (`axum`).
-* Gerenciamento de faturamento direto de chaves de API de provedores de LLM.
-* Criação de sub-issues no GitHub para tarefas atômicas (expressamente proibido pela Invariante #15).
-* Abertura automática de Pull Requests ao fim do Gate 6 (expressamente proibido pela Invariante #12; PR é sempre sob demanda).
+#### 5.1.7. Revisão Semântica & Portões de Segurança Pré-Release (`trustkit-orch` & `trustkit-cli`)
+* Subcomando `trustkit task review`: auditoria semântica de diffs no Gate 4 Refactor com níveis de esforço (`LOW`, `MEDIUM`, `HIGH`).
+* Subcomando `trustkit audit security`: auditoria defensiva em 6 fases com categorização CWE/OWASP e filtro de confiança de criticidade (threshold >= 8/10).
+
+#### 5.1.8. Motor Autônomo de Ponta a Ponta (`trustkit auto`)
+* Subcomando `trustkit auto`: orquestração completa e desatendida percorrendo os Gates 0 a 6.
+* Suporte nativo a issues remotas do GitHub (`--issue <id|url>`) ou arquivos locais de especificação (`--spec <path>`).
+* Execução headless à prova de bloqueios interativos e tratamento estrito de exit codes em chamadas informativas (`--help`, `--version` com código 0 no stdout).
+
+#### 5.1.9. Sincronizador Git & GitHub Projects v2 (`trustkit-gh`)
+* Verificação estrita de identidade ativa no GitHub (`gh auth status`).
+* Transição de cards nas 9 colunas oficiais do GitHub Projects v2.
+* Abertura de Pull Request exclusivamente sob demanda explícita do desenvolvedor (`trustkit pr`).
+
+#### 5.1.10. Interceptador de Hooks de Ciclo de Vida (`trustkit hook`)
+* Subcomandos `trustkit hook pre-tool` e `trustkit hook post-tool` com cold-start < 3ms para bloquear comandos destrutivos (`git stash`, `git reset --hard`, commits diretos em branches protegidas).
+
+#### 5.1.11. Agentic Harness & Governança L4 (100% no harness-score)
+* Conjunto integrado de regras e personas em `.claude/` (`rules/`, `agents/`, `commands/`).
+* Scaffolding de contexto centralizado em `AGENTS.md`.
+* Validações contínuas via `clippy.toml`, `.pre-commit-config.yaml` e `.github/workflows/ci.yml`.
+
+#### 5.1.12. Planejamento de Marcos a partir de PRD e ADR (`trustkit milestones`)
+* Subcomando `trustkit milestones plan`: extração estática combinada de PRD e ADR via AST, mapeamento de capacidades de negócio e restrições técnicas, decomposição em DAG acíclico, geração de artefatos Markdown individuais em `docs/milestones/MNN.md` com citação exata de linhas (`#LXX-LYY`) e persistência transacional em SQLite WAL.
+* Subcomando `trustkit milestones list`: listagem ordenada de marcos, dependências topológicas e status.
+* Subcomando `trustkit milestones inspect`: inspeção detalhada de metadados, capacidades e citações de um marco.
+* Integração com `trustkit init --milestone`: inicialização direcionada de ciclos SDD a partir do marco planejado.
+
+### 5.2. Itens Fora do Escopo (V2)
+* Interface gráfica TUI complexa (`ratatui`) ou Dashboard Web local — o foco permanece 100% na eficiência de terminal e MCP.
+* Cobrança ou gestão direta de saldo/chaves de API de provedores de LLM.
+* Criação de sub-issues no GitHub para tarefas atômicas (proibido pela Invariante Constitucional #15).
+* Abertura automática de Pull Request ao término do ciclo (proibido pela Invariante Constitucional #12).
 
 ---
 
-## 6. Requisitos Funcionais (Especificação BDD Executável — Build / Operate / Check)
-
-> **Diretriz Clean Code (Capítulos 1 e 9):** Todos os requisitos funcionais abaixo seguem estritamente a estrutura *Given / When / Then* (`Dado / Quando / Então`), contemplando tanto o caminho nominal quanto os cenários de falha determinística e ausência de dados (*Special Cases*).
+## 6. Requisitos Funcionais (Especificação BDD Executável)
 
 | ID | Requisito de Domínio | Critérios de Aceite Executáveis (BDD — Dado / Quando / Então) |
 | :--- | :--- | :--- |
-| **RF-001** | **Inicialização Concorrente e Sincronização de Board (`Gate 0`)** | **Cenário 1.1 (Com Issue Vinculada):** **Dado** que o repositório possui árvore Git acessível e o desenvolvedor executa `trustkit init --issue 45`, **quando** o comando inicia, **então** o binário valida a conta GitHub ativa, preserva arquivos sujos pré-existentes na lista `PreExistingDirtyFiles` (sem executar `git stash`), move o card `#45` para `In progress`, cria `docs/specs/issue-45-AAAAMMDDHHMM/` e registra o ciclo `SddCycle` no SQLite com `Exit Code: 0` em `< 250ms`.<br>**Cenário 1.2 (Caso Especial Sem Issue):** **Dado** que `trustkit init` é invocado sem argumento `--issue` e fora de uma branch de feature (`feat/<id>-...`), **quando** o comando inicia, **então** o binário instancia o Caso Especial `IssueTarget::UnlinkedCycle`, cria o diretório `docs/specs/no-issue-AAAAMMDDHHMM/`, não move nenhum card no GitHub Projects e solicita confirmação explícita ao usuário. |
-| **RF-002** | **Ingestão Upstream de PRD/ADR (`Gate 0a`)** | **Cenário 2.1 (PRD Válido):** **Dado** um arquivo PRD/ADR contendo tabelas de `RN` e `RF`, **quando** `trustkit spec init --from-prd docs/PRD.md` é executado, **então** o ingestor gera `<topico>-spec.md` com as seções do Product Trio, Gherkin e Matriz de Rastreabilidade pré-populadas.<br>**Cenário 2.2 (Arquivo PRD Ausente ou Malformado):** **Dado** que o caminho informado em `--from-prd` não existe ou não contém tabelas `RN`/`RF`, **quando** o comando é executado, **então** o binário aborta com `Exit Code: 2` (`SpecIngestionError::MissingBusinessRules`), sem criar arquivo parcial em disco. |
-| **RF-003** | **Validação e Congelamento Criptográfico da Spec V2 (`Gate 1 & Gate 2`)** | **Cenário 3.1 (Spec Completa):** **Dado** um arquivo `<topico>-spec.md` contendo diagrama Mermaid `flowchart LR`, critérios em Gherkin e Matriz $\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E} \rightarrow \text{Screenshot}$ 100% fechada, **quando** `trustkit spec lock` é executado, **então** o binário grava o estado `SpecLockState::Frozen { blake3_digest }` no SQLite em `< 5ms` e avança para `GATE_2_LOCKED`.<br>**Cenário 3.2 (Regra de Negócio Órfã na Matriz):** **Dado** uma Spec onde a `RN-002` não possui `TASK` ou `Screenshot` correspondente na Matriz de Rastreabilidade, **quando** `trustkit spec lock` é executado, **então** o binário rejeita o congelamento (`Exit Code: 3`) e retorna o objeto `TraceabilityGap { orphan_rule: "RN-002" }`. |
-| **RF-004** | **Planejamento de Ondas via DAG (`Gate 3`)** | **Cenário 4.1 (Grafo Acíclico Válido):** **Dado** um conjunto de arquivos `TASK-NNN.md` sem dependências circulares, **quando** `trustkit wave plan` é executado, **então** o planejador retorna a estrutura `WaveSchedule` dividida em ondas topológicas e separa automaticamente em ondas distintas quaisquer tarefas que declarem tocar o mesmo arquivo.<br>**Cenário 4.2 (Dependência Circular Detectada):** **Dado** que `TASK-001` depende de `TASK-002` e `TASK-002` depende de `TASK-001`, **quando** `trustkit wave plan` é executado, **então** o planejador aborta em `< 2ms` com `DagValidationError::CycleDetected { cycle_path: ["TASK-001", "TASK-002"] }`. |
-| **RF-005** | **Fiscalização Determinística do Ciclo TDD (`Gate 4`)** | **Cenário 5.1 (Ciclo RED -> GREEN Válido):** **Dado** que o Builder registrou uma execução `trustkit task test TASK-001 --phase red` com falha comprovada (`Exit Code != 0`) e posteriormente uma execução `--phase green` passando (`Exit Code == 0`), **quando** `trustkit task complete TASK-001` é invocado, **então** a tarefa transiciona para `TddLifecycleState::GreenVerified`.<br>**Cenário 5.2 (Violação de Ordem TDD — Sem Fase RED):** **Dado** que o Builder tenta executar `--phase green` ou `task complete` sem registro prévio de `TddLifecycleState::RedVerified` no SQLite, **quando** o comando é chamado, **então** o binário bloqueia a transição com `TddViolationError::MissingRedPhaseProof`. |
-| **RF-006** | **Isolamento e Merge de Worktrees por Onda (`Gate 4`)** | **Dado** uma onda contendo $N$ tarefas independentes, **quando** `trustkit wave run --wave <W>` é disparado, **então** o `WorktreeIsolationProvider` instancia $N$ worktrees efêmeras em `.trustkit/worktrees/`, executa os Builders em paralelo via `tokio`, valida os commits no padrão `<type>: #<id> <descricao em pt-BR>` e realiza o merge determinístico na branch de trabalho (`feat/<id>-<slug>`). |
-| **RF-007** | **Auditoria AST Anti-Cheat e Invariantes — Camada 0 (`Gate 5`)** | **Cenário 7.1 (Código Limpo e Íntegro):** **Dado** que o diff da branch não alterou a Spec congelada, manteve todas as asserções pré-existentes intactas e não introduziu emojis, `any` ou trailers de IA, **quando** `trustkit gauntlet ast-audit` é executado, **então** retorna o Caso Especial `AstAuditVerdict::CleanPass { violations: [] }` em `< 5ms`.<br>**Cenário 7.2 (Detecção de Test Dilution / Anti-Cheat):** **Dado** que um Builder comentou um `expect()` ou adicionou `.skip` em um teste listado em `artifact_locks`, **quando** `trustkit gauntlet ast-audit` é executado, **então** retorna `AstAuditVerdict::Rejected` com `TestIntegrityViolation { file, line, removed_assertions }` e `Exit Code: 4`, impedindo o disparo dos Críticos LLM. |
-| **RF-008** | **Orquestração do Swarm de Críticos e Playwright E2E — Camada 1 (`Gate 5`)** | **Dado** que a Camada 0 retornou `CleanPass`, **quando** `trustkit gauntlet run` inicia a Camada 1, **então** o motor dispara concorrentemente os 4 Críticos (Adversarial de Domínio/Técnico, Contrato, Estático/Build e E2E Playwright), confirma a gravação das screenshots da Jornada Mermaid em `docs/specs/<issue-id>-AAAAMMDDHHMM/tests/evidence/` e executa `git checkout --` em qualquer screenshot de outra issue tocada durante a bateria. |
-| **RF-009** | **Disjuntor de Segurança / Circuit Breaker (`Gate 5`)** | **Dado** que o ciclo acumulou 4 reprovações no Gauntlet, **quando** a 5ª iteração consecutiva resulta em `FAIL`, **então** o motor transiciona o ciclo para `CycleStatus::CircuitBreakerTripped`, bloqueia novas execuções de `wave run` ou `gauntlet run` e gera automaticamente o relatório de diagnóstico (`trustkit doctor`). |
-| **RF-010** | **Certificação Imutável e Comentário na Issue (`Gate 6`)** | **Dado** que a Camada 0, os 4 Críticos, o lint/build e o Playwright E2E possuem eventos `PASS` (`Exit Code: 0`) no SQLite, **quando** `trustkit done` é executado, **então** o binário renderiza `gauntlet-report.md` a partir dos registros do banco, commita as evidências na branch, publica o comentário na issue com a Matriz de Rastreabilidade e tags `<img src=".../blob/...?raw=true" />`, e aguarda a decisão de destino de merge do usuário. |
-| **RF-011** | **Gate de Merge e Transição para `Await Staging`** | **Dado** um ciclo em estado `CycleStatus::Certified` e confirmação do usuário para mergear em `develop`, **quando** `trustkit merge --target develop` é executado, **então** o binário realiza o merge e move o card no GitHub Projects para `Await Staging` mantendo a issue aberta. |
-| **RF-012** | **Abertura de Pull Request Exclusivamente Sob Demanda** | **Dado** que o usuário invocou explicitamente `trustkit pr`, **quando** o comando executa, **então** o binário abre o PR para `develop` com revisores e assignees configurados, referência `Ref #<id>` (rejeitando `Closes`/`Fixes`/`Resolves`), Matriz de Rastreabilidade e imagens HTML, movendo o card para `In review`. |
-| **RF-013** | **Interceptação Preventiva via Hooks (`PreToolUse`)** | **Dado** que o agente hospedeiro tenta invocar uma ferramenta shell contendo `git stash`, `git add .`, `git add -A`, commit direto em branch protegida ou `gh pr create` fora do fluxo, **quando** `trustkit hook pre-tool` inspeciona o comando, **então** o binário nega a execução em `< 3ms` retornando a invariante violada. |
+| **RF-001** | **Inicialização Concorrente do Ciclo (`Gate 0`)** | **Dado** uma árvore de trabalho Git acessível, **quando** o comando `trustkit init --issue <ID>` for executado, **então** o binário valida a conta GitHub ativa, preserva arquivos modificados prévios na lista `PreExistingDirtyFiles` (sem executar `git stash`), move o card no GitHub Projects para `In progress`, cria o diretório `docs/specs/<issue-id>-AAAAMMDDHHMM/` e grava o registro `SddCycle` no SQLite WAL em < 250ms com Exit Code 0. |
+| **RF-002** | **Caso Especial Sem Issue Vinculada (`Gate 0`)** | **Dado** que `trustkit init` foi invocado sem argumento de issue, **quando** o comando iniciar, **então** o binário instancia o Caso Especial `IssueLinkage::UnlinkedLocalCycle`, cria `docs/specs/no-issue-AAAAMMDDHHMM/` e opera localmente sem emitir mutações remotas no GitHub Projects. |
+| **RF-003** | **Ingestão Upstream de PRD/ADR (`Gate 0a`)** | **Dado** um arquivo PRD ou ADR válido contendo tabelas de requisitos, **quando** `trustkit spec init --from-prd <path>` for acionado, **então** o motor extrai regras de negócio e requisitos funcionais e gera o esqueleto formal da especificação com as seções do Product Trio, Gherkin e Matriz de Rastreabilidade. |
+| **RF-004** | **Geração de Prompt Contextualizado (`Gate 1`)** | **Dado** uma ideia ou requisito em linguagem natural, **quando** `trustkit spec prompt --idea "<ideia>"` for executado, **então** o motor recupera fatias AST de código relevante e artigos da memória FTS5, retornando um prompt estruturado dentro do orçamento de tokens solicitado. |
+| **RF-005** | **Linting Estático da Especificação (`Gate 1`)** | **Dado** um arquivo `spec.md`, **quando** `trustkit spec lint --file <path>` for invocado, **então** o analisador verifica a presença do Product Trio, validade do Mermaid `flowchart LR`, blocos Gherkin e fechamento da Matriz de Rastreabilidade em < 5ms, retornando CleanPass ou lista tipada de diagnósticos. |
+| **RF-006** | **Congelamento Criptográfico da Spec (`Gate 2`)** | **Dado** uma especificação aprovada pelo linter, **quando** `trustkit spec lock` for acionado, **então** o motor calcula o hash BLAKE3 da especificação e de todos os testes existentes, captura a contagem de asserções AST e persiste o estado `SpecLockState::Frozen` no SQLite WAL. |
+| **RF-007** | **Planejamento de Ondas Topológicas (`Gate 3`)** | **Dado** um conjunto de tarefas atômicas `TASK-NNN.md`, **quando** `trustkit wave plan` for executado, **então** o algoritmo baseia-se em `petgraph` para validar aciclicidade (DAG), mapeia 100% das regras da Matriz e aloca em ondas distintas tarefas que declarem modificar os mesmos arquivos. |
+| **RF-008** | **Provisionamento Isolado de Worktrees (`Gate 4`)** | **Dado** uma onda de execução contendo N tarefas, **quando** `trustkit wave run --wave <N>` for disparado, **então** o motor instancia N Git Worktrees efêmeras com isolamento de índice e links CoW de dependências pesadas, despachando builders em paralelo. |
+| **RF-009** | **Supervisão do Ciclo TDD Estrito (`Gate 4`)** | **Dado** uma tarefa atômica em execução, **quando** o builder rodar `trustkit task test <ID> --phase red`, **então** o motor exige saída de falha comprovada (`Exit Code != 0`) antes de permitir a homologação de sucesso via `trustkit task test <ID> --phase green` (`Exit Code == 0`). |
+| **RF-010** | **Revisão Semântica de Código (`Gate 4 Refactor`)** | **Dado** uma tarefa concluída na fase green, **quando** `trustkit task review <ID>` for acionado, **então** o motor inspeciona o diff em busca de regressões, violações de escopo e aderência arquitetural, emitindo parecer detalhado. |
+| **RF-011** | **Auditoria AST Camada 0 do Gauntlet (`Gate 5`)** | **Dado** o diff da branch de trabalho antes dos críticos, **quando** `trustkit gauntlet ast-audit` for executado, **então** o motor valida via Tree-sitter em < 5ms a ausência de adulteração de testes (*test dilution*), emojis, trailers de IA e modificação de arquivos protegidos, bloqueando a execução antes de gastar tokens caso haja inconformidade. |
+| **RF-012** | **Portão Defensivo Global de Segurança (`Gate 5`)** | **Dado** a solicitação de auditoria pré-release, **quando** `trustkit audit security` for disparado, **então** o motor executa varredura em 6 fases (AST, CWE/OWASP, injeção, segredos, permissões e dependências), reportando achados com score de confiança >= 8/10. |
+| **RF-013** | **Swarm de Críticos e Evidências Playwright (`Gate 5`)** | **Dado** que a Camada 0 foi aprovada com CleanPass, **quando** `trustkit gauntlet run` for executado, **então** o motor orquestra em paralelo os 4 críticos adversariais, executa testes E2E Playwright, valida capturas de tela e restaura automaticamente qualquer screenshot alheia tocada acidentalmente. |
+| **RF-014** | **Disjuntor de Segurança / Circuit Breaker (`Gate 5`)** | **Dado** que um ciclo acumulou 4 reprovações no Gauntlet, **quando** a 5ª iteração falhar, **então** o motor bloqueia novas execuções via `CycleStatus::CircuitBreakerTripped` e aciona o relatório de diagnóstico defensivo `trustkit doctor`. |
+| **RF-015** | **Certificação Determinística de Release (`Gate 6`)** | **Dado** que todos os portões e críticos acumularam veredito PASS no SQLite, **quando** `trustkit done` for acionado, **então** o binário renderiza o `gauntlet-report.md` a partir do log transacional, realiza commit das evidências e publica comentário oficial na issue do GitHub. |
+| **RF-016** | **Integração de Merge Controlada (`Gate 6+`)** | **Dado** um ciclo certificado, **quando** `trustkit merge --target develop` for executado com autorização do operador, **então** o motor realiza o merge na branch de destino e move o card no quadro para `Await Staging`. |
+| **RF-017** | **Abertura de Pull Request Sob Demanda** | **Dado** solicitação explícita do desenvolvedor, **quando** `trustkit pr` for executado, **então** o motor abre o Pull Request com referência `Ref #<id>`, lista de revisores, matriz de rastreabilidade e imagens HTML, transicionando o card para `In review`. |
+| **RF-018** | **Interceptação Preventiva via Hooks Síncronos** | **Dado** que um agente ou script tenta disparar comando proibido (`git stash`, `git reset --hard`, commit direto em branch protegida), **quando** o interceptor `trustkit hook pre-tool` analisar o comando, **então** o processo é abortado em < 3ms com código semântico e diagnóstico explicativo. |
+| **RF-019** | **Indexação e Busca na Memória Perene (`trustkit memory`)** | **Dado** termos de pesquisa de arquitetura ou histórico, **quando** `trustkit memory search <query>` for acionado, **então** o motor consulta a tabela FTS5 com BM25 ranking e retorna trechos contextuais e links de wiki adjacentes. |
+| **RF-020** | **Análise Estrutural e Detecção de God Nodes (`trustkit graph`)** | **Dado** uma base de código analisada pelo Tree-sitter, **quando** `trustkit graph god-nodes` for invocado, **então** o motor retorna os nós com maior acoplamento eferente/aferente e calcula a métrica de instabilidade para guiar a decomposição de tarefas. |
+| **RF-021** | **Orquestração Autônoma Desatendida (`trustkit auto`)** | **Dado** um identificador de issue ou arquivo de spec local, **quando** o comando `trustkit auto` for acionado, **então** o motor executa de forma autônoma e contínua os Gates 0 a 6 com isolamento de worktree, TDD estrito e auto-merge final em caso de certificação unânime. |
+| **RF-022** | **Planejamento de Marcos e Citações AST (`trustkit milestones`)** | **Dado** a presença de PRD e ADR no repositório, **quando** `trustkit milestones plan` for executado, **então** o motor decompõe os documentos em marcos acíclicos com citações de linha precisas, gera os arquivos `docs/milestones/` e persiste os registros na tabela transacional `milestones` do SQLite WAL, habilitando `trustkit init --milestone` para direcionar a execução do ciclo SDD. |
+| **RF-022** | **Conformidade de Exit Codes e Execução Headless** | **Dado** um ambiente de automação sem terminal interativo (TTY), **quando** o binário for invocado com flags de ajuda (`--help`, `-h`) ou versão (`--version`, `-V`), **então** a saída informativa deve ser direcionada para `stdout` com código de saída 0, e rotinas de decisão devem resolver por política padrão sem bloquear aguardando `stdin`. |
 
 ---
 
-## 7. Estratégia para Casos Especiais e Ausência de Dados (Clean Code — Capítulo 7)
+## 7. Requisitos Não-Funcionais
 
-> **Invariante de Modelagem (Proibição de `null`):** É estritamente proibido o uso de valores `null` / `nil` nos modelos de domínio, nos contratos JSON da CLI (`--json`) e nas regras de negócio do `TRustKit`. Toda ausência de dado ou condição atípica deve ser representada pelo **Padrão de Caso Especial (*Special Case / Null Object Pattern*)** através de *Tagged Unions* (Enums algébricos em Rust) ou coleções vazias imutáveis (`[]`).
-
-| Cenário de Ausência ou Caso Especial | Representação Proibida (Anti-Pattern) | Representação Obrigatória no Domínio e JSON (`Special Case Pattern`) | Comportamento Determinístico do Sistema |
-| :--- | :--- | :--- | :--- |
-| **Ciclo iniciado sem Issue do GitHub vinculada** | `issue_number: null`, `issue_url: null`, `board_column: null` | `IssueLinkage::UnlinkedLocalCycle { directory_slug: "no-issue-202610271230" }` | Cria o diretório `docs/specs/no-issue-AAAAMMDDHHMM/`, opera todos os Gates locais normalmente e ignora silenciosamente mutações no GitHub Projects sem lançar erro de ponteiro nulo. |
-| **Spec ainda em elaboração (antes do Gate 2)** | `spec_blake3_hash: null` | `SpecLockState::DraftUnverified` (transiciona para `SpecLockState::Frozen { blake3_digest }` no Gate 2) | Qualquer tentativa de iniciar o Gate 4 (`wave run`) recebe o estado `DraftUnverified` e recusa a execução com mensagem instrutiva: `"Execute 'trustkit spec lock' antes de iniciar os Builders"`. |
-| **Tarefa Atômica ainda não iniciada em Worktree** | `worktree_path: null`, `commit_sha: null`, `red_exit_code: null` | `TaskExecutionContext::NotProvisioned` e `TddLifecycleState::AwaitingRedPhase` | Comandos de status e relatórios renderizam `"AWAITING_RED_PHASE"` em vez de campos vazios ou `N/A`. |
-| **Árvore Git 100% limpa no Gate 0 ou Auditoria AST sem violações** | `pre_existing_dirty: null` ou `violations: null` | Lista imutável vazia `pre_existing_dirty: []` e objeto `AstAuditVerdict::CleanPass { violations: [] }` | Iteradores nos consumidores processam a lista vazia sem ramificações `if (x != null)`. |
-| **Repositório sem SDD (`.specify/` ausente)** | `sdd_config: null` | `MethodologyProfile::StandardGauntletV2` (vs `MethodologyProfile::StructuredSdd { feature_dir }`) | Polimorfismo via enum despacha o validador da Spec V2 padrão sem checagens condicionais espalhadas pelo código. |
-| **Falha de comunicação temporária com a API do GitHub** | Retornar erro genérico ou `board_status: null` | `BoardSyncOutcome::DeferredOffline { queued_transition: "In progress", retry_after_ms: 5000 }` | Registra a transição pendente no SQLite local e permite que o desenvolvedor continue trabalhando no Gate 1/2 sem bloqueio de rede. |
-
----
-
-## 8. Requisitos Não-Funcionais
-
-| Atributo | Requisito | Métrica Objetiva |
+| Atributo de Qualidade | Especificação Técnica do Requisito | Métrica Objetiva de Validação |
 | :--- | :--- | :--- |
-| **Performance (Cold-Start)** | Inicialização instantânea do binário para uso em hooks síncronos e chamadas CLI frequentes. | `< 3ms` (p99) para subcomandos locais (`hook`, `spec verify`, `status`). |
-| **Performance (Auditoria AST)** | Análise sintática incremental via `tree-sitter` e verificação das 16 invariantes sobre o diff da branch. | `< 10ms` para diffs de até 5.000 linhas modificadas. |
-| **Performance (Context Slicing)** | Extração de assinaturas e tipos públicos dos arquivos-alvo de uma tarefa. | `< 15ms` por tarefa atômica; redução mínima de `60%` no volume de tokens de código enviados ao Builder. |
-| **Confiabilidade & Integridade** | Persistência transacional à prova de corrupção sob múltiplos processos Builders/Critics simultâneos. | SQLite em modo `WAL` com `synchronous = NORMAL`, `busy_timeout = 5000ms` e `NOT NULL` em todas as colunas de estado; 0% de corrupção sob concorrência. |
-| **Portabilidade & Distribuição** | Binário único estático sem dependência de runtime Python, Node.js ou bibliotecas dinâmicas externas. | Binário único compilado para Linux (`x86_64-unknown-linux-gnu` / `musl`) e macOS (`aarch64-apple-darwin`) com tamanho `< 25 MB`. |
-| **Ergonomia de Tokens (AI UX)** | Respostas no modo `--json` otimizadas para consumo mínimo de janela de contexto do LLM. | Payloads de sucesso `< 300 tokens`; zero campos `null`; payloads de falha contendo apenas erros acionáveis e coordenadas exatas (`arquivo:linha:coluna`). |
-| **Segurança** | Proteção de credenciais e proibição de vazamento de segredos em logs de evidência. | Uso nativo do token já autenticado no `gh auth`; sanitização automática (`SecretRedactor`) antes de gravar saídas no `state.db` e `gauntlet-report.md`. |
+| **Latência de Cold-Start** | Inicialização ultrarrápida para hooks síncronos de ciclo de vida (`pre-tool`/`post-tool`). | `< 3ms` (p99) medido via `hyperfine`. |
+| **Auditoria de AST Camada 0** | Varredura estática de integridade de testes e invariantes léxicas sobre o diff da branch. | `< 5ms` (p99) para diffs de até 5.000 linhas de código. |
+| **Busca Textual na Memória** | Consulta em linguagem natural via SQLite FTS5 com ranqueamento BM25. | `< 2ms` para base de até 10.000 documentos de documentação/wiki. |
+| **Análise Topológica do Grafo** | Construção do DAG de tarefas e cálculo de acoplamento estrutural via `petgraph`. | `< 10ms` para grafos de até 1.000 nós e dependências. |
+| **Confiabilidade Transacional** | Integridade dos dados sob alta concorrência de múltiplos builders e críticos simultâneos. | SQLite em modo WAL com `busy_timeout = 5000ms`, `synchronous = NORMAL` e 100% de colunas com restrição `NOT NULL`. |
+| **Portabilidade do Binário** | Distribuição de binário único totalmente estático sem dependências dinâmicas externas. | Compilação nativa para Linux (`x86_64`, `aarch64`) e macOS (`darwin`) com tamanho final stripado `< 30 MB`. |
+| **Ergonomia e Consumo de Tokens** | Formatação das saídas no modo `--json` projetada especificamente para economizar contexto de LLM. | Ausência absoluta do literal `: null` (100% Casos Especiais), payloads de sucesso `< 300 tokens` e relatórios focados em coordenadas exatas (`arquivo:linha`). |
+| **Segurança e Sanitização** | Proteção de dados sensíveis e credenciais de ambiente em relatórios públicos de issue/PR. | Sanitização automática via `SecretRedactor` mascarando tokens GitHub, senhas e variáveis privadas em saídas gravadas. |
 
 ---
 
-## 9. Regras de Negócio (As 16 Hard Invariants do TRustKit)
+## 8. Regras de Negócio (As 20 Hard Invariants do TRustKit)
 
-| ID | Regra | Descrição Invariante |
+| ID | Regra de Negócio | Descrição Formal da Invariante |
 | :--- | :--- | :--- |
-| **RN-001** | **Sem Código Sem Spec Congelada (V2)** | Nenhum commit ou execução de Builder (Gate 4) é permitido se o ciclo não estiver com `SpecLockState::Frozen` no `.trustkit/state.db`. No perfil `StandardGauntletV2`, exige Spec com Product Trio, Mermaid, Gherkin e Matriz de Rastreabilidade. No perfil `StructuredSdd`, exige `spec.md`, `plan.md`, `tasks.md` e `gauntlet-rubric.md`. |
-| **RN-002** | **Evidência sobre Asserção** | Nenhum Gate de execução (TDD RED/GREEN, Lint, Build, Playwright E2E) pode ser marcado como concluído por declaração textual do agente; o próprio binário `trustkit` deve capturar o comando, o `stdout`/`stderr`, a duração e o `Exit Code` real no banco de eventos. |
-| **RN-003** | **Aprovação Unânime Cumulativa** | A certificação (Gate 6) exige, cumulativamente: Camada 0 (AST) `CleanPass`, todos os 4 Críticos do Gauntlet `PASS`, `npm run test:e2e` com `Exit Code: 0` e `npm run lint && npm run build` com `Exit Code: 0` em cada aplicação tocada. |
-| **RN-004** | **Integridade Imutável de Testes (Anti-Cheat)** | É proibido remover, comentar ou enfraquecer asserções de testes pré-existentes sem autorização humana formal registrada via `trustkit contract unlock`. |
-| **RN-005** | **Circuit Breaker Estrito de 5 Loops** | O ciclo autônomo entre Builders (Gate 4) e Gauntlet (Gate 5) possui limite máximo intransponível de 5 iterações. Na 5ª falha, o motor aciona o disjuntor (`CircuitBreakerTripped`) e exige intervenção humana. |
-| **RN-006** | **GitFlow Rigoroso e Árvore Compartilhada** | Branch base é `develop` (`develop -> staging -> main`). Branches de trabalho seguem `feat/<task-id>-<titulo-curto-kebab>` (ou `bugfix/<task-id>-<titulo-curto-kebab>`). Commits seguem `<type>: #<task-id> <descricao em pt-BR>`. Proibido `git stash`, `git add .`, `git add -A` e reversão autônoma de commits. Arquivos sujos prévios ao ciclo permanecem intocados. |
-| **RN-007** | **Proibição Absoluta de Emojis e Ícones Gráficos** | Nenhum arquivo de spec, task, relatório, commit, issue, comentário ou PR pode conter caracteres dos blocos Unicode de Emojis, Emoticons ou Dingbats. |
-| **RN-008** | **Evidências Visuais Autenticadas e Restauração Alheia** | Capturas do Playwright devem residir em `docs/specs/<issue-id>-AAAAMMDDHHMM/tests/evidence/` e usar exclusivamente `<img src="https://github.com/<org>/<repo>/blob/<branch>/.../evidence/<arq>.png?raw=true" alt="..." width="100%" />`. Evidências de outras issues regravadas durante a suíte E2E são restauradas via `git checkout -- <path>` antes do commit. |
-| **RN-009** | **Sincronização das 9 Colunas do GitHub Projects** | O card da issue transiciona estritamente entre `Backlog`, `Refinement`, `Ready`, `In progress`, `In review`, `Await Staging`, `In Staging`, `Blocked` e `Done`, sem regressão silenciosa de coluna. No caso especial `UnlinkedLocalCycle`, nenhum card é movido. |
-| **RN-010** | **Comentário de Encerramento com Rastreabilidade Total** | Concluído o Gauntlet, publica-se na issue o comentário contendo Nota para o Time de Negócios, Matriz de Rastreabilidade Ponta a Ponta ($\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E} \rightarrow \text{Screenshot}$), Passo a Passo de Validação, Screenshots HTML e Resumo Técnico. |
-| **RN-011** | **Decisão Explícita de Destino de Merge** | Ao final do Gate 6, o motor jamais faz merge silencioso: pergunta explicitamente ao usuário para qual branch deseja mergear (ou informa caso tenha sido autorizado commit direto na `develop`). |
-| **RN-012** | **Pull Request Exclusivamente Sob Demanda** | Proibido abrir PR automaticamente ao fim da issue. Quando solicitado pelo usuário (`trustkit pr`), deve incluir revisores e assignees configurados, coluna `In review` e referência `Ref #<id>` (proibido `Closes`/`Fixes`/`Resolves`). |
-| **RN-013** | **Zero Atribuição a Ferramentas de IA** | Bloqueio estrito de trailers `Co-Authored-By: Claude/Anthropic/...`, `Claude-Session`, rodapés `Generated with...` ou links `claude.ai/code/...` em commits, PRs, issues e comentários. |
-| **RN-014** | **Verificação Obrigatória de Conta GitHub** | Toda operação GitHub verifica previamente se a conta ativa no `gh auth status` corresponde ao perfil autenticado (ou configurado via `TRUSTKIT_GITHUB_USER`), executando `gh auth switch` se necessário. |
-| **RN-015** | **Tipagem Nativa de Issue e Proibição de Sub-Issues** | Issues utilizam o campo nativo `Type` da organização (`Bug`, `Feature`, `Test`, `Call`, `Administrative`, `Alignment`, `Deployment`, `Prototyping`). Tarefas atômicas (`TASK-NNN`) jamais viram sub-issues no GitHub. |
-| **RN-016** | **Interoperabilidade Upstream (`--from-prd`)** | O motor aceita nativamente documentos PRD/ADR upstream para popular a Spec V2, mantendo rastreabilidade desde a concepção do produto até a evidência E2E. |
+| **RN-001** | **Sem Código Sem Spec Congelada** | Nenhuma linha de código de produção pode ser criada ou commitada sem que a especificação formal correspondente esteja no estado `SpecLockState::Frozen` com hash BLAKE3 gravado no SQLite WAL. |
+| **RN-002** | **Evidência sobre Asserção Textual** | Nenhuma etapa de execução (TDD RED/GREEN, Lint, Build, Testes E2E) é concluída por declaração em texto do agente; o próprio binário `trustkit` executa o comando e grava o Exit Code real e digest no banco. |
+| **RN-003** | **Aprovação Unânime Cumulativa** | A certificação do Gate 6 exige cumulativamente: Camada 0 AST CleanPass, 100% dos críticos do Gauntlet aprovados (PASS), testes E2E aprovados e linter/build sem advertências em todas as aplicações tocadas. |
+| **RN-004** | **Integridade Imutável de Testes (Anti-Cheat)** | Proibição absoluta de remover, comentar ou enfraquecer asserções de testes pré-existentes sem autorização humana formal registrada via `trustkit contract unlock`. |
+| **RN-005** | **Circuit Breaker Estrito de 5 Loops** | O ciclo autônomo entre builders e gauntlet é interrompido imediatamente na 5ª reprovação consecutiva, congelando o ciclo em `CircuitBreakerTripped` e exigindo intervenção humana. |
+| **RN-006** | **GitFlow Rigoroso e Árvore Compartilhada** | Branch base é `develop`. Branches de trabalho seguem o padrão `feat/<id>-<slug>` ou `fix/<id>-<slug>`. Commits seguem `<type>: #<id> <descricao em pt-BR>`. Proibido `git stash`, `git add .`, `git add -A` e commits diretos em branches protegidas. |
+| **RN-007** | **Proibição Absoluta de Emojis e Ícones Gráficos** | Nenhum artefato, documento, código-fonte, relatório, mensagem de commit, comentário de issue ou saída de terminal pode conter caracteres de emojis, emoticons ou dingbats Unicode. |
+| **RN-008** | **Evidências Visuais Autenticadas e Restauração Alheia** | Screenshots do Playwright devem ser salvas no diretório oficial da spec e referenciadas via URLs autenticadas. Capturas de tela de outras issues regravadas durante a suíte são restauradas automaticamente via Git. |
+| **RN-009** | **Sincronização das 9 Colunas do GitHub Projects** | Cards transicionam ordenadamente entre as colunas oficiais: `Backlog`, `Refinement`, `Ready`, `In progress`, `In review`, `Await Staging`, `In Staging`, `Blocked` e `Done`, sem saltos arbitrários. |
+| **RN-010** | **Comentário de Encerramento com Rastreabilidade Total** | A conclusão do Gate 6 gera comentário oficial contendo nota para o time de negócios, matriz de rastreabilidade completa, passo a passo de homologação e resumo técnico da entrega. |
+| **RN-011** | **Decisão Explícita de Destino de Merge** | O motor jamais efetua merge silencioso em branches principais sem validação prévia de conformidade e autorização expressa do operador humano. |
+| **RN-012** | **Pull Request Exclusivamente Sob Demanda** | A abertura de Pull Request ocorre única e exclusivamente mediante comando humano explícito (`trustkit pr`), rejeitando menções de fechamento automático (`Closes`/`Fixes`). |
+| **RN-013** | **Zero Atribuição a Ferramentas de IA** | Proibição de inclusão de trailers de autoria como `Co-Authored-By: Claude`, `Generated-by` ou referências a modelos de linguagem em commits, PRs e documentações. |
+| **RN-014** | **Verificação Obrigatória de Conta GitHub** | Toda operação de rede valida previamente se a conta ativa no `gh auth status` corresponde ao perfil autorizado no repositório. |
+| **RN-015** | **Tipagem Nativa de Issues e Proibição de Sub-Issues** | Tarefas atômicas de implementação (`TASK-NNN`) jamais são publicadas como sub-issues poluindo o repositório remoto; pertencem exclusivamente ao DAG local. |
+| **RN-016** | **Interoperabilidade Upstream (`--from-prd`)** | O motor aceita nativamente documentos PRD/ADR para pré-popular a especificação formal, mantendo rastreabilidade desde a concepção até o teste E2E. |
+| **RN-017** | **Auto-Suficiência e Independência de Especificação** | A especificação e linting de features devem operar de forma autônoma no binário nativo, sem exigir ferramentas ou interpretadores externos no ambiente hospedeiro. |
+| **RN-018** | **Integridade Bidirecional da Memória Perene** | Toda atualização na memória viva (`trustkit memory`) deve reindexar instantaneamente os links wiki e atualizar o índice FTS5 sob selo de hash BLAKE3. |
+| **RN-019** | **Limiar Mínimo de Confiança em Segurança (AppSec >= 8/10)** | Alertas de segurança gerados na auditoria pré-release só bloqueiam a entrega se possuírem índice de confiança avaliado em 8 ou superior, evitando falsos positivos paralisantes. |
+| **RN-020** | **Execução Headless Não-Bloqueante** | Em pipelines CI e ambientes sem TTY interativo, comandos de verificação devem resolver ambiguidades por política padrão segura sem travar aguardando entrada de usuário. |
 
 ---
 
-## 10. Domínio e Linguagem Ubíqua (Clean Code — Capítulo 2)
+## 9. Domínio e Dados
 
-> **Regra de Nomenclatura do Domínio:** São proibidos sufixos vagos ou genéricos como `Manager`, `Processor`, `Data`, `Info`, `Helper` ou `Handler` nas entidades e serviços de domínio, bem como siglas obscuras de tela/sistema. Todos os substantivos e verbos abaixo compõem a **Linguagem Ubíqua** obrigatória tanto no PRD quanto nas structs e traits do código Rust.
+### 9.1. Glossário Ubíquo do Domínio
+* **`SddCycle` (Ciclo SDD):** Instância de governança que encapsula o ciclo de vida de uma funcionalidade, associada a uma issue remota ou a um caso especial local.
+* **`GateStage` (Estágio de Gate):** Enumeração dos 7 marcos do SDD (`Gate0Discovery`, `Gate1SpecPrompt`, `Gate2SpecLock`, `Gate3WavePlan`, `Gate4TasksImplemented`, `Gate5GauntletCleared`, `Gate6Certification`).
+* **`ArtifactSeal` (Selo de Artefato):** Registro de hash BLAKE3 e contagem de nós de asserção AST que atesta a imutabilidade da especificação e dos testes.
+* **`TraceabilityLink` (Elo de Rastreabilidade):** Tupla relacionando $	ext{RN} ightarrow 	ext{RF} ightarrow 	ext{TASK} ightarrow 	ext{E2E} ightarrow 	ext{Screenshot}$.
+* **`AtomicTask` (Tarefa Atômica):** Unidade atômica de trabalho de uma única camada arquitetural, associada a um teste de destino e executada em worktree dedicada.
+* **`ExecutionWave` (Onda de Execução):** Grupo de tarefas atômicas sem conflito mútuo de arquivos nem dependência topológica que podem ser executadas em paralelo.
+* **`ExecutionEvidence` (Evidência de Execução):** Registro append-only de comando executado, exit code, duração, hash de saída e parecer determinístico.
+* **`KnowledgePage` (Página de Conhecimento):** Documento persistente indexado no FTS5 com título, tags, corpo textual e links wiki.
+* **`StructuralNode` / `StructuralEdge`:** Vértices e arestas que compõem o grafo arquitetural de dependências extraído via AST.
+* **`TerminalSession` (Sessão de Terminal PTY):** Sessão de processo filho executada sob pseudo-terminal assíncrono com canal de controle IPC.
 
-### 10.1. Glossário Ubíquo de Substantivos e Verbos do Domínio
-
-| Termo Ubíquo (Código / Produto) | Categoria | Definição Precisa no Domínio | Termos Genéricos Proibidos |
-| :--- | :---: | :--- | :--- |
-| **`SddCycle` (Ciclo SDD)** | Substantivo | Instância completa e isolada de entrega de uma funcionalidade, particionada em `docs/specs/<issue-id>-AAAAMMDDHHMM/`. | `SessionData`, `ProcessInfo`, `RunItem` |
-| **`GateStage` (Estágio de Portão)** | Substantivo | Cada um dos 7 marcos determinísticos (`Gate0Discovery` a `Gate6Certification`) que governam a progressão do ciclo. | `StepData`, `PhaseNumber` |
-| **`ArtifactSeal` (Selo Criptográfico)** | Substantivo | Assinatura `BLAKE3` mais contagem de nós de asserção AST capturadas no Gate 2 para garantir imutabilidade da Spec e dos testes pré-existentes. | `FileInfo`, `HashData`, `LockManager` |
-| **`TraceabilityLink` (Elos de Rastreabilidade)** | Substantivo | Tupla verificável que amarra `BusinessRuleId (RN)` $\rightarrow$ `FunctionalRequirementId (RF)` $\rightarrow$ `TaskId (TASK)` $\rightarrow$ `PlaywrightSpecPath` $\rightarrow$ `ScreenshotFileName`. | `MappingData`, `MatrixRowInfo` |
-| **`AtomicTask` (Tarefa Atômica)** | Substantivo | Unidade mínima de implementação TDD restrita a uma única camada arquitetural e executada em uma `IsolatedWorktree` própria. | `WorkItem`, `SubIssue`, `TaskData` |
-| **`ExecutionWave` (Onda de Execução)** | Substantivo | Subconjunto de `AtomicTasks` sem dependência mútua nem colisão de arquivos, despachado simultaneamente no Gate 4. | `BatchGroup`, `TaskList` |
-| **`ExecutionEvidence` (Evidência de Execução)** | Substantivo | Registro imutável de um comando real executado pelo harness, contendo comando literal, duração em milissegundos, `ExitCode`, resumo sanitizado da saída e hash `BLAKE3`. | `LogData`, `CommandInfo` |
-| **`SealSpecification` (Selar Especificação)** | Verbo | Ação do Gate 2 (`trustkit spec lock`) que valida a completude da Spec V2 e grava seu `ArtifactSeal` no repositório. | `ProcessSpec`, `ManageSpec` |
-| **`SliceAstContext` (Fatiar Contexto Sintático)** | Verbo | Ação de extrair da árvore sintática (`tree-sitter`) apenas as assinaturas públicas e tipos necessários para uma `AtomicTask`. | `GetFileData`, `PrepareInfo` |
-| **`VerifyTestIntegrity` (Verificar Integridade de Testes)** | Verbo | Ação da Camada 0 do Gauntlet que compara a AST de testes antes e depois das mudanças do Builder para barrar *test dilution*. | `CheckTests`, `ProcessDiff` |
-| **`TripCircuitBreaker` (Acionar Disjuntor)** | Verbo | Ação automática de travar o `SddCycle` após a 5ª reprovação consecutiva no Gauntlet, exigindo diagnóstico humano. | `StopLoop`, `HandleError` |
-| **`RestoreForeignEvidence` (Restaurar Evidência Alheia)** | Verbo | Ação de reverter automaticamente capturas de tela de outras issues que tenham sido sobrescritas durante a suíte Playwright E2E. | `CleanFiles`, `FixScreenshots` |
-
-### 10.2. Entidades Principais do Domínio (Livres de `null`)
+### 9.2. Entidades Principais e Modelagem Livre de `NULL`
 
 **`SddCycle`**
-* `cycle_id` (`CycleId` — ex.: `issue-45-202610271230`)
-* `issue_linkage` (`IssueLinkage` — `LinkedIssue { number, url, board_column }` | `UnlinkedLocalCycle { directory_slug }`)
-* `methodology_profile` (`MethodologyProfile` — `StandardGauntletV2` | `StructuredSdd { feature_dir }`)
-* `current_gate` (`GateStage` — `Gate0Discovery` .. `Gate6Certification`)
-* `lifecycle_status` (`CycleStatus` — `Active` | `Paused` | `CircuitBreakerTripped` | `Certified` | `Merged`)
-* `gauntlet_attempt` (`GauntletAttemptCount` — inteiro limitado ao intervalo `0..=5`)
-* `spec_seal_state` (`SpecLockState` — `DraftUnverified` | `Frozen { spec_path, blake3_digest }`)
-* `work_branch` (`BranchName`)
-* `pre_existing_dirty_files` (`Vec<RepoRelativePath>` — vazio `[]` quando árvore inicial está limpa)
+* `cycle_id`: Identificador textual único (`issue-45-AAAAMMDDHHMM` ou `no-issue-AAAAMMDDHHMM`).
+* `issue_linkage`: Objeto de Caso Especial (`LinkedIssue { number, url, board_column }` ou `UnlinkedLocalCycle { directory_slug }`).
+* `methodology_profile`: Perfil do framework (`StandardGauntletV2` ou `StructuredSdd`).
+* `current_gate`: Estágio corrente na máquina de estados (`0..=6`).
+* `lifecycle_status`: Status (`Active`, `Paused`, `CircuitBreakerTripped`, `Certified`, `Merged`).
+* `gauntlet_attempt`: Contador limitado (`0..=5`).
+* `spec_seal_state`: Estado de selo (`DraftUnverified` ou `Frozen { spec_path, blake3_digest }`).
+* `work_branch`: Nome da branch Git em trabalho.
+* `pre_existing_dirty_files`: Array de caminhos (`[]` quando limpo).
+
+**`ArtifactSeal`**
+* `seal_id`: Inteiro sequencial primário.
+* `cycle_id`: Chave estrangeira para o ciclo SDD.
+* `file_path`: Caminho do arquivo protegido.
+* `artifact_category`: Categoria (`Spec`, `Constitution`, `PreExistingTest`, `ForeignIssueEvidence`).
+* `blake3_digest`: Hash criptográfico de 64 caracteres hexadecimais.
+* `ast_assertion_count`: Total de nós de asserção AST contabilizados.
+* `contract_unlock_state`: Estado (`Sealed` ou `UnlockedByHuman { justification }`).
 
 **`TraceabilityLink`**
-* `trace_id` (`TraceId`)
-* `cycle_id` (`CycleId`)
-* `business_rule_id` (`BusinessRuleId` — ex.: `RN-001`)
-* `functional_req_id` (`FunctionalRequirementId` — ex.: `RF-001`)
-* `task_id` (`TaskId` — ex.: `TASK-001`)
-* `mermaid_journey_node` (`MermaidNodeId` — ex.: `D[Estado de Sucesso Confirmado]`)
-* `playwright_spec_path` (`RepoRelativePath` — ex.: `loggiq/tests/e2e/issue-45.spec.ts`)
-* `evidence_screenshot_name` (`ScreenshotFileName` — ex.: `01-sucesso.png`)
+* `trace_id`: Inteiro sequencial primário.
+* `cycle_id`: Chave estrangeira para o ciclo SDD.
+* `business_rule_id`: Código da regra de negócio (`RN-NNN`).
+* `functional_req_id`: Código do requisito funcional (`RF-NNN`).
+* `task_id`: Identificador da tarefa atômica (`TASK-NNN`).
+* `mermaid_journey_node`: Rótulo do nó no diagrama de fluxo.
+* `playwright_spec_path`: Caminho relativo da suíte E2E.
+* `evidence_screenshot`: Nome do arquivo de captura de tela de evidência.
+* `verification_state`: Estado de homologação (`PENDING_GATE5` ou `VERIFIED_PASS`).
 
 **`AtomicTask`**
-* `task_id` (`TaskId` — ex.: `TASK-001`)
-* `cycle_id` (`CycleId`)
-* `wave_index` (`WaveNumber` — `1..=4`)
-* `architectural_layer` (`ArchitecturalLayer`)
-* `target_test_file` (`RepoRelativePath`)
-* `tdd_lifecycle_state` (`TddLifecycleState` — `AwaitingRedPhase` | `RedVerified { failing_evidence_id }` | `GreenVerified { red_evidence_id, green_evidence_id }` | `Committed { commit_sha }`)
-* `worktree_allocation` (`WorktreeAllocation` — `NotProvisioned` | `Provisioned { worktree_path }` | `MergedAndPruned { commit_sha }`)
-
-**`ExecutionEvidence`**
-* `evidence_id` (`EvidenceId`)
-* `cycle_id` (`CycleId`)
-* `gate_stage` (`GateStage`)
-* `actor_role` (`ActorRole` — `Orchestrator` | `Builder(TaskId)` | `AstIntegrityAuditor` | `DomainAdversarialCritic` | `ContractComplianceCritic` | `StaticSecurityCritic` | `PlaywrightVisualCritic`)
-* `executed_command` (`CommandLineString`)
-* `exit_code` (`ProcessExitCode`)
-* `duration_ms` (`DurationMillis`)
-* `sanitized_output_digest` (`SanitizedOutput`)
-* `verdict` (`GateVerdict` — `Pass` | `Fail` | `Blocked`)
-* `recorded_at` (`UtcTimestamp`)
+* `task_id`: Identificador da tarefa (`TASK-NNN`).
+* `cycle_id`: Chave estrangeira para o ciclo SDD.
+* `wave_index`: Índice da onda topológica (`1..=N`).
+* `architectural_layer`: Camada da tarefa (`Core`, `DB`, `AST`, `Orch`, `CLI`, `GH`).
+* `tdd_lifecycle_state`: Estado de TDD (`AwaitingRedPhase`, `RedVerified`, `GreenVerified`, `Committed`).
+* `worktree_allocation`: Alocação de worktree (`NotProvisioned`, `Provisioned { path }`, `MergedAndPruned`).
 
 ---
 
-## 11. Métricas de Sucesso
+## 10. Métricas de Sucesso
 
-### 11.1. Métricas de Negócio
-* **Redução de 40% a 60% no Tempo Total de Ciclo (Wall-Clock Time)** de uma issue completa (do `init` ao `done`), eliminando turnos mecânicos de LLM e paralelizando ondas em worktrees.
-* **Redução de 35% no Consumo de Tokens por Issue**, graças ao `AstContextSlicer` e ao bloqueio precoce de erros na Camada 0 (`< 5ms`) antes de acionar o Swarm de Críticos.
+### 10.1. Métricas de Negócio
+* **Redução de 60% a 75% no Tempo Total de Ciclo (Wall-Clock Time):** Funcionalidades completas implementadas e certificadas em fração do tempo através do motor autônomo `trustkit auto` e paralelização por worktrees.
+* **Redução de 50% no Consumo de Tokens de LLM por Feature:** Graças à Camada 0 de AST que barra inconformidades mecânicas em microssegundos com zero tokens, e ao fatiamento cirúrgico de contexto (`trustkit context slice`).
 
-### 11.2. Métricas de Produto
-* **100% de Conformidade nas 16 Invariantes:** Zero PRs ou commits gerados com emojis, trailers de IA, links `raw.githubusercontent` ou testes adulterados.
-* **100% de Rastreabilidade Fechada:** Toda issue encerrada possui correspondência verificada matematicamente entre `RN -> RF -> TASK -> Playwright E2E -> Screenshot`.
+### 10.2. Métricas de Produto
+* **100% de Aderência às 20 Hard Invariants:** Zero commits com emojis, zero trailers de IA, zero adulterações em testes e zero bypasses de governança registrados.
+* **100% de Fechamento na Matriz de Rastreabilidade:** Nenhuma funcionalidade é integrada sem mapeamento bidirecional comprovado entre regras de negócio, testes e evidências visuais.
+* **Nota Máxima (100%) em Maturidade de Harness Agêntico:** Certificação de Nível L4 auditada deterministamente via `harness-score`.
 
-### 11.3. Métricas Operacionais
-* **Cold-start do binário `trustkit`:** `< 3ms` (medido via `hyperfine`).
-* **Tempo de execução do Gate 0 completo (`trustkit init`):** `< 250ms` (operações locais + chamadas de API concorrentes).
-* **Tempo de execução da Camada 0 do Gauntlet (`trustkit gauntlet ast-audit`):** `< 10ms`.
+### 10.3. Métricas Operacionais
+* **Latência de Cold-Start do binário `trustkit`:** `< 3ms` (p99).
+* **Tempo de Execução da Camada 0 de AST (`gauntlet ast-audit`):** `< 5ms` (p99).
+* **Tempo de Resposta em Consultas de Memória FTS5:** `< 2ms` (p99).
+* **Tempo de Montagem do DAG e Detecção de Ciclos:** `< 10ms` (p99).
 
 ---
 
-## 12. Riscos e Dependências
+## 11. Riscos e Dependências
 
-### 12.1. Riscos
+### 11.1. Matriz de Riscos
 
-| Risco | Probabilidade | Impacto | Mitigação |
+| Risco Mapeado | Probabilidade | Impacto | Estratégia de Mitigação Implementada |
 | :--- | :---: | :---: | :--- |
-| **Conflito de Merge entre Worktrees de uma mesma Onda** | Média | Médio | O `WaveExecutionPlanner` no Gate 3 (`trustkit wave plan`) analisa a seção `Arquivos Esperados` de cada `TASK-NNN.md`; se duas tarefas tocarem o mesmo arquivo, adiciona automaticamente uma aresta de dependência entre elas, alocando-as em ondas sequenciais. |
-| **Falsos Positivos no `TestIntegrityAuditor` (AST)** | Baixa | Médio | Caso uma refatoração legítima de contrato exija alterar um teste existente, o desenvolvedor humano pode autorizar explicitamente via `trustkit contract unlock --file <test-file> --reason "..."`, registrando a justificativa no banco de eventos. |
-| **Consumo de Disco por Múltiplas Worktrees (`node_modules`)** | Média | Médio | O `WorktreeIsolationProvider` utiliza *reflinks* Copy-on-Write (`cp --reflink=always`) ou *symlinks* automáticos da pasta `node_modules` da árvore principal para dentro das worktrees efêmeras, reduzindo o tempo de criação para `< 20ms` e custo de disco para ~0 MB. |
-| **Indisponibilidade Temporária da API do GitHub (`gh`)** | Baixa | Baixo | Retornar o Caso Especial `BoardSyncOutcome::DeferredOffline`, gravando a transição pendente no SQLite para reenvio automático no próximo comando sem travar o trabalho local. |
+| **Conflitos de merge entre tarefas da mesma onda** | Baixa | Médio | O planejador DAG (`WaveTopologyPlannerPort`) inspeciona a lista de arquivos afetados e força tarefas que tocam os mesmos arquivos para ondas subsequentes. |
+| **Sobrecarga de espaço em disco por múltiplas worktrees** | Baixa | Baixo | Criação de worktrees via *reflinks* Copy-on-Write e symlinks compartilhados para pastas pesadas de dependências (`node_modules`, `target`). |
+| **Falsos positivos em regras de segurança AppSec** | Média | Médio | Aplicação de filtro rígido de confiança (threshold >= 8/10), limitando os bloqueios apenas a vulnerabilidades de alta certeza e severidade crítica. |
+| **Instabilidade de rede na sincronização com GitHub** | Baixa | Baixo | Uso do padrão de Caso Especial `BoardSyncOutcome::DeferredOffline`, permitindo operação local normal com sincronização postergada. |
+| **Saturação de processos em sistemas com baixa memória** | Baixa | Médio | Limite configurável de concorrência máxima de workers paralelos no orquestrador Tokio. |
 
-### 12.2. Dependências
-* Toolchain Rust estável (`rustc >= 1.82`, `cargo`).
-* Git CLI (`>= 2.38`) e GitHub CLI (`gh >= 2.40`) autenticados na máquina hospedeira.
-* Gramáticas oficiais do `tree-sitter` embarcadas estaticamente no binário (`tree-sitter-typescript`, `tree-sitter-rust`, `tree-sitter-python`, `tree-sitter-json`).
+### 11.2. Dependências do Sistema
+* **Compilador Rust:** Toolchain estável `rustc >= 1.82` e `cargo`.
+* **Ferramental Git:** `git >= 2.38` com suporte a worktrees.
+* **GitHub CLI:** `gh >= 2.40` autenticado localmente para operações remotas de quadro e PR.
+* **Gramáticas Tree-sitter:** Gramáticas de Rust, TypeScript, TSX, Python, Go e SQL embutidas estaticamente no binário.
 
 ---
 
-## 13. Cronograma Estimado (MVP)
+## 12. Cronograma e Fases Entregues (Status de Engenharia)
 
-| Fase | Duração | Deliverables (Entregáveis) |
-| :--- | :---: | :--- |
-| **Fase 1: Fundação, CLI & SQLite WAL (`Gate 0`)** | Semana 1 | Workspace Cargo estruturado, banco `.trustkit/state.db` em modo WAL (zero `NULL`), `trustkit init`, integração concorrente com `gh` (`GitHubIdentityGuard` + `ProjectBoardSynchronizer`) e `trustkit hook` (`< 3ms`). |
-| **Fase 2: Motor de Spec V2, `--from-prd` & DAG (`Gates 1, 2 e 3`)** | Semana 2 | Ingestor de PRD upstream (`PrdSpecificationIngestor`), validador de Mermaid/Gherkin/Matriz de Rastreabilidade, `trustkit spec lock` com `BLAKE3` (`ArtifactSeal`) e `WaveExecutionPlanner` (`trustkit wave plan`). |
-| **Fase 3: Camada 0 AST (`tree-sitter`) & Context Slicer** | Semana 3 | Crate `trustkit-ast` com `TestIntegrityAuditor` (Anti-Cheat), `InvariantLexicalScanner` (zero emojis, zero IA trailers, zero `raw.githubusercontent`) e `AstContextSlicer` para os Builders. |
-| **Fase 4: Isolador de Worktrees, TDD Guard & Gauntlet V2 (`Gates 4, 5 e 6`)** | Semana 4 | `WorktreeIsolationProvider`, fiscalizador `TddPhaseGuard` (`RED -> GREEN`), despachante paralelo (`tokio`) + servidor MCP `stdio`, `VisualEvidenceGuard`, `trustkit done`, `trustkit pr` e a *Thin Skill* (`SKILL.md` v4 enxuta). |
+| Fase de Engenharia | Funcionalidades Entregues no Repositório | Status Atual |
+| :--- | :--- | :---: |
+| **Fase 1: Fundação, Domínio e CLI Base** | Pure Domain Models, SQLite WAL (100% NOT NULL), `trustkit init`, `trustkit hook`. | Concluído e Homologado |
+| **Fase 2: Motor de Especificação e DAG** | Validador de Spec V2, Ingestor PRD, `trustkit spec lock` BLAKE3 e `trustkit wave plan`. | Concluído e Homologado |
+| **Fase 3: AST Camada 0 e Context Slicer** | Tree-sitter parser, `TestIntegrityAuditor` (anti-cheat), lexical scanner e context slicer. | Concluído e Homologado |
+| **Fase 4: Git Worktrees e Ciclo TDD** | `WorktreeIsolationProvider` CoW, `TddPhaseGuard` (RED -> GREEN), Swarm de 4 críticos. | Concluído e Homologado |
+| **Fase 5: Memória Perene do Projeto** | SQLite FTS5 BM25 search, links wiki bidirecionais e subcomando `trustkit memory`. | Concluído e Homologado |
+| **Fase 6: Inteligência de Grafo Estrutural** | Extração de nós/arestas AST, acoplamento afferent/efferent, detecção de god nodes (`trustkit graph`). | Concluído e Homologado |
+| **Fase 7: Revisão Semântica e Segurança** | `trustkit task review` e auditoria global de segurança em 6 fases (`trustkit audit security`). | Concluído e Homologado |
+| **Fase 8: Autonomia de Especificação** | Independência de ferramentas externas; `trustkit spec prompt` e `trustkit spec lint` nativos. | Concluído e Homologado |
+| **Fase 9: Multiplexador de Terminais PTY** | Terminais virtuais PTY assíncronos para despacho paralelo de agentes reais. | Concluído e Homologado |
+| **Fase 10: Motor Autônomo e Headless** | Orquestrador `trustkit auto` ponta a ponta, exit codes 0 para help/version e execução headless. | Concluído e Homologado |
+| **Fase 11: Governança de Harness L4** | Regras e agentes `.claude/`, `AGENTS.md`, suite SDD thin skills e diagramas Archify. | Concluído e Homologado |
+| **Fase 12: Planejamento de Marcos e Citações AST** | Subcomando `trustkit milestones` (plan/list/inspect), `trustkit init --milestone`, citações exatas de linhas PRD/ADR e tabela SQLite WAL. | Concluído e Homologado |
 
 ---
 
 ## Apêndice: Racional de Nomenclatura e Identidade Arquitetural (TRustKit)
 
-A escolha do nome **TRustKit** consolida a fusão conceitual de **"True Rust"** com o ferramental (*Kit*) de governança de ciclo de vida para desenvolvimento assistido por agentes de IA. Longe de ser apenas um artifício fonético, o prefixo **T** define formalmente os pilares estruturais e operacionais que diferenciam este harness das implementações tradicionais de mercado:
-
-### 1. "True Rust" (Nativo vs. Runtimes Interpretados)
-
-A maioria dos harnesses de agentes no mercado opera sobre Python ou Node.js, arcando com o custo de inicialização de interpretadores (300ms a 2s por sub-processo), alto consumo de memória e latência severa em hooks síncronos de ciclo de vida (`PreToolUse` / `PostToolUse`).
-
-O **TRustKit** implementa um binário estático nativo em Rust (*True Rust*), garantindo:
-
-* **Cold-start desprezível (~1 a 3ms):** Hooks e validadores executam instantaneamente no terminal sem quebrar a fluidez da sessão interativa do LLM.
-* **Orquestração de baixo nível concorrente:** Uso direto de bibliotecas nativas de sistema (`git2`/`gix` para isolamento de worktrees com reflink copy-on-write e `tokio` para paralelização real dos builders), eliminando o *overhead* de chamadas shell externas em cadeia.
-
-### 2. Determinismo e Eliminação de Alucinações (*Trust*)
-
-A sobreposição fonética intencional com o termo em inglês **"Trust"** (confiança) estabelece a fronteira entre a criatividade probabilística do LLM e a integridade matemática do código:
-
-* **Invariantes determinísticos:** Validação de conformidade estrutural em microssegundos (fechamento formal da matriz $\text{RN} \rightarrow \text{RF} \rightarrow \text{TASK} \rightarrow \text{E2E}$, integridade de blocos Mermaid e critérios Gherkin).
-* **Análise estática via AST (tree-sitter):** O binário audita alterações estruturais diretamente na árvore sintática, barrando quebra de contratos, adulteração de testes ou vazamento de escopo antes de acionar turnos caros de LLM para auditoria reflexiva.
-
-### 3. Especificação do Nome e Mapeamento CLI
-
-* **Nome Formal do Projeto:** `TRustKit`
-* **Binário CLI:** `trustkit` (todo em minúsculas para conformidade ergonômica com ambientes POSIX)
-* **Slogan / Tagline do Produto:** *"True Rust performance for trusted, spec-driven agentic execution."*
+O nome **TRustKit** materializa a convergência entre:
+1. **True Rust:** Desempenho nativo com tempos de inicialização da ordem de microssegundos, ausência de coletor de lixo e segurança garantida pelo sistema de tipos e propriedade (*ownership*).
+2. **Trust (Confiança Determinística):** Eliminação da volatilidade em sistemas agênticos através de comprovação matemática, assinaturas BLAKE3, rastreabilidade fechada e integridade inviolável de testes.

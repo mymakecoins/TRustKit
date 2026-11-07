@@ -70,6 +70,7 @@ fn test_concurrent_bootstrap_init() {
         command: Command::Init(InitArgs {
             issue: None,
             from_prd: None,
+            milestone: None,
             json: false,
         }),
     };

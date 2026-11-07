@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guia do Usuario TRustKit - Manual Oficial de Operacao</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --border-color: #30363d;
+      --text-primary: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-heading: #f0f6fc;
+      --accent-color: #58a6ff;
+      --accent-hover: #79c0ff;
+      --code-bg: #1f242c;
+      --table-header: #21262d;
+      --table-stripe: #12161c;
+      --badge-bg: #238636;
+      --badge-text: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background-color: var(--bg-primary);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    aside.sidebar {
+      width: 280px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    aside.sidebar h2 {
+      font-size: 1.1rem;
+      color: var(--text-heading);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    aside.sidebar nav ul {
+      list-style: none;
+    }
+
+    aside.sidebar nav li {
+      margin-bottom: 8px;
+    }
+
+    aside.sidebar nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    aside.sidebar nav a:hover {
+      color: var(--accent-hover);
+      background-color: var(--bg-tertiary);
+    }
+
+    main.content {
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 980px;
+      overflow-y: auto;
+    }
+
+    header.header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    header.header h1 {
+      font-size: 2.2rem;
+      color: var(--text-heading);
+      margin-bottom: 8px;
+    }
+
+    header.header p.lead {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 12px;
+      background-color: var(--badge-bg);
+      color: var(--badge-text);
+      text-transform: uppercase;
+    }
+
+    section {
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      color: var(--text-heading);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      color: var(--text-heading);
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    ul, ol {
+      margin-bottom: 16px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.88rem;
+      color: #e6edf3;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.88em;
+      background-color: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #79c0ff;
+    }
+
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: var(--table-header);
+      color: var(--text-heading);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--table-stripe);
+    }
+
+    .notice {
+      background-color: var(--bg-secondary);
+      border-left: 4px solid var(--accent-color);
+      padding: 14px 18px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      body {
+        flex-direction: column;
+      }
+      aside.sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+      main.content {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h2>TRustKit Guia</h2>
+    <nav>
+      <ul>
+        <li><a href="#intro">1. Introducao e Principios</a></li>
+        <li><a href="#milestones">2. Planejamento de Marcos</a></li>
+        <li><a href="#gate0">3. Inicializacao (Gate 0)</a></li>
+        <li><a href="#auto">4. Modo Autonomo</a></li>
+        <li><a href="#gates">5. Jornada dos 7 Gates</a></li>
+        <li><a href="#security">6. Auditoria de Seguranca</a></li>
+        <li><a href="#memory">7. Memoria Perene</a></li>
+        <li><a href="#graph">8. Grafo Estrutural</a></li>
+        <li><a href="#cheatsheet">9. Referencia Rapida</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="content">
+
+    <header class="header">
+      <span class="badge">Versao 2.0</span>
+      <h1>Guia do Usuario TRustKit</h1>
+      <p class="lead">Manual Oficial de Operacao, Governanca de Spec-Driven Development (SDD) e Execucao Deterministica de Agentes.</p>
+    </header>
+
+    <section id="intro">
+      <h2>1. Introducao e Principios Fundamentais</h2>
+      <p>O TRustKit e um motor deterministico escrito em Rust focado em governanca estrita de SDD, isolamento em Git Worktrees, Gauntlet Loop V2 e inteligencia sintatica via Tree-Sitter.</p>
+      
+      <div class="notice">
+        <strong>Invariantes Constitucionais Inviolaveis:</strong>
+        <ul>
+          <li><strong>Zero Emojis:</strong> Absoluta proibicao de icones ou caracteres graficos em codigo, documentacao, commits ou terminais.</li>
+          <li><strong>Zero Trailers de IA:</strong> Bloqueio formal de assinaturas automaticas de autoria (como <code>Co-Authored-By</code>).</li>
+          <li><strong>Determinismo Puro:</strong> Todas as mutacoes de ciclo e selos de artefatos devem ser conduzidas pelo binario <code>trustkit</code>.</li>
+          <li><strong>TDD Estrito:</strong> No Gate 4, a comprovacao da fase RED (falha do teste) e compulsoria antes da fase GREEN.</li>
+          <li><strong>Pull Request Sob Demanda:</strong> Abertura de PR somente mediante solicitacao humana explicita.</li>
+          <li><strong>Protecao de Branches:</strong> Proibicao de pushes diretos a branches protegidas (main, staging, develop).</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="milestones">
+      <h2>2. Planejamento Previo de Marcos (trustkit milestones)</h2>
+      <p>O modulo de planejamento de marcos analisa conjuntamente o PRD e o ADR, mapeia capacidades de negocio e restricoes tecnicas, calcula a ordenacao aciclica (DAG) e gera os arquivos individuais em <code>docs/milestones/</code> com citacoes exatas de linhas (<code>#LXX-LYY</code>).</p>
+
+      <h3>Analise e Planejamento (trustkit milestones plan)</h3>
+      <pre><code># Planeja marcos aciclicos com base em PRD e ADR
+trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
+
+# Saida estruturada em JSON sem campos nulos
+trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md --json</code></pre>
+
+      <h3>Listagem de Marcos (trustkit milestones list)</h3>
+      <pre><code># Lista todos os marcos cadastrados no SQLite WAL
+trustkit milestones list
+
+# Listagem formatada em JSON
+trustkit milestones list --json</code></pre>
+
+      <h3>Inspecao Detalhada de Marco (trustkit milestones inspect)</h3>
+      <pre><code># Inspeciona capacidades, restricoes e citacoes exatas do marco M01
+trustkit milestones inspect M01
+
+# Inspecao em formato JSON
+trustkit milestones inspect M01 --json</code></pre>
+    </section>
+
+    <section id="gate0">
+      <h2>3. Inicializacao do Ciclo SDD (Gate 0)</h2>
+      <p>O Gate 0 valida identidade, estado da arvore Git e cria a sessao transacional de ciclo no SQLite WAL.</p>
+
+      <h3>Inicializacao Direcionada por Marco (trustkit init --milestone)</h3>
+      <pre><code>trustkit init --milestone docs/milestones/M01-fundacao.md</code></pre>
+
+      <h3>Inicializacao Nominal Vinculada a Issue (trustkit init --issue)</h3>
+      <pre><code># Inicializacao com issue remota
+trustkit init --issue 42
+
+# Inicializacao sem issue vinculada (modo puramente local)
+trustkit init</code></pre>
+
+      <h3>Diagnostico e Status do Ciclo (trustkit status)</h3>
+      <pre><code>trustkit status
+trustkit status --json</code></pre>
+    </section>
+
+    <section id="auto">
+      <h2>4. Modo Autonomo de Ponta a Ponta (trustkit auto)</h2>
+      <p>Executa de forma autonoma e desatendida todo o ciclo do Gate 0 ao Gate 6 com isolamento de worktree e auto-merge final:</p>
+      <pre><code># Executa ciclo completo a partir de uma issue remota
+trustkit auto --issue 42 --target develop
+
+# Executa ciclo completo a partir de arquivo de especificacao local
+trustkit auto --spec docs/specs/042-feature/spec.md --target develop
+
+# Execucao com selecao explicita de runtime de terminal (auto, pty, native)
+trustkit auto --issue 42 --runtime pty</code></pre>
+    </section>
+
+    <section id="gates">
+      <h2>5. Jornada Passo a Passo dos 7 Gates</h2>
+
+      <h3>Gate 1: Context Slicing e Linting de Especificacao</h3>
+      <pre><code># Gera prompt rico com fatiamento de contexto AST e busca semantica FTS5
+trustkit spec prompt --idea "Modulo de autenticacao JWT" --context-hops 2 --budget 4000
+
+# Executa linter estatico imediato (&lt; 3ms) para auto-correcao
+trustkit spec lint --file docs/specs/042-feature/spec.md</code></pre>
+
+      <h3>Gate 2: Selamento Criptografico (trustkit spec lock)</h3>
+      <pre><code>trustkit spec lock --spec docs/specs/042-feature/spec.md</code></pre>
+
+      <h3>Gate 3: Decomposicao Atomica e DAG (trustkit wave plan)</h3>
+      <pre><code>trustkit wave plan
+trustkit wave plan --json</code></pre>
+
+      <h3>Gate 4: Execucao em Git Worktrees e TDD Estrito</h3>
+      <pre><code># Despacha a onda de tarefas em worktrees efemeras
+trustkit wave run --wave 1 --runtime auto
+
+# Registro mandatorio da fase RED (falha comprovada)
+trustkit task test TASK-001 --phase red
+
+# Registro mandatorio da fase GREEN (sucesso comprovado)
+trustkit task test TASK-001 --phase green
+
+# Revisao semantica multi-angulo do diff da tarefa
+trustkit task review TASK-001 --effort medium
+
+# Conclusao e homologacao da tarefa atomica
+trustkit task complete TASK-001 --code-review medium</code></pre>
+
+      <h3>Gate 5: Gauntlet V2 e Invariantes</h3>
+      <pre><code># Camada 0: Auditoria estatica AST em microssegundos (anti-cheat e invariantes)
+trustkit gauntlet ast-audit
+
+# Execucao completa do swarm de criticos e testes E2E Playwright
+trustkit gauntlet run
+
+# Execucao com revisao de seguranca de aplicacao forcada
+trustkit gauntlet run --security-review
+
+# Diagnostico de falhas ou circuit breaker
+trustkit doctor</code></pre>
+
+      <h3>Gate 6: Certificacao, Merge e Pull Request</h3>
+      <pre><code># Certifica a conclusao e compila o gauntlet-report.md
+trustkit done
+
+# Merge deterministico na branch de destino
+trustkit merge --target develop
+
+# Abertura de Pull Request sob demanda explicita
+trustkit pr --target develop</code></pre>
+    </section>
+
+    <section id="security">
+      <h2>6. Auditoria de Seguranca Pre-Release (trustkit audit security)</h2>
+      <p>Auditoria global em 6 fases para homologacao de marcos de versao antes do merge em branches estaveis:</p>
+      <pre><code># Auditoria defensiva no perfil padrao
+trustkit audit security --profile standard --scope .
+
+# Auditoria em profundidade com emissao de relatorio estruturado JSON
+trustkit audit security --profile deep --output-dir .trustkit/audits/security --json</code></pre>
+    </section>
+
+    <section id="memory">
+      <h2>7. Memoria Perene e Base de Conhecimento (trustkit memory)</h2>
+      <p>Gestao de wiki viva em <code>.trustkit/wiki/</code> indexada em SQLite FTS5 com busca semantica BM25:</p>
+      <pre><code># Busca semantica na base de conhecimento
+trustkit memory search --query "diretrizes de arquitetura" --limit 5
+
+# Leitura estruturada de nota
+trustkit memory read --slug "arquitetura-hexagonal"
+
+# Criacao de nota atomica com tags
+trustkit memory write --slug "padroes-de-api" --title "Padroes de API" --tags "api,rest" --body "Texto..."
+
+# Listagem de todas as notas catalogadas
+trustkit memory list
+
+# Reconstrucao completa do indice FTS5 a partir dos arquivos
+trustkit memory reindex</code></pre>
+    </section>
+
+    <section id="graph">
+      <h2>8. Inteligencia de Grafo Estrutural (trustkit graph)</h2>
+      <p>Mapeia dependencias entre nos de codigo e wiki via Tree-Sitter, com prevencao Shrink-Guard:</p>
+      <pre><code># Constroi ou atualiza o grafo estrutural
+trustkit graph build
+
+# Diagnostica acoplamento e localiza God Nodes
+trustkit graph health --top-god-nodes 10
+
+# Caminho minimo entre dois simbolos via BFS
+trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db::SqliteWalRepositoryAdapter"</code></pre>
+    </section>
+
+    <section id="cheatsheet">
+      <h2>9. Referencia Rapida de Comandos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Comando</th>
+            <th>Descricao Operacional</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>trustkit auto</code></td>
+            <td>Orquestra autonomamente o ciclo SDD de ponta a ponta (Gates 0 a 6).</td>
+          </tr>
+          <tr>
+            <td><code>trustkit milestones plan</code></td>
+            <td>Decompoe PRD e ADR em marcos aciclicos com citacoes exatas de linhas.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit milestones list</code></td>
+            <td>Lista todos os marcos cadastrados e persistidos no SQLite WAL.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit milestones inspect</code></td>
+            <td>Inspeciona metadados, capacidades e citacoes exatas de um marco.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit init</code></td>
+            <td>Inicializa ciclo SDD (suporta <code>--milestone</code> e <code>--issue</code>).</td>
+          </tr>
+          <tr>
+            <td><code>trustkit status</code></td>
+            <td>Inspeciona o gate ativo e a saude do ciclo de desenvolvimento.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit spec prompt</code></td>
+            <td>Compila prompt contextualizado com fatias AST e memoria FTS5.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit spec lint</code></td>
+            <td>Valida estaticamente a conformidade do arquivo de especificacao.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit spec lock</code></td>
+            <td>Aplica selo criptografico BLAKE3 congelando a especificacao.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit wave plan</code></td>
+            <td>Calcula grafo topologico DAG de tarefas e organiza ondas paralelas.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit wave run</code></td>
+            <td>Executa tarefas da onda em Git Worktrees isoladas com links CoW.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit task test</code></td>
+            <td>Fiscaliza o cumprimento obrigatorio do ciclo TDD (red e green).</td>
+          </tr>
+          <tr>
+            <td><code>trustkit task review</code></td>
+            <td>Executa revisao semantica multi-angulo do diff da tarefa.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit task complete</code></td>
+            <td>Homologa formalmente a conclusao da tarefa apos testes verificados.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit gauntlet ast-audit</code></td>
+            <td>Auditoria estatica da Camada 0 em microssegundos contra violacoes.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit gauntlet run</code></td>
+            <td>Dispara swarm de criticos concorrentes e testes E2E Playwright.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit doctor</code></td>
+            <td>Diagnostica causas de falha e estado do disjuntor de seguranca.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit done</code></td>
+            <td>Certifica conclusao do ciclo e compila o relatorio oficial final.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit merge</code></td>
+            <td>Efetua merge deterministico na branch de destino homologada.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit pr</code></td>
+            <td>Abre Pull Request para o GitHub sob demanda explicita humana.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit audit security</code></td>
+            <td>Auditoria defensiva pre-release global em 6 fases com ledger JSON.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit memory</code></td>
+            <td>Gerenciamento e busca semantica BM25 na memoria viva do projeto.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit graph</code></td>
+            <td>Analise de acoplamento, busca de caminhos e deteccao de God Nodes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>TRustKit: True Rust performance for trusted, spec-driven agentic execution.</p>
+    </footer>
+
+  </main>
+
+</body>
+</html>

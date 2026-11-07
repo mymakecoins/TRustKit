@@ -72,7 +72,9 @@ TRustKit/
 O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 
 ```
-[Gate 0] Inicializacao de Sessao e Setup de Identidade
+[Pre-Planejamento] Planejamento de Marcos (trustkit milestones plan --prd PRD.md --adr ADR.md)
+    |
+[Gate 0] Inicializacao de Sessao e Setup de Identidade (trustkit init --milestone M01.md ou --issue ID)
     |
 [Gate 1] Context Slicing e Especificacao V2 (spec.md com Mermaid e Gherkin)
     |
@@ -99,10 +101,27 @@ trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] 
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
+### Planejamento Previo de Marcos: Decomposicao Aciclica de PRD e ADR (`trustkit milestones`)
+Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de marcos, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os marcos no SQLite WAL:
+```bash
+# Analisa PRD e ADR, gera arquivos M01..MNN.md com citacoes de linha e persiste no banco
+trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
+
+# Lista todos os marcos cadastrados, ordem topologica, dependencias e status
+trustkit milestones list [--json]
+
+# Inspeciona detalhes completos, capacidades e citacoes de um marco especifico
+trustkit milestones inspect M01 [--json]
+```
+
 ### Gate 0: Inicializacao do Ciclo
 Valida identidade GitHub, branches, estado da arvore de trabalho e inicializa o ciclo no banco SQLite WAL:
 ```bash
+# Inicializacao nominal vinculada a issue remota ou local
 trustkit init --issue <ISSUE_ID> [--from-prd <CAMINHO_PRD>] [--json]
+
+# Inicializacao direcionada por marco previamente planejado
+trustkit init --milestone docs/milestones/M01-fundacao.md [--json]
 ```
 
 ### Gate 1 & 2: Especificacao Nativa, Linting e Congelamento (Spec Lock)
