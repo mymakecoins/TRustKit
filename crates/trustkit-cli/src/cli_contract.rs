@@ -83,6 +83,11 @@ impl Cli {
                 AuditSubcommand::Security(a) => a.json,
             },
             Command::Auto(args) => args.json,
+            Command::Milestones(MilestonesArgs { action }) => match action {
+                MilestonesSubcommand::Plan(args) => args.json,
+                MilestonesSubcommand::List(args) => args.json,
+                MilestonesSubcommand::Inspect(args) => args.json,
+            },
         }
     }
 }
@@ -139,6 +144,9 @@ pub enum Command {
 
     #[command(about = "Decoupled pre-release homologation and repository security audits")]
     Audit(AuditArgs),
+
+    #[command(about = "Plan, list and inspect project milestones")]
+    Milestones(MilestonesArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]
@@ -148,6 +156,9 @@ pub struct InitArgs {
 
     #[arg(long, help = "Path to source PRD or requirements specification")]
     pub from_prd: Option<String>,
+
+    #[arg(long, help = "Path to milestone markdown file for targeted SDD cycle")]
+    pub milestone: Option<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
@@ -322,6 +333,61 @@ impl AutoArgs {
         }
         Ok(())
     }
+}
+
+#[derive(Args, Debug, PartialEq, Eq)]
+pub struct MilestonesArgs {
+    #[command(subcommand)]
+    pub action: MilestonesSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum MilestonesSubcommand {
+    #[command(name = "plan", about = "Plan milestones DAG from PRD and ADR files")]
+    Plan(MilestonesPlanArgs),
+
+    #[command(name = "list", about = "List planned milestones")]
+    List(MilestonesListArgs),
+
+    #[command(name = "inspect", about = "Inspect milestone details and criteria")]
+    Inspect(MilestonesInspectArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default)]
+pub struct MilestonesPlanArgs {
+    #[arg(long, help = "Path to PRD markdown file")]
+    pub prd: String,
+
+    #[arg(long, help = "Path to ADR markdown file")]
+    pub adr: String,
+
+    #[arg(
+        long,
+        default_value = "docs/milestones",
+        help = "Output directory for milestone markdown files"
+    )]
+    pub output_dir: String,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default)]
+pub struct MilestonesListArgs {
+    #[arg(long, help = "Optional plan ID to filter milestones")]
+    pub plan_id: Option<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default)]
+pub struct MilestonesInspectArgs {
+    #[arg(help = "Milestone identifier (e.g. M01)")]
+    pub milestone_id: String,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
 }
 
 #[cfg(test)]

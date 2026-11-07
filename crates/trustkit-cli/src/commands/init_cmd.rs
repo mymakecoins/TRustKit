@@ -74,6 +74,16 @@ pub fn scaffold_trustkit_toml(repo_dir: &Path) -> Result<(), DomainViolation> {
 }
 
 pub fn execute(args: &InitArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
+    if let Some(ref m_path) = args.milestone {
+        let path = Path::new(m_path);
+        if !path.exists() {
+            return Err(DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "init_milestone".to_string(),
+                details: format!("Milestone file '{}' does not exist", m_path),
+            });
+        }
+    }
+
     let repo_dir = Path::new(".");
     let git_ctx = GitInspector::inspect(repo_dir)?;
 
@@ -90,6 +100,7 @@ pub fn execute(args: &InitArgs, json_mode: bool) -> Result<DomainOutcome, Domain
     let req = InitializeCycleRequest {
         issue_param: args.issue.clone(),
         from_prd: args.from_prd.clone(),
+        milestone_path: args.milestone.clone(),
         work_branch: git_ctx.work_branch,
         base_commit_sha: git_ctx.base_commit_sha,
         pre_existing_dirty_files: git_ctx.pre_existing_dirty_files,
@@ -108,6 +119,11 @@ pub fn execute(args: &InitArgs, json_mode: bool) -> Result<DomainOutcome, Domain
             outcome.cycle.spec_dir
         ),
     })?;
+
+    if let Some(ref m_path) = args.milestone {
+        let dest = spec_dir.join("spec.md");
+        let _ = fs::copy(Path::new(m_path), dest);
+    }
 
     let rendered = Presenter::render_init(&outcome, json_mode);
     println!("{rendered}");

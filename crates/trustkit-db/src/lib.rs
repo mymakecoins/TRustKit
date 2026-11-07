@@ -7,6 +7,7 @@ pub mod graph_sqlite_repository;
 pub mod knowledge_ops;
 pub mod knowledge_wiki_fs;
 pub mod migrations;
+pub mod milestone_ops;
 pub mod row_mappers;
 pub mod sqlite_adapter;
 pub mod task_ops;

@@ -20,6 +20,7 @@ release/
 *.tmp
 .DS_Store
 Thumbs.db
+node_modules/
 # TRustKit runtime transacional e worktrees efemeras
 .trustkit/state.db*
 .trustkit/worktrees/

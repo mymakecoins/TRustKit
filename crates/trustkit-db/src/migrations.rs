@@ -145,7 +145,25 @@ pub fn initialize_database(conn: &Connection) -> Result<(), DomainViolation> {
 
          CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON structural_graph_edges(source_id);
          CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON structural_graph_edges(target_id);
-         CREATE INDEX IF NOT EXISTS idx_graph_edges_file ON structural_graph_edges(source_file);"
+         CREATE INDEX IF NOT EXISTS idx_graph_edges_file ON structural_graph_edges(source_file);
+
+         CREATE TABLE IF NOT EXISTS milestones (
+             milestone_id        TEXT PRIMARY KEY NOT NULL,
+             plan_id             TEXT NOT NULL,
+             sequence_index      INTEGER NOT NULL,
+             title               TEXT NOT NULL,
+             slug                TEXT NOT NULL,
+             file_path           TEXT NOT NULL,
+             goal                TEXT NOT NULL,
+             dependencies_json   TEXT NOT NULL DEFAULT '[]',
+             capabilities_json   TEXT NOT NULL DEFAULT '[]',
+             status              TEXT NOT NULL CHECK (status IN ('Planned', 'InProgress', 'Completed', 'Cancelled')),
+             created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+             updated_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_milestones_plan ON milestones(plan_id);
+         CREATE INDEX IF NOT EXISTS idx_milestones_status ON milestones(status);"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
         subsystem: "sqlite_migrations".into(),
         details: format!("Failed initializing database schema: {e}"),

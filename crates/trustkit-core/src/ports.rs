@@ -10,10 +10,10 @@ use crate::entities::{
     CodeReviewEffortLevel, ContextSliceRequest, ContextSliceResult, CycleStatus, ExecutionEvidence,
     FileGraphManifest, GateStage, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome,
     KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome,
-    KnowledgeSearchQuery, KnowledgeWriteOutcome, MultiplexedTerminalHandle,
-    MultiplexedTerminalRequest, SddCycle, SemanticReviewFinding, ShortestPathOutcome,
-    SpecPromptPayload, SpecPromptRequest, SpecificationV2, StructuralEdge, StructuralNode,
-    TaskNode, TraversalMode, WaveSchedule, WikiLink,
+    KnowledgeSearchQuery, KnowledgeWriteOutcome, Milestone, MilestonePlan, MilestoneStatus,
+    MultiplexedTerminalHandle, MultiplexedTerminalRequest, SddCycle, SemanticReviewFinding,
+    ShortestPathOutcome, SpecPromptPayload, SpecPromptRequest, SpecificationV2, StructuralEdge,
+    StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
 };
 use crate::errors::DomainViolation;
 use crate::special_cases::{
@@ -324,4 +324,33 @@ pub trait TerminalMultiplexerPort: Send + Sync {
     ) -> Result<String, DomainViolation>;
     fn terminate_terminal(&self, handle: &MultiplexedTerminalHandle)
     -> Result<(), DomainViolation>;
+}
+
+pub trait MilestoneExtractorPort: Send + Sync {
+    fn extract_milestone_plan(
+        &self,
+        prd_path: &str,
+        adr_path: &str,
+    ) -> Result<MilestonePlan, DomainViolation>;
+}
+
+pub trait MilestoneRepositoryPort: Send + Sync {
+    fn save_milestone(&self, milestone: &Milestone) -> Result<(), DomainViolation>;
+    fn save_milestone_plan(&self, plan: &MilestonePlan) -> Result<(), DomainViolation> {
+        for m in &plan.milestones {
+            self.save_milestone(m)?;
+        }
+        Ok(())
+    }
+    fn find_milestone_by_id(
+        &self,
+        milestone_id: &str,
+    ) -> Result<Option<Milestone>, DomainViolation>;
+    fn list_milestones(&self, plan_id: Option<&str>) -> Result<Vec<Milestone>, DomainViolation>;
+    fn update_milestone_status(
+        &self,
+        milestone_id: &str,
+        status: MilestoneStatus,
+        updated_at: &str,
+    ) -> Result<(), DomainViolation>;
 }

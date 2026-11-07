@@ -13,6 +13,7 @@ pub mod init_cmd;
 pub mod mcp_cmd;
 pub mod memory_cmd;
 pub mod merge_cmd;
+pub mod milestones_cmd;
 pub mod pr_cmd;
 pub mod spec_init_cmd;
 pub mod spec_lint_cmd;
