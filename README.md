@@ -72,7 +72,7 @@ TRustKit/
 O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 
 ```
-[Pre-Planejamento] Planejamento de Marcos (trustkit milestones plan --prd PRD.md --adr ADR.md)
+[Pre-Planejamento] Planejamento de Marcos de Entregas (trustkit milestones plan --prd PRD.md --adr ADR.md)
     |
 [Gate 0] Inicializacao de Sessao e Setup de Identidade (trustkit init --milestone M01.md ou --issue ID)
     |
@@ -101,13 +101,13 @@ trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] 
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
-### Planejamento Previo de Marcos: Decomposicao Aciclica de PRD e ADR (`trustkit milestones`)
-Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de marcos, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os marcos no SQLite WAL:
+### Planejamento Previo de Marcos de Entregas: Decomposicao Aciclica de PRD e ADR (`trustkit milestones`)
+Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de Marcos de Entregas, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os Marcos de Entregas no SQLite WAL:
 ```bash
 # Analisa PRD e ADR, gera arquivos M01..MNN.md com citacoes de linha e persiste no banco
 trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
 
-# Lista todos os marcos cadastrados, ordem topologica, dependencias e status
+# Lista todos os Marcos de Entregas cadastrados, ordem topologica, dependencias e status
 trustkit milestones list [--json]
 
 # Inspeciona detalhes completos, capacidades e citacoes de um marco especifico
@@ -214,7 +214,7 @@ trustkit pr --target develop [--json]
 ```
 
 ### Homologação Pré-Release: Auditoria Defensiva Global (`audit security`)
-Para homologação de marcos de versão ou antes de merges em branches estáveis (`staging` ou `main`), o TRustKit oferece um subcomando desacoplado de auditoria defensiva em 6 fases com validação de ledger determinístico (`coverage-ledger.json` e `findings.json`):
+Para homologação de Marcos de Entregas de versão ou antes de merges em branches estáveis (`staging` ou `main`), o TRustKit oferece um subcomando desacoplado de auditoria defensiva em 6 fases com validação de ledger determinístico (`coverage-ledger.json` e `findings.json`):
 ```bash
 # Executa auditoria global pré-release (perfis: quick, standard, deep)
 trustkit audit security [--profile standard] [--scope .] [--output-dir .trustkit/audits/security] [--json]
