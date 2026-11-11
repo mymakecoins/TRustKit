@@ -3,7 +3,7 @@
 // Constitutional Principle II: Absolute Prohibition of NULL.
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
-use crate::entities::{TaskNode, WaveSchedule};
+use crate::entities::{GateStage, TaskNode, WaveSchedule};
 use crate::errors::DomainViolation;
 use crate::ports::{CycleEvidenceRepositoryPort, WaveExecutionPlannerPort};
 use crate::special_cases::{ActiveCycleLookup, SpecLockState};
@@ -16,6 +16,44 @@ pub struct PlanExecutionWavesRequest {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlanExecutionWavesOutcome {
     pub wave_schedule: WaveSchedule,
+}
+
+pub fn enforce_non_empty_backlog(
+    cycle_id: &str,
+    total_tasks: usize,
+) -> Result<(), DomainViolation> {
+    if total_tasks == 0 {
+        return Err(DomainViolation::EmptyTaskBacklogFault {
+            cycle_id: cycle_id.to_string(),
+            reason: "Circuit Breaker tripped at Gate 3: atomic task backlog is empty (0 tasks). Cannot advance to Gate 4, Gate 5, or Gate 6.".to_string(),
+        });
+    }
+    Ok(())
+}
+
+pub fn guard_gate_transition_with_backlog(
+    cycle_id: &str,
+    target_gate: GateStage,
+    total_tasks: usize,
+) -> Result<(), DomainViolation> {
+    match target_gate {
+        GateStage::Gate4TasksImplemented
+        | GateStage::Gate5GauntletCleared
+        | GateStage::Gate6Certified => enforce_non_empty_backlog(cycle_id, total_tasks),
+        GateStage::Gate0Discovery
+        | GateStage::Gate1SpecDrafting
+        | GateStage::Gate2SpecSealed
+        | GateStage::Gate3WavePlanned => Ok(()),
+    }
+}
+
+pub fn verify_cycle_has_atomic_tasks(
+    cycle_id: &str,
+    repo: &dyn CycleEvidenceRepositoryPort,
+) -> Result<usize, DomainViolation> {
+    let tasks = repo.list_atomic_tasks(cycle_id)?;
+    enforce_non_empty_backlog(cycle_id, tasks.len())?;
+    Ok(tasks.len())
 }
 
 pub fn execute(
@@ -44,6 +82,7 @@ pub fn execute(
     }
 
     let mut schedule = planner.plan_waves(&req.tasks)?;
+    enforce_non_empty_backlog(&active_cycle.cycle_id, schedule.total_tasks)?;
     schedule.cycle_id = active_cycle.cycle_id.clone();
 
     repo.save_atomic_tasks(&active_cycle.cycle_id, &req.tasks, &schedule)?;
@@ -183,13 +222,11 @@ mod tests {
         let req = PlanExecutionWavesRequest { tasks: vec![] };
 
         let result = execute(req, &repo, &planner);
-        assert!(result.is_err());
-        match result {
-            Err(DomainViolation::InfrastructureBoundaryFault { details, .. }) => {
-                assert!(details.contains("Specification is not frozen"));
-            }
-            other => panic!("Expected InfrastructureBoundaryFault, got: {other:?}"),
-        }
+        assert!(matches!(
+            result,
+            Err(DomainViolation::InfrastructureBoundaryFault { ref details, .. })
+                if details.contains("Specification is not frozen")
+        ));
     }
 
     #[test]
