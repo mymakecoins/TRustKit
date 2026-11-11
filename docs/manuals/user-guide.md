@@ -100,9 +100,11 @@ trustkit init --issue 42 --from-prd docs/PRD_TRustKit.md
 trustkit init --issue 42 --json
 ```
 
-### Consulta de Status e Diagnostico (`trustkit status`)
+### Consulta de Status, Diagnostico e Orientacao Contextual de Proximo Passo (`trustkit status` / `NextStepResolver`)
 
-Permite verificar a qualquer instante o gate ativo, branch de trabalho, integridade do ciclo e historico do disjuntor (Circuit Breaker):
+Permite verificar a qualquer instante o gate ativo, branch de trabalho, integridade do ciclo e historico do disjuntor (Circuit Breaker). Alem disso, todos os comandos do TRustKit (incluindo `trustkit status`) executam o resolvedor contextual deterministico (`NextStepResolver`), emitindo automaticamente a proxima acao exata para o estado corrente do ciclo:
+- Em **Modo Humano (ASCII)**: exibe o bloco padronizado `NEXT STEP:` ao final da saida com prioridades `[PRIMARY]`, `[SECONDARY]` e `[OPTIONAL]`, gate de destino e comando completo.
+- Em **Modo Agente (`--json`)**: inclui o array `next_steps` livre de `null` (`priority`, `target_gate`, `command` e `description`), consumido obrigatoriamente pela skill `trustkit-sdd` ao final de cada turno.
 
 ```bash
 trustkit status

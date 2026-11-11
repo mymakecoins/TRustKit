@@ -825,11 +825,11 @@ trustkit --version</code></pre>
       <h3 id="modos-operacao">2.3 Modos de Operacao: Humano vs Agente</h3>
       <p>O TRustKit suporta nativamente dois formatos de saida ergonomicos:</p>
       <ul>
-        <li><strong>Modo Humano (Padrao):</strong> Apresenta tabelas limpas, texto legivel e prefixos padronizados como <code>[PASS]</code>, <code>[FAIL]</code>, <code>[GATE-0]</code> a <code>[GATE-6]</code>.</li>
-        <li><strong>Modo Agente (Flag <code>--json</code> ou <code>TRUSTKIT_AGENT_MODE=1</code>):</strong> Retorna dados em JSON minificado, sem formatacao ANSI e <strong>sem valores nulos (null)</strong>, otimizando o consumo de tokens.</li>
+        <li><strong>Modo Humano (Padrao):</strong> Apresenta tabelas limpas, texto legivel, prefixos padronizados como <code>[PASS]</code>, <code>[FAIL]</code>, <code>[GATE-0]</code> a <code>[GATE-6]</code> e o rodape contextual <code>NEXT STEP:</code> indicando os proximos comandos priorizados (<code>[PRIMARY]</code>, <code>[SECONDARY]</code>, <code>[OPTIONAL]</code>).</li>
+        <li><strong>Modo Agente (Flag <code>--json</code> ou <code>TRUSTKIT_AGENT_MODE=1</code>):</strong> Retorna dados em JSON minificado, sem formatacao ANSI, <strong>sem valores nulos (null)</strong> e enriquecidos com o array <code>next_steps</code> calculado pelo <code>NextStepResolver</code> (<code>priority</code>, <code>target_gate</code>, <code>command</code> e <code>description</code>).</li>
       </ul>
 
-      <h3 id="status-sessao">2.4 Consultando o Status da Sessao</h3>
+      <h3 id="status-sessao">2.4 Consultando o Status da Sessao e o Proximo Passo</h3>
       <div class="code-container">
         <div class="code-header">
           <span>Terminal (Bash)</span>
@@ -843,7 +843,13 @@ trustkit --version</code></pre>
 [STATUS] Gate Atual: GATE_1_SPECIFICATION
 [STATUS] Estado da Spec: DRAFT_UNVERIFIED
 [STATUS] Invariantes: 16 de 16 Ativas
-[STATUS] Banco SQLite WAL: .trustkit/state.db (Ok)</code></pre>
+[STATUS] Banco SQLite WAL: .trustkit/state.db (Ok)
+
+NEXT STEP:
+  [PRIMARY]   (GATE_1_SPEC) trustkit spec lint --file docs/specs/issue-45-202611041030/spec.md
+              -&gt; Validate the specification structure, Mermaid diagram, Gherkin scenarios, and traceability matrix.
+  [SECONDARY] (GATE_2_LOCK) trustkit spec lock --spec docs/specs/issue-45-202611041030/spec.md
+              -&gt; Freeze the specification with a BLAKE3 seal once linting passes.</code></pre>
       </div>
 
       <div id="adocao-projetos">

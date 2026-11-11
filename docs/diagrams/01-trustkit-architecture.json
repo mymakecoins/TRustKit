@@ -171,10 +171,10 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Hexagonal Core & Spec Scaffold",
+      "title": "Hexagonal Core & Next-Step Guidance",
       "items": [
-        "trustkit-core defines SpecScaffoldComposerPort, SemanticCodeReviewerPort, and InteractivePromptPort",
-        "Deterministic domain ports orchestrate prompt scaffold, AST slicing, and BM25 knowledge search"
+        "trustkit-core defines NextStepResolver, SpecScaffoldComposerPort, SemanticCodeReviewerPort, and InteractivePromptPort",
+        "NextStepPresenter emits deterministic NEXT STEP ASCII footers and null-free next_steps JSON arrays across all gates"
       ]
     },
     {

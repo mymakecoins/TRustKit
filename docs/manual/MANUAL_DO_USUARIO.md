@@ -175,20 +175,21 @@ trustkit --help
 O TRustKit oferece flexibilidade visual completa para dois tipos de publico:
 
 1. **Modo Humano (Padrao via Terminal TTY):**  
-   Exibe informacoes limpas em formato de tabela ASCII legivel, usando prefixos padronizados como `[GATE-0]`, `[PASS]`, `[FAIL]`, `[WARN]` e `[INFO]`, sem decoracoes superfluas.
+   Exibe informacoes limpas em formato de tabela ASCII legivel, usando prefixos padronizados como `[GATE-0]`, `[PASS]`, `[FAIL]`, `[WARN]` e `[INFO]`, sem decoracoes superfluas, e encerra cada comando com o rodape contextual `NEXT STEP:` indicando os proximos comandos priorizados (`[PRIMARY]`, `[SECONDARY]`, `[OPTIONAL]`).
 
 2. **Modo Agente (`--json` ou variavel `TRUSTKIT_AGENT_MODE=1`):**  
    Emite a saida como um documento JSON minificado e deterministico.  
-   * **Garantia de ausencia de valores nulos:** Propriedades opcionais sao expressas como listas vazias `[]` ou objetos de caso especial explicitos, evitando quebras em parsers agênticos.
+   * **Garantia de ausencia de valores nulos:** Propriedades opcionais sao expressas como listas vazias `[]` ou objetos de caso especial explicitos, evitando quebras em parsers agenticos.
+   * **Orientacao Contextual (`next_steps`):** Todo retorno JSON inclui o array `next_steps` calculado pelo resolvedor `NextStepResolver` (`priority`, `target_gate`, `command` e `description`), consumido obrigatoriamente pela skill `trustkit-sdd` ao final de cada turno.
 
 Exemplo de chamada em modo agente:
 ```bash
 trustkit status --json
 ```
 
-### 2.4 Diagnosticando a Sessao Atual
+### 2.4 Diagnosticando a Sessao Atual e o Proximo Passo (`trustkit status`)
 
-Para verificar se ha um ciclo SDD ativo no diretorio de trabalho e qual o estagio dos gates:
+Para verificar se ha um ciclo SDD ativo no diretorio de trabalho, qual o estagio dos gates e qual o proximo comando exato a executar:
 
 ```bash
 trustkit status
@@ -201,6 +202,12 @@ Exemplo de retorno de status no terminal:
 [STATUS] Estado da Spec: DRAFT_UNVERIFIED
 [STATUS] Invariantes: 16 de 16 Ativas
 [STATUS] Banco SQLite WAL: .trustkit/state.db (Ok)
+
+NEXT STEP:
+  [PRIMARY]   (GATE_1_SPEC) trustkit spec lint --file docs/specs/issue-45-202611041030/spec.md
+              -> Validate the specification structure, Mermaid diagram, Gherkin scenarios, and traceability matrix.
+  [SECONDARY] (GATE_2_LOCK) trustkit spec lock --spec docs/specs/issue-45-202611041030/spec.md
+              -> Freeze the specification with a BLAKE3 seal once linting passes.
 ```
 
 ### 2.5 Guia de Adocao: Novo Projeto vs Projeto em Andamento
