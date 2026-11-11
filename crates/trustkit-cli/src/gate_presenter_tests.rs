@@ -43,6 +43,7 @@ fn test_render_task_test_dual_mode() {
         duration_ms: 120,
         evidence_id: 42,
         status: "RED_VERIFIED".to_string(),
+        next_steps: vec![],
     };
 
     let json = GatePresenter::render_task_test(&payload, true);
@@ -50,10 +51,18 @@ fn test_render_task_test_dual_mode() {
     let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid json");
     assert_eq!(parsed["verdict"], "PASS");
     assert_eq!(parsed["task_id"], "TASK-001");
+    assert!(parsed["next_steps"].is_array());
+    assert!(!parsed["next_steps"].as_array().unwrap().is_empty());
+    assert_eq!(
+        parsed["next_steps"][0]["command"],
+        "trustkit task test TASK-001 --phase green"
+    );
 
     let tty = GatePresenter::render_task_test(&payload, false);
     assert_no_emojis(&tty);
     assert!(tty.contains("[PASS] Task TASK-001 test --phase RED"));
+    assert!(tty.contains("NEXT STEP:"));
+    assert!(tty.contains("trustkit task test TASK-001 --phase green"));
 }
 
 #[test]
@@ -63,12 +72,17 @@ fn test_render_task_complete_dual_mode() {
         task_id: "TASK-001".to_string(),
         new_state: "GREEN_VERIFIED".to_string(),
         timestamp: "2026-10-28T12:00:00Z".to_string(),
+        next_steps: vec![],
     };
 
     let json = GatePresenter::render_task_complete(&payload, true);
     assert_no_null(&json);
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid json");
+    assert!(!parsed["next_steps"].as_array().unwrap().is_empty());
+
     let tty = GatePresenter::render_task_complete(&payload, false);
     assert_no_emojis(&tty);
+    assert!(tty.contains("NEXT STEP:"));
 }
 
 #[test]
@@ -81,12 +95,14 @@ fn test_render_wave_run_dual_mode() {
         failed_tasks: vec![],
         duration_ms: 450,
         runtime_used: "native".to_string(),
+        next_steps: vec![],
     };
 
     let json = GatePresenter::render_wave_run(&payload, true);
     assert_no_null(&json);
     let tty = GatePresenter::render_wave_run(&payload, false);
     assert_no_emojis(&tty);
+    assert!(tty.contains("NEXT STEP:"));
 }
 
 #[test]
@@ -101,12 +117,18 @@ fn test_render_gauntlet_run_dual_mode() {
         critics_passed: 4,
         critics_total: 4,
         circuit_breaker_tripped: false,
+        next_steps: vec![],
     };
 
     let json = GatePresenter::render_gauntlet_run(&payload, true);
     assert_no_null(&json);
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid json");
+    assert_eq!(parsed["next_steps"][0]["command"], "trustkit done");
+
     let tty = GatePresenter::render_gauntlet_run(&payload, false);
     assert_no_emojis(&tty);
+    assert!(tty.contains("NEXT STEP:"));
+    assert!(tty.contains("trustkit done"));
 }
 
 #[test]
@@ -117,12 +139,14 @@ fn test_render_doctor_dual_mode() {
         consecutive_failures: 5,
         diagnostics: vec!["Critic build failed".to_string()],
         remediation: "Inspect compiler errors".to_string(),
+        next_steps: vec![],
     };
 
     let json = GatePresenter::render_doctor(&payload, true);
     assert_no_null(&json);
     let tty = GatePresenter::render_doctor(&payload, false);
     assert_no_emojis(&tty);
+    assert!(tty.contains("NEXT STEP:"));
 }
 
 #[test]
@@ -133,12 +157,20 @@ fn test_render_done_dual_mode() {
         gate: "GATE-6".to_string(),
         report_file: "specs/004/gauntlet-report.md".to_string(),
         issue_comment: "Cycle certified successfully.".to_string(),
+        next_steps: vec![],
     };
 
     let json = GatePresenter::render_done(&payload, true);
     assert_no_null(&json);
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid json");
+    assert_eq!(
+        parsed["next_steps"][0]["command"],
+        "trustkit merge --target develop"
+    );
+
     let tty = GatePresenter::render_done(&payload, false);
     assert_no_emojis(&tty);
+    assert!(tty.contains("NEXT STEP:"));
 }
 
 #[test]
@@ -149,11 +181,13 @@ fn test_render_merge_and_pr_dual_mode() {
         target_branch: "develop".to_string(),
         commit_hash: "a1b2c3d".to_string(),
         board_column: "AWAIT_STAGING".to_string(),
+        next_steps: vec![],
     };
     let json_merge = GatePresenter::render_merge(&merge_payload, true);
     assert_no_null(&json_merge);
     let tty_merge = GatePresenter::render_merge(&merge_payload, false);
     assert_no_emojis(&tty_merge);
+    assert!(tty_merge.contains("NEXT STEP:"));
 
     let pr_payload = JsonPrResponse {
         verdict: "PASS".to_string(),
@@ -162,11 +196,13 @@ fn test_render_merge_and_pr_dual_mode() {
         pr_number: 42,
         target_branch: "develop".to_string(),
         board_column: "IN_REVIEW".to_string(),
+        next_steps: vec![],
     };
     let json_pr = GatePresenter::render_pr(&pr_payload, true);
     assert_no_null(&json_pr);
     let tty_pr = GatePresenter::render_pr(&pr_payload, false);
     assert_no_emojis(&tty_pr);
+    assert!(tty_pr.contains("NEXT STEP:"));
 }
 
 #[test]

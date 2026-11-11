@@ -186,8 +186,12 @@ pub fn execute_with_prompt(
         gate: "Gate6Certified".to_string(),
         report_file: report_file_path.to_string_lossy().to_string(),
         issue_comment: outcome.completion_comment,
+        next_steps: Vec::new(),
     };
 
-    println!("{}", GatePresenter::render_done(&response, json_mode));
+    println!(
+        "{}",
+        GatePresenter::render_done(&response, json_mode || args.json)
+    );
     Ok(DomainOutcome::Success)
 }

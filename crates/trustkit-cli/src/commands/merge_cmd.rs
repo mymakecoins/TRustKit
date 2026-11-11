@@ -73,8 +73,12 @@ pub fn execute_with_db(
         target_branch: outcome.target_branch,
         commit_hash: active_cycle.base_commit_sha,
         board_column: board_column_str,
+        next_steps: Vec::new(),
     };
 
-    println!("{}", GatePresenter::render_merge(&response, json_mode));
+    println!(
+        "{}",
+        GatePresenter::render_merge(&response, json_mode || args.json)
+    );
     Ok(DomainOutcome::Success)
 }

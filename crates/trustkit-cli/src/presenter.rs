@@ -3,8 +3,10 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
+use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
 use serde::Serialize;
-use trustkit_core::entities::{CycleStatus, MethodologyProfile};
+use std::path::Path;
+use trustkit_core::entities::{AtomicTask, CycleStatus, MethodologyProfile, NextStepResolver};
 use trustkit_core::special_cases::{
     ActiveCycleLookup, BoardSyncOutcome, IssueLinkage, SpecLockState,
 };
@@ -28,6 +30,7 @@ pub struct JsonInitResponse {
     pub work_branch: String,
     pub issue_linkage: JsonIssueLinkage,
     pub pre_existing_dirty_files: Vec<String>,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 #[derive(Debug, Serialize)]
@@ -51,6 +54,7 @@ pub enum JsonIssueLinkage {
 pub struct JsonStatusResponse {
     pub verdict: String,
     pub cycle_state: JsonCycleState,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 #[derive(Debug, Serialize)]
@@ -90,7 +94,34 @@ impl Presenter {
         json_mode || std::env::var("TRUSTKIT_AGENT_MODE").as_deref() == Ok("1")
     }
 
+    fn has_populated_file(path: &str) -> bool {
+        std::fs::metadata(path)
+            .map(|m| m.len() > 0)
+            .unwrap_or(false)
+    }
+
+    fn has_task_files_in_spec_dir(spec_dir: &str) -> bool {
+        let tasks_dir = Path::new(spec_dir).join("tasks");
+        std::fs::read_dir(tasks_dir)
+            .ok()
+            .into_iter()
+            .flatten()
+            .flatten()
+            .any(|e| {
+                e.file_name()
+                    .to_str()
+                    .is_some_and(|n| n.starts_with("TASK-") && n.ends_with(".md"))
+            })
+    }
+
     pub fn render_init(outcome: &InitializeCycleOutcome, json_mode: bool) -> String {
+        let has_populated_spec = Self::has_populated_file(&outcome.cycle.spec_file_path)
+            || matches!(
+                outcome.cycle.methodology_profile,
+                MethodologyProfile::StructuredSdd { .. }
+            );
+        let steps = NextStepResolver::for_init(&outcome.cycle.spec_file_path, has_populated_spec);
+
         if Self::is_json_mode(json_mode) {
             let sync_outcome_str = match &outcome.sync_outcome {
                 BoardSyncOutcome::Synchronized { .. } => "SYNCHRONIZED",
@@ -133,6 +164,7 @@ impl Presenter {
                 work_branch: outcome.cycle.work_branch.clone(),
                 issue_linkage: linkage,
                 pre_existing_dirty_files: outcome.cycle.pre_existing_dirty_files.clone(),
+                next_steps: NextStepPresenter::to_json_vec(&steps),
             };
 
             serde_json::to_string_pretty(&payload)
@@ -166,9 +198,10 @@ impl Presenter {
                 outcome.cycle.work_branch
             ));
             out.push_str(&format!(
-                "Dirty Baseline    : {} files\n",
+                "Dirty Baseline    : {} files",
                 outcome.cycle.pre_existing_dirty_files.len()
             ));
+            out.push_str(&NextStepPresenter::render_ascii_block(&steps));
             out
         }
     }
@@ -188,6 +221,24 @@ impl Presenter {
     }
 
     pub fn render_status(lookup: &ActiveCycleLookup, json_mode: bool) -> String {
+        Self::render_status_with_tasks(lookup, &[], json_mode)
+    }
+
+    pub fn render_status_with_tasks(
+        lookup: &ActiveCycleLookup,
+        tasks: &[AtomicTask],
+        json_mode: bool,
+    ) -> String {
+        let steps = match lookup {
+            ActiveCycleLookup::Found(cycle) => {
+                let has_spec = Self::has_populated_file(&cycle.spec_file_path);
+                let has_tasks =
+                    !tasks.is_empty() || Self::has_task_files_in_spec_dir(&cycle.spec_dir);
+                NextStepResolver::for_cycle_status(cycle, tasks, has_spec, has_tasks)
+            }
+            ActiveCycleLookup::NoActiveCycle => NextStepResolver::for_no_active_cycle(),
+        };
+
         if Self::is_json_mode(json_mode) {
             let cycle_state = match lookup {
                 ActiveCycleLookup::Found(cycle) => {
@@ -229,6 +280,7 @@ impl Presenter {
             serde_json::to_string_pretty(&JsonStatusResponse {
                 verdict: "PASS".to_string(),
                 cycle_state,
+                next_steps: NextStepPresenter::to_json_vec(&steps),
             })
             .unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
@@ -239,25 +291,40 @@ impl Presenter {
                         SpecLockState::Frozen { .. } => "FROZEN",
                     };
                     let status_str = match cycle.lifecycle_status {
-                        CycleStatus::Active => "ACTIVE", CycleStatus::Paused => "PAUSED",
+                        CycleStatus::Active => "ACTIVE",
+                        CycleStatus::Paused => "PAUSED",
                         CycleStatus::CircuitBreakerTripped => "CIRCUIT_BREAKER_TRIPPED",
-                        CycleStatus::Certified => "CERTIFIED", CycleStatus::Merged => "MERGED",
+                        CycleStatus::Certified => "CERTIFIED",
+                        CycleStatus::Merged => "MERGED",
                     };
                     let gate_prefix = format!("[GATE-{}]", cycle.current_gate.as_u8());
                     let mut out = String::new();
                     out.push_str(&format!("[PASS] {} Active Cycle Status\n", gate_prefix));
                     out.push_str("------------------------------------------------------------\n");
                     out.push_str(&format!("Cycle ID          : {}\n", cycle.cycle_id));
-                    out.push_str(&format!("Current Gate      : {} ({})\n", cycle.current_gate.as_u8(), cycle.current_gate.label()));
+                    out.push_str(&format!(
+                        "Current Gate      : {} ({})\n",
+                        cycle.current_gate.as_u8(),
+                        cycle.current_gate.label()
+                    ));
                     out.push_str(&format!("Lifecycle Status  : {}\n", status_str));
-                    out.push_str(&format!("Gauntlet Attempts : {} / 5\n", cycle.gauntlet_attempt));
+                    out.push_str(&format!(
+                        "Gauntlet Attempts : {} / 5\n",
+                        cycle.gauntlet_attempt
+                    ));
                     out.push_str(&format!("Spec Lock State   : {}\n", lock_state_str));
                     out.push_str(&format!("Work Branch       : {}\n", cycle.work_branch));
-                    out.push_str(&format!("Dirty Baseline    : {} files", cycle.pre_existing_dirty_files.len()));
+                    out.push_str(&format!(
+                        "Dirty Baseline    : {} files",
+                        cycle.pre_existing_dirty_files.len()
+                    ));
+                    out.push_str(&NextStepPresenter::render_ascii_block(&steps));
                     out
                 }
                 ActiveCycleLookup::NoActiveCycle => {
-                    "[PASS] No active cycle found.\nRun 'trustkit init [--issue <ID>]' to initialize a new SDD cycle.".to_string()
+                    let mut out = "[PASS] No active cycle found.\nRun 'trustkit init [--issue <ID>]' to initialize a new SDD cycle.".to_string();
+                    out.push_str(&NextStepPresenter::render_ascii_block(&steps));
+                    out
                 }
             }
         }

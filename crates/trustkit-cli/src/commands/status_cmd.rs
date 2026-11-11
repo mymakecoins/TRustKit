@@ -13,14 +13,21 @@ use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 
 pub fn execute(_args: &StatusArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     let db_path = Path::new(".trustkit").join("state.db");
-    let lookup = if db_path.exists() {
+    let (lookup, tasks) = if db_path.exists() {
         let repo = SqliteWalRepositoryAdapter::open(&db_path)?;
-        query_cycle_status::execute(&repo)?
+        let found = query_cycle_status::execute(&repo)?;
+        let cycle_tasks = match &found {
+            ActiveCycleLookup::Found(cycle) => {
+                repo.list_atomic_tasks(&cycle.cycle_id).unwrap_or_default()
+            }
+            ActiveCycleLookup::NoActiveCycle => Vec::new(),
+        };
+        (found, cycle_tasks)
     } else {
-        ActiveCycleLookup::NoActiveCycle
+        (ActiveCycleLookup::NoActiveCycle, Vec::new())
     };
 
-    let rendered = Presenter::render_status(&lookup, json_mode);
+    let rendered = Presenter::render_status_with_tasks(&lookup, &tasks, json_mode);
     println!("{rendered}");
 
     Ok(DomainOutcome::Success)

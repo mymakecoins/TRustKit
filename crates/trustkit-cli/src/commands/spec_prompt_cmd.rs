@@ -65,6 +65,7 @@ pub fn execute_from_root(
         system_instructions,
         scaffold_markdown,
         context_summary,
+        next_steps: Vec::new(),
     };
 
     let rendered = GatePresenter::render_spec_prompt(&response, json_mode || args.json);

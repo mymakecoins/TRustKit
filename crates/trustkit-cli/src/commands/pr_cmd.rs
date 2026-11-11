@@ -94,8 +94,12 @@ pub fn execute_with_db(
         pr_number: outcome.pr_number,
         target_branch: base_branch,
         board_column: format!("{:?}", outcome.target_column),
+        next_steps: Vec::new(),
     };
 
-    println!("{}", GatePresenter::render_pr(&response, json_mode));
+    println!(
+        "{}",
+        GatePresenter::render_pr(&response, json_mode || args.json)
+    );
     Ok(DomainOutcome::Success)
 }
