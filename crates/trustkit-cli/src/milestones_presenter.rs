@@ -3,8 +3,11 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
+use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
 use serde::Serialize;
-use trustkit_core::entities::Milestone;
+use trustkit_core::entities::{
+    Milestone, NextStepPriority, NextStepRecommendation, NextStepResolver,
+};
 use trustkit_core::use_cases::plan_milestones::PlanMilestonesOutcome;
 
 #[derive(Debug, Clone, Serialize)]
@@ -28,6 +31,7 @@ pub struct JsonMilestonesPlanResponse {
     pub total_capabilities: usize,
     pub generated_files: Vec<String>,
     pub milestones: Vec<JsonMilestoneSummary>,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -36,6 +40,7 @@ pub struct JsonMilestonesListResponse {
     pub status: String,
     pub total_milestones: usize,
     pub milestones: Vec<JsonMilestoneSummary>,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -76,12 +81,29 @@ pub struct JsonMilestonesInspectResponse {
     pub verdict: String,
     pub status: String,
     pub milestone: JsonMilestoneDetail,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 pub struct MilestonesPresenter;
 
 impl MilestonesPresenter {
+    pub fn resolve_plan_next_steps(milestones: &[Milestone]) -> Vec<NextStepRecommendation> {
+        let first_file = milestones.first().map(|m| m.file_path.as_str());
+        let first_id = milestones.first().map(|m| m.milestone_id.as_str());
+        NextStepResolver::for_milestones_plan(first_file, first_id)
+    }
+
+    pub fn resolve_inspect_next_steps(m: &Milestone) -> Vec<NextStepRecommendation> {
+        vec![NextStepRecommendation::new(
+            NextStepPriority::Primary,
+            "GATE-0",
+            format!("trustkit init --milestone {}", m.file_path),
+            format!("Initialize an SDD cycle from milestone {}.", m.milestone_id),
+        )]
+    }
+
     pub fn render_plan_text(outcome: &PlanMilestonesOutcome) -> String {
+        let steps = Self::resolve_plan_next_steps(&outcome.plan.milestones);
         let mut out = String::new();
         out.push_str("[PASS] Milestones planned successfully\n");
         out.push_str("------------------------------------------------------------\n");
@@ -108,10 +130,12 @@ impl MilestonesPresenter {
                 m.title
             ));
         }
+        out.push_str(&NextStepPresenter::render_ascii_block(&steps));
         out
     }
 
     pub fn render_list_text(milestones: &[Milestone]) -> String {
+        let steps = Self::resolve_plan_next_steps(milestones);
         let mut out = String::new();
         out.push_str(&format!(
             "[PASS] Milestones List ({} items)\n",
@@ -138,10 +162,12 @@ impl MilestonesPresenter {
                 deps
             ));
         }
+        out.push_str(&NextStepPresenter::render_ascii_block(&steps));
         out
     }
 
     pub fn render_inspect_text(m: &Milestone) -> String {
+        let steps = Self::resolve_inspect_next_steps(m);
         let mut out = String::new();
         out.push_str(&format!(
             "[PASS] Milestone: {} ({})\n",
@@ -183,6 +209,7 @@ impl MilestonesPresenter {
                 tc.citation.format_citation()
             ));
         }
+        out.push_str(&NextStepPresenter::render_ascii_block(&steps));
         out
     }
 }

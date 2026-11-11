@@ -10,10 +10,13 @@ use crate::cli_contract::{
 };
 use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonTaskCompleteResponse, JsonTaskTestResponse};
+use crate::next_step_presenter::NextStepPresenter;
 use std::path::Path;
 use std::process::Command as StdCommand;
 use std::time::{SystemTime, UNIX_EPOCH};
-use trustkit_core::entities::{CodeReviewEffortLevel, SemanticReviewFinding, TddPhase};
+use trustkit_core::entities::{
+    CodeReviewEffortLevel, NextStepResolver, SemanticReviewFinding, TddPhase,
+};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{CycleEvidenceRepositoryPort, SemanticCodeReviewerPort};
 use trustkit_core::special_cases::ActiveCycleLookup;
@@ -208,6 +211,7 @@ pub fn execute_test_with_db(
     };
 
     let outcome = record_tdd_phase::execute(request, &repo, &supervisor)?;
+    let steps = NextStepResolver::for_task_test(&outcome.task_id, outcome.phase);
 
     let response = JsonTaskTestResponse {
         verdict: "PASS".to_string(),
@@ -217,9 +221,13 @@ pub fn execute_test_with_db(
         duration_ms: 0,
         evidence_id: outcome.evidence_id,
         status: format!("{:?}", outcome.new_state),
+        next_steps: NextStepPresenter::to_json_vec(&steps),
     };
 
-    println!("{}", GatePresenter::render_task_test(&response, json_mode));
+    println!(
+        "{}",
+        GatePresenter::render_task_test(&response, json_mode || args.json)
+    );
     Ok(DomainOutcome::Success)
 }
 
@@ -266,7 +274,7 @@ pub fn execute_complete_with_db(
     }
 
     let request = CompleteTaskRequest {
-        cycle_id: active_cycle.cycle_id,
+        cycle_id: active_cycle.cycle_id.clone(),
         task_id: args.task_id.clone(),
         commit_sha,
         now_iso: now_iso.clone(),
@@ -274,16 +282,37 @@ pub fn execute_complete_with_db(
 
     let outcome = complete_task::execute(request, &repo)?;
 
+    let all_tasks = repo
+        .list_atomic_tasks(&active_cycle.cycle_id)
+        .unwrap_or_default();
+    let current_wave = all_tasks
+        .iter()
+        .find(|t| t.task_id == outcome.task_id)
+        .map(|t| t.wave_index)
+        .unwrap_or(1);
+    let next_pending_in_wave = all_tasks
+        .iter()
+        .find(|t| t.wave_index == current_wave && !t.tdd_lifecycle_state.is_committed())
+        .map(|t| t.task_id.as_str());
+    let next_wave_idx = all_tasks
+        .iter()
+        .filter(|t| t.wave_index > current_wave && !t.tdd_lifecycle_state.is_committed())
+        .map(|t| t.wave_index)
+        .min();
+
+    let steps = NextStepResolver::for_task_complete(next_pending_in_wave, next_wave_idx);
+
     let response = JsonTaskCompleteResponse {
         verdict: "PASS".to_string(),
         task_id: outcome.task_id,
         new_state: format!("{:?}", outcome.new_state),
         timestamp: now_iso,
+        next_steps: NextStepPresenter::to_json_vec(&steps),
     };
 
     println!(
         "{}",
-        GatePresenter::render_task_complete(&response, json_mode)
+        GatePresenter::render_task_complete(&response, json_mode || args.json)
     );
     Ok(DomainOutcome::Success)
 }

@@ -7,11 +7,13 @@
 
 use crate::cli_contract::SpecLockArgs;
 use crate::error_handler::DomainOutcome;
+use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_ast::SpecValidator;
+use trustkit_core::entities::NextStepResolver;
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::CycleEvidenceRepositoryPort;
 use trustkit_core::special_cases::ActiveCycleLookup;
@@ -33,6 +35,7 @@ pub struct JsonSpecLockSuccessResponse {
     pub requirements_count: usize,
     pub tasks_count: usize,
     pub e2e_tests_count: usize,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 pub fn execute(args: &SpecLockArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
@@ -94,6 +97,24 @@ pub fn execute(args: &SpecLockArgs, json_mode: bool) -> Result<DomainOutcome, Do
 }
 
 fn render_output(outcome: &LockSpecificationOutcome, json_mode: bool) -> String {
+    let spec_dir = Path::new(&outcome.spec_file_path)
+        .parent()
+        .and_then(|p| p.to_str())
+        .unwrap_or("");
+    let has_task_files = Path::new(spec_dir)
+        .join("tasks")
+        .read_dir()
+        .ok()
+        .into_iter()
+        .flatten()
+        .flatten()
+        .any(|e| {
+            e.file_name()
+                .to_str()
+                .is_some_and(|n| n.starts_with("TASK-") && n.ends_with(".md"))
+        });
+    let steps = NextStepResolver::for_spec_lock(spec_dir, has_task_files);
+
     if json_mode {
         let payload = JsonSpecLockSuccessResponse {
             status: "SPEC_FROZEN".to_string(),
@@ -106,11 +127,12 @@ fn render_output(outcome: &LockSpecificationOutcome, json_mode: bool) -> String 
             requirements_count: outcome.requirements_count,
             tasks_count: outcome.tasks_count,
             e2e_tests_count: outcome.e2e_tests_count,
+            next_steps: NextStepPresenter::to_json_vec(&steps),
         };
 
         serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string())
     } else {
-        format!(
+        let mut out = format!(
             "[SPEC FROZEN]\nCycle ID: {}\nFile: {}\nBLAKE3: {}\nLocked At: {}\nRules: {} | Requirements: {} | Tasks: {} | Tests: {}",
             outcome.cycle_id,
             outcome.spec_file_path,
@@ -120,7 +142,9 @@ fn render_output(outcome: &LockSpecificationOutcome, json_mode: bool) -> String 
             outcome.requirements_count,
             outcome.tasks_count,
             outcome.e2e_tests_count
-        )
+        );
+        out.push_str(&NextStepPresenter::render_ascii_block(&steps));
+        out
     }
 }
 

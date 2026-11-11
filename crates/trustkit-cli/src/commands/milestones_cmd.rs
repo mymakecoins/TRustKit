@@ -15,6 +15,7 @@ use crate::milestones_presenter::{
     JsonMilestonesInspectResponse, JsonMilestonesListResponse, JsonMilestonesPlanResponse,
     JsonTechnicalConstraint, MilestonesPresenter,
 };
+use crate::next_step_presenter::NextStepPresenter;
 use std::fs;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -99,6 +100,7 @@ pub fn execute_plan_with_db(
         .collect();
 
     if json_mode || args.json {
+        let steps = MilestonesPresenter::resolve_plan_next_steps(&outcome.plan.milestones);
         let resp = JsonMilestonesPlanResponse {
             verdict: "PASS".to_string(),
             status: "MILESTONES_PLANNED".to_string(),
@@ -107,6 +109,7 @@ pub fn execute_plan_with_db(
             total_capabilities: outcome.plan.total_capabilities(),
             generated_files,
             milestones: summaries,
+            next_steps: NextStepPresenter::to_json_vec(&steps),
         };
         println!(
             "{}",
@@ -149,11 +152,13 @@ pub fn execute_list_with_db(
         .collect();
 
     if json_mode || args.json {
+        let steps = MilestonesPresenter::resolve_plan_next_steps(&milestones);
         let resp = JsonMilestonesListResponse {
             verdict: "PASS".to_string(),
             status: "MILESTONES_LISTED".to_string(),
             total_milestones: summaries.len(),
             milestones: summaries,
+            next_steps: NextStepPresenter::to_json_vec(&steps),
         };
         println!(
             "{}",
@@ -224,10 +229,12 @@ pub fn execute_inspect_with_db(
     };
 
     if json_mode || args.json {
+        let steps = MilestonesPresenter::resolve_inspect_next_steps(&milestone);
         let resp = JsonMilestonesInspectResponse {
             verdict: "PASS".to_string(),
             status: "MILESTONE_FOUND".to_string(),
             milestone: detail,
+            next_steps: NextStepPresenter::to_json_vec(&steps),
         };
         println!(
             "{}",

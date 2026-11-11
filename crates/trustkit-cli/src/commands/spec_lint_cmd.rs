@@ -82,6 +82,7 @@ pub fn execute_with_db(
         spec_file: target_spec_path.clone(),
         violations_count: json_violations.len(),
         violations: json_violations,
+        next_steps: Vec::new(),
     };
 
     let rendered = GatePresenter::render_spec_lint(&response, json_mode || args.json);

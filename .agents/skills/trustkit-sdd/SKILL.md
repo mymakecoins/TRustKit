@@ -3,13 +3,13 @@ name: trustkit-sdd
 description: Governanca deterministica de Spec-Driven Development (SDD), isolamento de Git Worktrees e Gauntlet V2 em Rust nativo.
 compatibility: Requer o binario estatico trustkit disponivel no PATH ou workspace.
 metadata:
-  version: 4.1.0
+  version: 4.2.0
   architecture: Hybrid Rust Core + Thin Skill
 ---
 
-# Thin Skill Declarativa: TRustKit SDD (v4.1)
+# Thin Skill Declarativa: TRustKit SDD (v4.2)
 
-Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD e transicoes de Gates ao binario nativo `trustkit`.
+Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD, resolucao contextual de proximos passos e transicoes de Gates ao binario nativo `trustkit`.
 
 ## Invariantes Obrigatorios
 
@@ -19,6 +19,29 @@ Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes determ
 4. A especificacao no Gate 1 deve ser formulada via comandos nativos ou ferramentas MCP, validada continuamente via `trustkit spec lint` e congelada no Gate 2 via `trustkit spec lock`.
 5. Os testes do Gate 4 devem seguir estritamente o ciclo TDD: RED comprovado antes de GREEN.
 6. Abertura de Pull Request ocorre exclusivamente sob demanda humana explicita.
+7. Ao final de cada comando ou turno de interacao, o agente deve obrigatoriamente ler o array `next_steps` do JSON retornado pelo binario (ou o bloco `NEXT STEP:` da saida ASCII) e apresentar ao usuario a orientacao explicita do proximo passo.
+
+## Protocolo Obrigatorio de Orientacao de Proximo Passo (Next-Step Guidance)
+
+Todo comando do binario `trustkit` emite deterministica e contextualmente as proximas acoes recomendadas para o ciclo ativo:
+- No modo `--json`: por meio do array `next_steps`, contendo objetos com `priority` (`PRIMARY`, `SECONDARY`, `OPTIONAL`), `target_gate`, `command` e `description`.
+- No modo ASCII: por meio do rodape padronizado `NEXT STEP:`.
+
+Sempre que concluir a execucao de um comando ou etapa do SDD, o agente **DEVE** encerrar sua resposta ao usuario com o seguinte bloco padronizado (sem emojis):
+
+```text
+RESUMO DO GATE ATUAL:
+- Gate / Status: <Gate atual e veredito retornado pelo trustkit>
+- Artefatos afetados: <Arquivos criados, validados ou selados>
+
+PROXIMO PASSO RECOMENDADO:
+- [PRIMARY] (<target_gate>) `<command>`
+  <description>
+- [SECONDARY/OPTIONAL] (<target_gate>) `<command>` (quando aplicavel)
+  <description>
+```
+
+Caso o usuario retome uma sessao sem saber o estado atual, execute `trustkit status --json` para inspecionar o ciclo, as tarefas pendentes na onda e apresentar o `next_steps` calculado pelo resolvedor contextual.
 
 ## Jornada dos Gates
 
@@ -35,7 +58,7 @@ trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|nativ
 ### Gate 0: Inicializacao do Ciclo
 Execute a inicializacao para validar identidade, branches e registrar a sessao:
 ```bash
-trustkit init --issue <ISSUE_ID> [--from-prd <CAMINHO_PRD>] --json
+trustkit init --issue <ISSUE_ID> [--from-prd <CAMINHO_PRD>] [--milestone <CAMINHO_MILESTONE>] --json
 ```
 
 ### Gate 1: Formulacao e Validacao da Especificacao (Nativa)

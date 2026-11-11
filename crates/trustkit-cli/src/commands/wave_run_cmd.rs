@@ -8,9 +8,10 @@
 use crate::cli_contract::WaveRunArgs;
 use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonWaveRunResponse};
+use crate::next_step_presenter::NextStepPresenter;
 use std::path::Path;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
-use trustkit_core::entities::{GateVerdict, RuntimeBackendMode};
+use trustkit_core::entities::{GateVerdict, NextStepResolver, RuntimeBackendMode};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{CycleEvidenceRepositoryPort, TerminalMultiplexerPort};
 use trustkit_core::special_cases::ActiveCycleLookup;
@@ -68,7 +69,7 @@ pub fn execute_with_db(
     let (successful_tasks, failed_tasks, verdict_str) =
         if resolved.multiplexer.is_some() || !args.agent_cmd.is_empty() {
             let req = RunInteractiveWaveRequest {
-                cycle_id: active_cycle.cycle_id,
+                cycle_id: active_cycle.cycle_id.clone(),
                 wave_index: args.wave,
                 runtime_mode: resolved.active_mode,
                 agent_command: args.agent_cmd.clone(),
@@ -97,7 +98,7 @@ pub fn execute_with_db(
             (succ, fail, v)
         } else {
             let request = RunExecutionWaveRequest {
-                cycle_id: active_cycle.cycle_id,
+                cycle_id: active_cycle.cycle_id.clone(),
                 wave_index: args.wave,
                 now_iso,
             };
@@ -112,6 +113,26 @@ pub fn execute_with_db(
 
     let duration_ms = start.elapsed().as_millis() as u64;
 
+    let all_tasks = repo
+        .list_atomic_tasks(&active_cycle.cycle_id)
+        .unwrap_or_default();
+    let first_pending_task = all_tasks
+        .iter()
+        .find(|t| t.wave_index == args.wave && !t.tdd_lifecycle_state.is_committed())
+        .map(|t| t.task_id.as_str());
+    let next_wave_index = all_tasks
+        .iter()
+        .filter(|t| t.wave_index > args.wave && !t.tdd_lifecycle_state.is_committed())
+        .map(|t| t.wave_index)
+        .min();
+
+    let steps = NextStepResolver::for_wave_run(
+        args.wave,
+        &failed_tasks,
+        next_wave_index,
+        first_pending_task,
+    );
+
     let response = JsonWaveRunResponse {
         verdict: verdict_str,
         wave_index: args.wave,
@@ -120,8 +141,12 @@ pub fn execute_with_db(
         failed_tasks,
         duration_ms,
         runtime_used: resolved.active_mode.as_str().to_string(),
+        next_steps: NextStepPresenter::to_json_vec(&steps),
     };
 
-    println!("{}", GatePresenter::render_wave_run(&response, json_mode));
+    println!(
+        "{}",
+        GatePresenter::render_wave_run(&response, json_mode || args.json)
+    );
     Ok(DomainOutcome::Success)
 }

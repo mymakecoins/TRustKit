@@ -251,11 +251,12 @@ pub fn execute_with_prompt(
         critics_passed,
         critics_total,
         circuit_breaker_tripped: false,
+        next_steps: Vec::new(),
     };
 
     println!(
         "{}",
-        GatePresenter::render_gauntlet_run(&response, json_mode)
+        GatePresenter::render_gauntlet_run(&response, json_mode || args.json)
     );
     Ok(DomainOutcome::Success)
 }
