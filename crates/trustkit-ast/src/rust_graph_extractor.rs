@@ -158,6 +158,39 @@ impl RustGraphExtractor {
         nodes: &mut Vec<StructuralNode>,
         edges: &mut Vec<StructuralEdge>,
     ) {
+        if let (Some(trait_node), Some(type_node)) = (
+            node.child_by_field_name("trait"),
+            node.child_by_field_name("type"),
+        ) && let (Ok(raw_trait), Ok(raw_type)) =
+            (trait_node.utf8_text(bytes), type_node.utf8_text(bytes))
+        {
+            let trait_clean = raw_trait
+                .split('<')
+                .next()
+                .unwrap_or(raw_trait)
+                .rsplit("::")
+                .next()
+                .unwrap_or(raw_trait)
+                .trim();
+            let type_clean = raw_type
+                .split('<')
+                .next()
+                .unwrap_or(raw_type)
+                .rsplit("::")
+                .next()
+                .unwrap_or(raw_type)
+                .trim();
+            if !trait_clean.is_empty() && !type_clean.is_empty() {
+                edges.push(StructuralEdge::new(
+                    format!("{file_path}::{type_clean}"),
+                    trait_clean,
+                    EdgeRelationKind::ReferencesSymbol,
+                    EdgeConfidence::Extracted,
+                    file_path,
+                ));
+            }
+        }
+
         let Some(body) = node.child_by_field_name("body") else {
             return;
         };

@@ -7,7 +7,7 @@
 
 use crate::cli_contract::SpecPromptArgs;
 use crate::error_handler::DomainOutcome;
-use crate::gate_presenter::{GatePresenter, JsonSpecPromptResponse};
+use crate::gate_presenter::{GatePresenter, JsonDesignItTwiceBrief, JsonSpecPromptResponse};
 use std::path::Path;
 use trustkit_ast::TreeSitterAstAuditorAdapter;
 use trustkit_core::entities::{SpecPromptRequest, SpecScaffoldTemplate};
@@ -24,7 +24,8 @@ pub fn execute_from_root(
     json_mode: bool,
     root: &Path,
 ) -> Result<DomainOutcome, DomainViolation> {
-    let domain_req = SpecPromptRequest::new(&args.idea, args.context_hops, args.budget)?;
+    let domain_req = SpecPromptRequest::new(&args.idea, args.context_hops, args.budget)?
+        .with_design_it_twice(args.design_it_twice);
 
     let context_summary = if let Ok(repo) = KnowledgeWikiFsRepository::open_from_root(root) {
         let slicer = TreeSitterAstAuditorAdapter::new();
@@ -58,6 +59,23 @@ pub fn execute_from_root(
     );
     let token_estimate = SpecScaffoldTemplate::estimate_tokens(&full_content);
 
+    let design_it_twice_briefs = if domain_req.design_it_twice {
+        SpecScaffoldTemplate::generate_design_it_twice_briefs(&domain_req.idea)
+            .into_iter()
+            .map(|b| JsonDesignItTwiceBrief {
+                brief_id: b.brief_id,
+                strategy_code: b.strategy.code_label().to_string(),
+                strategy_name: b.strategy_name,
+                design_constraint: b.design_constraint,
+                target_seam_focus: b.target_seam_focus,
+                subagent_prompt: b.subagent_prompt,
+                expected_tradeoffs: b.expected_tradeoffs,
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+
     let response = JsonSpecPromptResponse {
         verdict: "PASS".to_string(),
         idea: domain_req.idea,
@@ -65,6 +83,8 @@ pub fn execute_from_root(
         system_instructions,
         scaffold_markdown,
         context_summary,
+        design_it_twice: domain_req.design_it_twice,
+        design_it_twice_briefs,
         next_steps: Vec::new(),
     };
 

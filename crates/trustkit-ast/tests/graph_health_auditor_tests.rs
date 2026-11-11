@@ -6,8 +6,8 @@
 use std::time::Instant;
 use trustkit_ast::graph_health_auditor::GraphHealthAuditor;
 use trustkit_core::entities::{
-    EdgeConfidence, EdgeRelationKind, GraphHealthVerdict, GraphNodeKind, StructuralEdge,
-    StructuralNode,
+    EdgeConfidence, EdgeRelationKind, GraphHealthVerdict, GraphNodeKind, ModuleDepthClassification,
+    StructuralEdge, StructuralNode,
 };
 use trustkit_core::ports::StructuralGraphAnalyzerPort;
 
@@ -266,4 +266,132 @@ fn test_graph_health_auditor_performance_large_graph() {
     // Precondition: execution in memory < 10ms (generous margin for CI/test while requirement is < 3ms)
     println!("Elapsed for 5000 nodes audit: {:?}", elapsed);
     assert!(elapsed.as_millis() < 50);
+}
+
+#[test]
+fn test_graph_health_auditor_evaluates_module_depth_and_deletion_test_under_15ms() {
+    let auditor = GraphHealthAuditor::new();
+
+    let shallow_rust = r#"
+        pub fn forward_save(repo: &Repo, id: &str) -> bool {
+            repo.save(id)
+        }
+        pub fn forward_delete(repo: &Repo, id: &str) -> bool {
+            repo.delete(id)
+        }
+    "#;
+
+    let deep_rust = r#"
+        pub fn compile_pipeline(source: &str) -> Result<Vec<String>, String> {
+            let mut tokens = Vec::new();
+            for line in source.lines() {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() && !trimmed.starts_with("//") {
+                    tokens.push(trimmed.to_uppercase());
+                }
+            }
+            if tokens.is_empty() {
+                return Err("empty pipeline".to_string());
+            }
+            let mut normalized = Vec::with_capacity(tokens.len());
+            for tok in tokens {
+                let clean = tok.replace(';', "");
+                if !clean.is_empty() {
+                    normalized.push(clean);
+                }
+            }
+            Ok(normalized)
+        }
+    "#;
+
+    let start = Instant::now();
+    let shallow_metric =
+        auditor.evaluate_module_depth("crates/cli/src/pass_through.rs", shallow_rust);
+    let deep_metric = auditor.evaluate_module_depth("crates/core/src/deep_engine.rs", deep_rust);
+    let elapsed = start.elapsed();
+
+    assert!(
+        elapsed.as_millis() < 15,
+        "Depth evaluation must run in < 15ms"
+    );
+    assert_eq!(
+        shallow_metric.classification,
+        ModuleDepthClassification::ShallowPassThrough
+    );
+    assert!(!shallow_metric.passes_deletion_test);
+    assert_eq!(deep_metric.classification, ModuleDepthClassification::Deep);
+    assert!(deep_metric.passes_deletion_test);
+}
+
+#[test]
+fn test_graph_health_auditor_detects_shallow_pass_through_candidates_in_report() {
+    let nodes = vec![
+        StructuralNode::new(
+            "crates/cli/src/wrapper.rs",
+            "wrapper.rs",
+            GraphNodeKind::CodeFile,
+            "crates/cli/src/wrapper.rs",
+            "CLI",
+        ),
+        StructuralNode::new(
+            "crates/cli/src/wrapper.rs::delegate_call",
+            "delegate_call",
+            GraphNodeKind::PublicSymbol,
+            "crates/cli/src/wrapper.rs",
+            "CLI",
+        ),
+        StructuralNode::new(
+            "crates/cli/src/wrapper.rs::delegate_status",
+            "delegate_status",
+            GraphNodeKind::PublicSymbol,
+            "crates/cli/src/wrapper.rs",
+            "CLI",
+        ),
+        StructuralNode::new(
+            "crates/orch/src/adapter.rs",
+            "adapter.rs",
+            GraphNodeKind::CodeFile,
+            "crates/orch/src/adapter.rs",
+            "ORCH",
+        ),
+    ];
+
+    let edges = vec![
+        StructuralEdge::new(
+            "crates/cli/src/wrapper.rs",
+            "crates/cli/src/wrapper.rs::delegate_call",
+            EdgeRelationKind::DefinesSymbol,
+            EdgeConfidence::Extracted,
+            "crates/cli/src/wrapper.rs",
+        ),
+        StructuralEdge::new(
+            "crates/cli/src/wrapper.rs",
+            "crates/cli/src/wrapper.rs::delegate_status",
+            EdgeRelationKind::DefinesSymbol,
+            EdgeConfidence::Extracted,
+            "crates/cli/src/wrapper.rs",
+        ),
+        StructuralEdge::new(
+            "crates/cli/src/wrapper.rs",
+            "crates/orch/src/adapter.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            "crates/cli/src/wrapper.rs",
+        ),
+    ];
+
+    let auditor = GraphHealthAuditor::new();
+    let report = auditor
+        .audit_graph_health(&nodes, &edges, 5)
+        .expect("Health audit should succeed");
+
+    assert!(!report.shallow_modules.is_empty());
+    let candidate = report
+        .shallow_modules
+        .iter()
+        .find(|c| c.file_path == "crates/cli/src/wrapper.rs")
+        .expect("wrapper.rs should be flagged as shallow module candidate");
+    assert!(candidate.affected_seam.contains("adapter.rs"));
+    assert!(!candidate.deletion_test_justification.is_empty());
+    assert!(!candidate.deepening_recommendation.is_empty());
 }

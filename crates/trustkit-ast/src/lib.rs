@@ -9,9 +9,11 @@ pub mod knowledge_link_extractor;
 pub mod lexical_scanner;
 pub mod milestone_citation;
 pub mod milestone_extractor;
+pub mod module_depth_analyzer;
 pub mod prd_ingestor;
 pub mod rust_assertion_counter;
 pub mod rust_graph_extractor;
+pub mod seam_classifier;
 pub mod spec_linter;
 pub mod spec_validator;
 pub mod task_parser;
@@ -32,6 +34,7 @@ pub use milestone_citation::{
     ParsedCitation,
 };
 pub use milestone_extractor::{ExtractedMarkdownBlock, PrdAdrMilestoneExtractor};
+pub use module_depth_analyzer::ModuleDepthAnalyzer;
 pub use prd_ingestor::PrdSpecificationIngestor;
 pub use rust_assertion_counter::RustAssertionCounter;
 pub use spec_linter::{SpecLintVerdict, SpecLintViolation, SpecLinter};

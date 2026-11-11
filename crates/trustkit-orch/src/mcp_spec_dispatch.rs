@@ -29,13 +29,14 @@ pub fn spec_tools() -> Vec<McpTool> {
         ),
         tool(
             "trustkit_spec_context",
-            "Recupera contexto tecnico fatiado da memoria wiki e do grafo AST",
+            "Recupera contexto tecnico fatiado da memoria wiki, grafo AST e briefings Design It Twice",
             json!({
                 "type": "object",
                 "properties": {
                     "idea": { "type": "string", "description": "Ideia ou termo para contextualizacao" },
                     "hops": { "type": "integer", "description": "Saltos de grafo AST (padrao: 2)" },
-                    "max_snippets": { "type": "integer", "description": "Maximo de artigos wiki correlacionados (padrao: 5)" }
+                    "max_snippets": { "type": "integer", "description": "Maximo de artigos wiki correlacionados (padrao: 5)" },
+                    "design_it_twice": { "type": "boolean", "description": "Gerar 3 briefings contrastantes Design It Twice" }
                 },
                 "required": ["idea"]
             }),
@@ -107,6 +108,29 @@ fn handle_context(
         .get("max_snippets")
         .and_then(Value::as_u64)
         .unwrap_or(5) as usize;
+    let design_it_twice = args
+        .get("design_it_twice")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+
+    let briefs_json: Vec<Value> = if design_it_twice {
+        SpecScaffoldTemplate::generate_design_it_twice_briefs(idea)
+            .into_iter()
+            .map(|b| {
+                json!({
+                    "brief_id": b.brief_id,
+                    "strategy_code": b.strategy.code_label(),
+                    "strategy_name": b.strategy_name,
+                    "design_constraint": b.design_constraint,
+                    "target_seam_focus": b.target_seam_focus,
+                    "subagent_prompt": b.subagent_prompt,
+                    "expected_tradeoffs": b.expected_tradeoffs
+                })
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
 
     let compose_req = match ComposeSpecContextRequest::new(idea, hops, max_snippets) {
         Ok(req) => req,
@@ -126,6 +150,7 @@ fn handle_context(
                 "tool": "trustkit_spec_context",
                 "wiki_articles": [],
                 "ast_slices": [],
+                "design_it_twice_briefs": briefs_json,
                 "aggregated_context": "Nenhum repositorio de memoria wiki ativo."
             })
             .to_string(),
@@ -153,6 +178,7 @@ fn handle_context(
                     "tool": "trustkit_spec_context",
                     "wiki_articles": wiki_json,
                     "ast_slices": ast_json,
+                    "design_it_twice_briefs": briefs_json,
                     "aggregated_context": outcome.aggregated_context
                 })
                 .to_string(),

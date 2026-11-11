@@ -3,6 +3,8 @@
 // Constitutional Principle II: Absolute Prohibition of NULL & Special Cases.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
+pub use crate::module_depth_entities::*;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GraphNodeKind {
     CodeFile,
@@ -317,6 +319,9 @@ pub struct GraphHealthReport {
     pub shrink_guard_triggered: bool,
     pub god_nodes: Vec<GodNodeMetric>,
     pub surprising_connections: Vec<SurprisingEdge>,
+    pub module_depth_metrics: Vec<ModuleDepthMetric>,
+    pub shallow_modules: Vec<ShallowModuleCandidate>,
+    pub seam_classifications: Vec<SeamClassification>,
     pub verdict: GraphHealthVerdict,
 }
 
@@ -338,8 +343,23 @@ impl GraphHealthReport {
             .iter()
             .map(SurprisingEdge::to_json)
             .collect();
+        let depths: Vec<String> = self
+            .module_depth_metrics
+            .iter()
+            .map(ModuleDepthMetric::to_json)
+            .collect();
+        let shallows: Vec<String> = self
+            .shallow_modules
+            .iter()
+            .map(ShallowModuleCandidate::to_json)
+            .collect();
+        let seams: Vec<String> = self
+            .seam_classifications
+            .iter()
+            .map(SeamClassification::to_json)
+            .collect();
         format!(
-            "{{\"total_nodes\":{},\"total_edges\":{},\"dangling_edges\":[{}],\"self_loop_edges\":[{}],\"collapsed_edges_count\":{},\"shrink_guard_triggered\":{},\"god_nodes\":[{}],\"surprising_connections\":[{}],\"verdict\":\"{}\"}}",
+            "{{\"total_nodes\":{},\"total_edges\":{},\"dangling_edges\":[{}],\"self_loop_edges\":[{}],\"collapsed_edges_count\":{},\"shrink_guard_triggered\":{},\"god_nodes\":[{}],\"surprising_connections\":[{}],\"module_depth_metrics\":[{}],\"shallow_modules\":[{}],\"seam_classifications\":[{}],\"verdict\":\"{}\"}}",
             self.total_nodes,
             self.total_edges,
             dangling.join(","),
@@ -348,6 +368,9 @@ impl GraphHealthReport {
             self.shrink_guard_triggered,
             gods.join(","),
             surp.join(","),
+            depths.join(","),
+            shallows.join(","),
+            seams.join(","),
             self.verdict.as_str()
         )
     }
@@ -447,4 +470,4 @@ fn escape_json(input: &str) -> String {
 }
 #[cfg(test)]
 #[path = "graph_entities_tests.rs"]
-mod tests;
+mod graph_entities_tests;

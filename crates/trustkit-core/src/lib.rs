@@ -13,6 +13,7 @@ pub mod graph_entities;
 pub mod invariants_policy;
 pub mod knowledge_entities;
 pub mod milestone_entities;
+pub mod module_depth_entities;
 pub mod next_step_guidance;
 pub mod next_step_status_policy;
 pub mod osc7501_encoder;
