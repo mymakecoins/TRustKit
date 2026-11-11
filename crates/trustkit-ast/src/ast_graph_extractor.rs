@@ -7,11 +7,13 @@
 use std::fs;
 use std::path::Path;
 use trustkit_core::entities::{
-    EdgeConfidence, EdgeRelationKind, GraphNodeKind, StructuralEdge, StructuralNode,
+    EdgeConfidence, EdgeRelationKind, GraphNodeKind, ModuleDepthMetric, SeamClassification,
+    StructuralEdge, StructuralNode,
 };
 use trustkit_core::errors::DomainViolation;
 
 use crate::knowledge_link_extractor::{extract_frontmatter_and_body, extract_wikilinks};
+use crate::module_depth_analyzer::ModuleDepthAnalyzer;
 use crate::rust_graph_extractor::RustGraphExtractor;
 use crate::ts_graph_extractor::TsGraphExtractor;
 
@@ -84,6 +86,25 @@ impl AstGraphExtractor {
         }
 
         Ok((all_nodes, all_edges))
+    }
+
+    pub fn classify_seams(
+        &self,
+        nodes: &[StructuralNode],
+        edges: &[StructuralEdge],
+    ) -> Vec<SeamClassification> {
+        ModuleDepthAnalyzer::new().classify_seams(nodes, edges)
+    }
+
+    pub fn extract_module_depths_from_in_memory_files(
+        &self,
+        files: &[(String, String)],
+    ) -> Vec<ModuleDepthMetric> {
+        let analyzer = ModuleDepthAnalyzer::new();
+        files
+            .iter()
+            .map(|(path, content)| analyzer.evaluate_source_depth(path, content))
+            .collect()
     }
 
     fn add_file_node(file_path: &str, layer: &str, nodes: &mut Vec<StructuralNode>) {

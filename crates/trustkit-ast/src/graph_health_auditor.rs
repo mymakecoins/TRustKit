@@ -6,14 +6,16 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use trustkit_core::entities::{
-    GodNodeMetric, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome,
-    ShortestPathOutcome, StructuralEdge, StructuralNode, SurprisingEdge, TraversalMode,
+    GodNodeMetric, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome, ModuleDepthMetric,
+    SeamClassification, ShortestPathOutcome, StructuralEdge, StructuralNode, SurprisingEdge,
+    TraversalMode,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::StructuralGraphAnalyzerPort;
 
 use crate::ast_graph_extractor::detect_layer;
 use crate::graph_context_slicer::GraphContextSlicer;
+use crate::module_depth_analyzer::ModuleDepthAnalyzer;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct GraphHealthAuditor;
@@ -21,6 +23,18 @@ pub struct GraphHealthAuditor;
 impl GraphHealthAuditor {
     pub const fn new() -> Self {
         Self
+    }
+
+    pub fn evaluate_module_depth(&self, file_path: &str, source_code: &str) -> ModuleDepthMetric {
+        ModuleDepthAnalyzer::new().evaluate_source_depth(file_path, source_code)
+    }
+
+    pub fn classify_seams(
+        &self,
+        nodes: &[StructuralNode],
+        edges: &[StructuralEdge],
+    ) -> Vec<SeamClassification> {
+        ModuleDepthAnalyzer::new().classify_seams(nodes, edges)
     }
 
     pub fn compute_cohesion_scores(
@@ -183,6 +197,9 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
             GraphHealthVerdict::Healthy
         };
 
+        let (module_depth_metrics, shallow_modules, seam_classifications) =
+            ModuleDepthAnalyzer::new().audit_depth_and_seams(nodes, edges);
+
         Ok(GraphHealthReport {
             total_nodes: nodes.len(),
             total_edges: edges.len(),
@@ -192,6 +209,9 @@ impl StructuralGraphAnalyzerPort for GraphHealthAuditor {
             shrink_guard_triggered: false,
             god_nodes: gods,
             surprising_connections: surprising,
+            module_depth_metrics,
+            shallow_modules,
+            seam_classifications,
             verdict,
         })
     }

@@ -17,6 +17,11 @@ pub struct SpecPromptArgs {
     pub context_hops: usize,
     #[arg(long, default_value = "4000", help = "Token budget for prompt output")]
     pub budget: usize,
+    #[arg(
+        long,
+        help = "Generate 3 contrasting Design It Twice architectural briefings for parallel subagents"
+    )]
+    pub design_it_twice: bool,
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }

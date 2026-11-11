@@ -261,14 +261,17 @@ trustkit memory reindex
 
 ## 8. Inteligencia de Grafo Estrutural (`trustkit graph`)
 
-Analisa as dependencias de codigo e wiki via Tree-Sitter, calculando acoplamento aferente/eferente e detectando God Nodes:
+Analisa as dependencias de codigo e wiki via Tree-Sitter, calculando acoplamento aferente/eferente, detectando God Nodes, avaliando a profundidade de modulos (Deep Modules vs ShallowPassThrough pelo Deletion Test) e classificando costuras (`RealSeam` vs `HypotheticalSeam`):
 
 ```bash
 # Constroi ou atualiza o grafo com protecao Shrink-Guard
 trustkit graph build
 
-# Diagnostica a saude arquitetural e localiza God Nodes
+# Diagnostica a saude arquitetural, God Nodes, shallow_modules (Deletion Test) e seam_classifications
 trustkit graph health --top-god-nodes 10
+
+# Gera 3 briefings arquiteturais contrastantes (Design It Twice) no Gate 1
+trustkit spec prompt --idea "Nova porta de dominio" --design-it-twice --json
 
 # Calcula o menor caminho de acoplamento entre dois simbolos (BFS)
 trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db::SqliteWalRepositoryAdapter"

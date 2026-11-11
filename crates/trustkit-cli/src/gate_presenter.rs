@@ -8,6 +8,17 @@ use serde::Serialize;
 use trustkit_core::entities::{NextStepResolver, TddPhase};
 
 #[derive(Debug, Clone, Serialize)]
+pub struct JsonDesignItTwiceBrief {
+    pub brief_id: String,
+    pub strategy_code: String,
+    pub strategy_name: String,
+    pub design_constraint: String,
+    pub target_seam_focus: String,
+    pub subagent_prompt: String,
+    pub expected_tradeoffs: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct JsonSpecPromptResponse {
     pub verdict: String,
     pub idea: String,
@@ -15,6 +26,10 @@ pub struct JsonSpecPromptResponse {
     pub system_instructions: String,
     pub scaffold_markdown: String,
     pub context_summary: String,
+    #[serde(default)]
+    pub design_it_twice: bool,
+    #[serde(default)]
+    pub design_it_twice_briefs: Vec<JsonDesignItTwiceBrief>,
     #[serde(default)]
     pub next_steps: Vec<JsonNextStep>,
 }

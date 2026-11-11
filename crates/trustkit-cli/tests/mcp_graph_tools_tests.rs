@@ -330,3 +330,122 @@ fn test_mcp_graph_tools_call_under_5ms_and_null_free() {
     assert!(!query_text.contains("null"));
     assert!(query_text.contains("\"outcome\":\"RESULTS\""));
 }
+
+#[test]
+fn test_cli_and_mcp_deep_modules_seam_analysis_and_design_it_twice_under_10ms() {
+    let tmp = TempDir::new().expect("create tempdir");
+    let src_dir = tmp.path().join("crates/my-crate/src");
+    fs::create_dir_all(&src_dir).expect("create src dir");
+
+    let wrapper_rs = src_dir.join("wrapper.rs");
+    fs::write(
+        &wrapper_rs,
+        "use crate::adapter::Adapter;\npub fn delegate_op(a: &Adapter) -> bool { a.run() }\n",
+    )
+    .expect("write wrapper.rs");
+
+    let adapter_rs = src_dir.join("adapter.rs");
+    fs::write(
+        &adapter_rs,
+        "pub trait StoragePort { fn run(&self) -> bool; }\npub struct Adapter;\nimpl StoragePort for Adapter { fn run(&self) -> bool { true } }\n",
+    )
+    .expect("write adapter.rs");
+
+    // 1. Build graph and check CLI `trustkit graph health --json`
+    Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args(["graph", "build", "--json"])
+        .assert()
+        .success();
+
+    let health_out = Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args(["graph", "health", "--json"])
+        .output()
+        .expect("run graph health");
+    assert!(health_out.status.success());
+    let health_stdout = String::from_utf8(health_out.stdout).expect("utf8");
+    assert!(!health_stdout.contains("null"));
+    let health_json: Value = serde_json::from_str(&health_stdout).expect("json");
+    assert!(health_json["shallow_modules"].is_array());
+    assert!(health_json["module_depth_metrics"].is_array());
+    assert!(health_json["seam_classifications"].is_array());
+    assert!(
+        !health_json["shallow_modules"]
+            .as_array()
+            .unwrap()
+            .is_empty(),
+        "wrapper.rs must be reported in shallow_modules"
+    );
+
+    // 2. Check CLI `trustkit spec prompt --idea "..." --design-it-twice --json`
+    let prompt_out = Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args([
+            "spec",
+            "prompt",
+            "--idea",
+            "Motor de auditoria de modulos profundos",
+            "--design-it-twice",
+            "--json",
+        ])
+        .output()
+        .expect("run spec prompt");
+    assert!(prompt_out.status.success());
+    let prompt_stdout = String::from_utf8(prompt_out.stdout).expect("utf8");
+    assert!(!prompt_stdout.contains("null"));
+    let prompt_json: Value = serde_json::from_str(&prompt_stdout).expect("json");
+    let briefs = prompt_json["design_it_twice_briefs"]
+        .as_array()
+        .expect("design_it_twice_briefs array");
+    assert_eq!(briefs.len(), 3);
+
+    // 3. Check MCP `trustkit_graph_health` and `trustkit_spec_context` in < 10ms
+    let g_repo = GraphSqliteRepository::open_from_root(tmp.path()).expect("open graph repo");
+    let k_repo =
+        KnowledgeWikiFsRepository::open_from_root(tmp.path()).expect("open knowledge repo");
+    let server = McpServer::with_knowledge_repo(Arc::new(k_repo))
+        .with_graph_repo(Arc::new(g_repo))
+        .with_graph_analyzer(Arc::new(GraphHealthAuditor::new()));
+
+    let start_mcp = Instant::now();
+    let mcp_health_req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        id: Some(json!(501)),
+        method: "tools/call".into(),
+        params: Some(json!({"name": "trustkit_graph_health", "arguments": {"top_god_nodes": 5}})),
+    };
+    let mcp_health_resp = server
+        .handle_request(&mcp_health_req)
+        .expect("mcp health")
+        .result
+        .expect("res");
+    assert!(start_mcp.elapsed() < Duration::from_millis(10));
+    let mcp_health_text = mcp_health_resp["content"][0]["text"].as_str().unwrap();
+    assert!(!mcp_health_text.contains("null"));
+    assert!(mcp_health_text.contains("\"shallow_modules\""));
+    assert!(mcp_health_text.contains("\"seam_classifications\""));
+
+    let start_ctx = Instant::now();
+    let mcp_ctx_req = JsonRpcRequest {
+        jsonrpc: "2.0".into(),
+        id: Some(json!(502)),
+        method: "tools/call".into(),
+        params: Some(json!({
+            "name": "trustkit_spec_context",
+            "arguments": {"idea": "Porta de persistencia transacional", "design_it_twice": true}
+        })),
+    };
+    let mcp_ctx_resp = server
+        .handle_request(&mcp_ctx_req)
+        .expect("mcp spec context")
+        .result
+        .expect("res");
+    assert!(start_ctx.elapsed() < Duration::from_millis(10));
+    let mcp_ctx_text = mcp_ctx_resp["content"][0]["text"].as_str().unwrap();
+    assert!(!mcp_ctx_text.contains("null"));
+    assert!(mcp_ctx_text.contains("\"design_it_twice_briefs\""));
+}

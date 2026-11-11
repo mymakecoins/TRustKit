@@ -255,6 +255,9 @@ O subsistema de memoria persistente do TRustKit gerencia a base viva de conhecim
 O motor de grafo extrai e mantem a topologia completa de dependencias de codigo e documentacao do repositorio:
 
 - Extracao sintatica via Tree-Sitter para Rust (modulos, structs, traits, enums, funcoes publicas e use declarations) e TypeScript/JavaScript (exports, imports, interfaces, classes e funcoes).
+- Auditoria de Modulos Profundos (Deep Modules - John Ousterhout) via `ModuleDepthMetric`, sinalizando modulos pass-through (`ShallowModuleCandidate`) que falham no Deletion Test em `shallow_modules`.
+- Classificacao de Costuras (Seams - Michael Feathers) via `SeamClassification`, distinguindo `RealSeam` (2+ adaptadores/fakes conectados) de `HypotheticalSeam` (abstracoes especulativas com apenas 1 adaptador).
+- Protocolo Design It Twice no Gate 1 via `trustkit spec prompt --idea "<IDEIA>" --design-it-twice`, gerando 3 briefings contrastantes (`Minimizacao de Interface`, `Maxima Flexibilidade`, `Otimizacao para o Chamador Comum`).
 - Unificacao do grafo de codigo com o grafo de conhecimento da wiki (`[[slug]]`).
 - Classificacao tipada de relacoes: `Calls`, `Imports`, `Defines`, `Implements`, `WikiLinksTo` com confiabilidade `Extracted` ou `Inferred`.
 - Mecanismo Shrink-Guard com manifesto BLAKE3 para impedir reducao acidental de nos sem flag `--force`.

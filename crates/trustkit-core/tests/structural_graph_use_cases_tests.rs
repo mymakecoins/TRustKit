@@ -154,6 +154,9 @@ impl StructuralGraphAnalyzerPort for MockGraphAnalyzer {
                 vec!["a".into()],
             )],
             surprising_connections: vec![SurprisingEdge::new("c", "d", "CORE", "CLI", "violation")],
+            module_depth_metrics: vec![],
+            shallow_modules: vec![],
+            seam_classifications: vec![],
             verdict: GraphHealthVerdict::Healthy,
         })
     }

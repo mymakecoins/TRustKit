@@ -6,7 +6,9 @@
 
 use std::time::Instant;
 use trustkit_ast::AstGraphExtractor;
-use trustkit_core::entities::{EdgeConfidence, EdgeRelationKind, GraphNodeKind};
+use trustkit_core::entities::{
+    EdgeConfidence, EdgeRelationKind, GraphNodeKind, ModuleDepthClassification, SeamKind,
+};
 
 #[test]
 fn test_extract_rust_public_symbols_and_imports() {
@@ -280,4 +282,74 @@ fn test_extract_from_files_batch() {
             .iter()
             .any(|e| e.relation == EdgeRelationKind::Imports && e.target_id.contains("Alpha"))
     );
+}
+
+#[test]
+fn test_extract_and_classify_real_seam_vs_hypothetical_seam_rust_and_ts() {
+    let extractor = AstGraphExtractor::new();
+    let files = vec![
+        (
+            "crates/trustkit-core/src/ports.rs".to_string(),
+            r#"
+                pub trait StorageRepositoryPort {
+                    fn save(&self, key: &str) -> bool;
+                }
+                pub trait SpeculativeSinglePort {
+                    fn ping(&self) -> bool;
+                }
+            "#
+            .to_string(),
+        ),
+        (
+            "crates/trustkit-db/src/sqlite_repo.rs".to_string(),
+            r#"
+                pub struct SqliteStorageAdapter;
+                impl StorageRepositoryPort for SqliteStorageAdapter {
+                    fn save(&self, _key: &str) -> bool { true }
+                }
+                pub struct OnlySpeculativeAdapter;
+                impl SpeculativeSinglePort for OnlySpeculativeAdapter {
+                    fn ping(&self) -> bool { true }
+                }
+            "#
+            .to_string(),
+        ),
+        (
+            "crates/trustkit-core/tests/fake_repo.rs".to_string(),
+            r#"
+                struct FakeInMemoryStorageAdapter;
+                impl StorageRepositoryPort for FakeInMemoryStorageAdapter {
+                    fn save(&self, _key: &str) -> bool { true }
+                }
+            "#
+            .to_string(),
+        ),
+    ];
+
+    let (nodes, edges) = extractor.extract_from_in_memory_files(&files);
+    let seams = extractor.classify_seams(&nodes, &edges);
+
+    let storage_seam = seams
+        .iter()
+        .find(|s| s.seam_id == "StorageRepositoryPort")
+        .expect("StorageRepositoryPort seam must be classified");
+    assert_eq!(storage_seam.kind, SeamKind::RealSeam);
+    assert_eq!(storage_seam.classification_label(), "RealSeam");
+    assert!(storage_seam.adapter_count >= 2);
+    assert!(!storage_seam.to_json().contains("null"));
+
+    let speculative_seam = seams
+        .iter()
+        .find(|s| s.seam_id == "SpeculativeSinglePort")
+        .expect("SpeculativeSinglePort seam must be classified");
+    assert_eq!(speculative_seam.kind, SeamKind::HypotheticalSeam);
+    assert_eq!(speculative_seam.classification_label(), "HypotheticalSeam");
+    assert_eq!(speculative_seam.adapter_count, 1);
+
+    let depths = extractor.extract_module_depths_from_in_memory_files(&files);
+    assert_eq!(depths.len(), 3);
+    assert!(depths.iter().any(|d| d.classification
+        == ModuleDepthClassification::ShallowPassThrough
+        || d.classification == ModuleDepthClassification::Balanced
+        || d.classification == ModuleDepthClassification::Deep));
 }
