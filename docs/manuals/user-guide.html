@@ -319,7 +319,8 @@ trustkit init --issue 42
 # Inicializacao sem issue vinculada (modo puramente local)
 trustkit init</code></pre>
 
-      <h3>Diagnostico e Status do Ciclo (trustkit status)</h3>
+      <h3>Diagnostico, Status do Ciclo e Orientacao Contextual (trustkit status / NextStepResolver)</h3>
+      <p>Todos os comandos do TRustKit e o diagnostico <code>trustkit status</code> executam o resolvedor contextual deterministico (<code>NextStepResolver</code>), apresentando o rodape padronizado <code>NEXT STEP:</code> em modo ASCII (com prioridades <code>[PRIMARY]</code>, <code>[SECONDARY]</code> e <code>[OPTIONAL]</code>) e o array <code>next_steps</code> livre de <code>null</code> em modo <code>--json</code>.</p>
       <pre><code>trustkit status
 trustkit status --json</code></pre>
     </section>

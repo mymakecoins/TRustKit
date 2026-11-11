@@ -181,7 +181,47 @@ fn test_user_guide_html_exists_and_is_valid_standalone() {
         content.contains("trustkit milestones"),
         "HTML guide must describe milestones"
     );
+    assert!(
+        content.contains("NextStepResolver") && content.contains("next_steps"),
+        "HTML guide must document NextStepResolver and next_steps"
+    );
 
     assert_zero_emojis("docs/manuals/user-guide.html", &content);
     assert_zero_ai_trailers("docs/manuals/user-guide.html", &content);
+}
+
+#[test]
+fn test_all_docs_and_manuals_document_contextual_next_step_guidance() {
+    let root = workspace_root();
+    let files = [
+        "README.md",
+        "README.en.md",
+        "AGENTS.md",
+        "docs/PRD_TRustKit.md",
+        "docs/ADR_001_TRustKit_Architecture.md",
+        "docs/manuals/user-guide.md",
+        "docs/manuals/user-guide.html",
+        "docs/manual/MANUAL_DO_USUARIO.md",
+        "docs/manual/manual.html",
+    ];
+
+    for rel_path in files {
+        let full_path = root.join(rel_path);
+        assert!(full_path.exists(), "{rel_path} must exist");
+        let content = fs::read_to_string(&full_path).expect("Failed to read documentation file");
+        assert!(
+            content.contains("NextStepResolver"),
+            "{rel_path} must document NextStepResolver"
+        );
+        assert!(
+            content.contains("next_steps"),
+            "{rel_path} must document next_steps JSON array"
+        );
+        assert!(
+            content.contains("NEXT STEP"),
+            "{rel_path} must document NEXT STEP ASCII footer"
+        );
+        assert_zero_emojis(rel_path, &content);
+        assert_zero_ai_trailers(rel_path, &content);
+    }
 }

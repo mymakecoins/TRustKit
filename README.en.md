@@ -19,6 +19,7 @@ The project resolves critical bottlenecks found in purely declarative approaches
 - Immutable auditability via Event Sourcing: transactional persistence in SQLite WAL mode (`.trustkit/state.db`) recording every state transition, execution proof, and BLAKE3 cryptographic hash.
 - Persistent Project Knowledge Memory: live documentation wiki (`.trustkit/wiki/`) indexed with SQLite FTS5, BM25 semantic ranking, and bidirectional `[[slug]]` wikilinks.
 - Structural Graph Intelligence: AST syntactic extraction via Tree-Sitter for code symbols and architectural edges, multi-hop context slicing (BFS/DFS), wave coupling analysis, and God Node detection.
+- Deterministic Contextual Next-Step Guidance (`NextStepResolver`): after every CLI command and in `trustkit status`, the engine evaluates the active cycle state in SQLite WAL and emits actionable next-step instructions both in ASCII (`NEXT STEP:`) and in null-free JSON (`next_steps`).
 
 ### The Hybrid Rust Core + Thin Skill Paradigm
 
@@ -380,6 +381,8 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Multi-angle semantic review (refactor phase), optional security review, and 6-phase pre-release audit. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Native prompt scaffolding, FTS5/AST context slicing, sub-3ms pre-lock linter, MCP tools, and sdd decoupling. |
 | `010-trustkit-auto-orchestrator` | Autonomous Orchestrator trustkit auto | Unified Gates 0 to 6 orchestration, topological wave loop with worktree isolation and strict TDD. |
+| `012-milestone-planning` | Milestone Planning | Acyclic PRD and ADR decomposition into milestones with exact line citations (`#LXX-LYY`) and `init --milestone`. |
+| `013-contextual-next-step-guidance` | Contextual Next-Step Guidance | Deterministic `NextStepResolver`, `NEXT STEP:` ASCII footer, `next_steps` JSON array, and `trustkit-sdd` v4.2 protocol. |
 
 ---
 
@@ -397,16 +400,18 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
 
 ---
 
-## 13. Dual-Audience Operating Modes
+## 13. Dual-Audience Operating Modes & Contextual Next-Step Guidance (`NextStepResolver`)
 
 - Human Mode (standard TTY terminal output):
   - Pure ASCII textual layout with no emojis or decorative glyphs.
   - Standardized diagnostic prefixes: `[GATE-0]` to `[GATE-6]`, `[PASS]`, `[FAIL]`, `[WARN]`, `[INFO]`.
+  - Standardized `NEXT STEP:` footer at the end of every command and in `trustkit status`, presenting prioritized recommendations (`[PRIMARY]`, `[SECONDARY]`, `[OPTIONAL]`) with target gates and exact commands.
   - Aligned tables and concise executive summaries.
 
 - Agent Mode (`--json` flag or `TRUSTKIT_AGENT_MODE=1` environment variable):
   - Strict deterministic JSON without superfluous whitespace.
   - Guaranteed 100% null-free payloads (empty arrays `[]` and typed Special Case models).
+  - Structured `next_steps` array emitted in every command output and in `trustkit status --json` (containing `priority`, `target_gate`, `command`, and `description`), consumed by the `trustkit-sdd` skill at the end of every turn.
   - Minimal token consumption and safe schema consumption for agentic parsers.
 
 ---

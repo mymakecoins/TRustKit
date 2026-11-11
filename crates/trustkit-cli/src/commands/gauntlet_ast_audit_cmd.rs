@@ -6,11 +6,12 @@
 
 use crate::cli_contract::GauntletAstAuditArgs;
 use crate::error_handler::DomainOutcome;
+use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
 use serde::Serialize;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_ast::TreeSitterAstAuditorAdapter;
-use trustkit_core::entities::AstAuditVerdict;
+use trustkit_core::entities::{AstAuditVerdict, NextStepResolver};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::CycleEvidenceRepositoryPort;
 use trustkit_core::special_cases::ActiveCycleLookup;
@@ -25,6 +26,7 @@ pub struct JsonAstAuditSuccessResponse {
     pub audited_files: Vec<String>,
     pub total_violations: usize,
     pub recorded_evidence_id: u64,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 pub fn execute(
@@ -78,7 +80,8 @@ pub fn execute_with_db(
 
     match outcome.verdict {
         AstAuditVerdict::CleanPass { .. } => {
-            if json_mode {
+            let steps = NextStepResolver::for_ast_audit();
+            if json_mode || args.json {
                 let response = JsonAstAuditSuccessResponse {
                     status: "PASS".to_string(),
                     verdict: "CLEAN_PASS".to_string(),
@@ -86,15 +89,18 @@ pub fn execute_with_db(
                     audited_files: files,
                     total_violations: 0,
                     recorded_evidence_id: outcome.recorded_evidence_id,
+                    next_steps: NextStepPresenter::to_json_vec(&steps),
                 };
                 if let Ok(json_str) = serde_json::to_string_pretty(&response) {
                     println!("{json_str}");
                 }
             } else {
-                println!(
+                let mut out = format!(
                     "[PASS] AST Layer 0 CleanPass: 0 violations detected across {} files.",
                     files.len()
                 );
+                out.push_str(&NextStepPresenter::render_ascii_block(&steps));
+                println!("{out}");
             }
             Ok(DomainOutcome::Success)
         }

@@ -61,6 +61,14 @@ fn test_trustkit_sdd_skill_contains_native_spec_workflows_and_zero_emojis() {
         content.contains("trustkit_terminal_send"),
         "Must document MCP terminal send tool"
     );
+    assert!(
+        content.contains("next_steps"),
+        "Must document mandatory next_steps guidance protocol"
+    );
+    assert!(
+        content.contains("NEXT STEP:"),
+        "Must document ASCII NEXT STEP block"
+    );
 
     // Validacao lexica rigorosa de invariantes: zero emojis e zero trailers de IA
     let scanner = InvariantLexicalScanner;

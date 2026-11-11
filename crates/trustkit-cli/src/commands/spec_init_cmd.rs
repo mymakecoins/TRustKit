@@ -6,10 +6,12 @@
 
 use crate::cli_contract::SpecInitArgs;
 use crate::error_handler::DomainOutcome;
+use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
 use trustkit_ast::PrdSpecificationIngestor;
+use trustkit_core::entities::NextStepResolver;
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::use_cases::initialize_spec_from_prd::{
     self, InitializeSpecFromPrdOutcome, InitializeSpecFromPrdRequest,
@@ -36,6 +38,7 @@ pub struct JsonSpecInitResponse {
     pub requirements_extracted_count: usize,
     pub business_rules: Vec<JsonBusinessRule>,
     pub functional_requirements: Vec<JsonFunctionalRequirement>,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 pub fn execute(args: &SpecInitArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
@@ -49,7 +52,6 @@ pub fn execute(args: &SpecInitArgs, json_mode: bool) -> Result<DomainOutcome, Do
 
     let outcome = initialize_spec_from_prd::execute(req, &ingestor)?;
 
-    // Persist generated spec file to disk
     let spec_path = Path::new(&outcome.generated_spec_file);
     if let Some(parent) = spec_path.parent().filter(|p| !p.as_os_str().is_empty()) {
         fs::create_dir_all(parent).map_err(|err| DomainViolation::InfrastructureBoundaryFault {
@@ -81,6 +83,7 @@ pub fn execute(args: &SpecInitArgs, json_mode: bool) -> Result<DomainOutcome, Do
 }
 
 fn render_output(outcome: &InitializeSpecFromPrdOutcome, json_mode: bool) -> String {
+    let steps = NextStepResolver::for_spec_init(&outcome.generated_spec_file);
     if json_mode {
         let payload = JsonSpecInitResponse {
             status: "SPEC_INITIALIZED".to_string(),
@@ -104,6 +107,7 @@ fn render_output(outcome: &InitializeSpecFromPrdOutcome, json_mode: bool) -> Str
                     description: r.description.clone(),
                 })
                 .collect(),
+            next_steps: NextStepPresenter::to_json_vec(&steps),
         };
 
         serde_json::to_string_pretty(&payload)
@@ -128,6 +132,7 @@ fn render_output(outcome: &InitializeSpecFromPrdOutcome, json_mode: bool) -> Str
             "Requirements Extracted : {}",
             outcome.requirements_extracted_count
         ));
+        out.push_str(&NextStepPresenter::render_ascii_block(&steps));
         out
     }
 }

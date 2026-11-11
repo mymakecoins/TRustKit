@@ -6,10 +6,11 @@
 
 use crate::cli_contract::WavePlanArgs;
 use crate::error_handler::DomainOutcome;
+use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use trustkit_ast::WaveExecutionPlanner;
-use trustkit_core::entities::WaveSchedule;
+use trustkit_core::entities::{NextStepResolver, WaveSchedule};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::CycleEvidenceRepositoryPort;
 use trustkit_core::special_cases::ActiveCycleLookup;
@@ -25,6 +26,7 @@ pub struct JsonWavePlanSuccessResponse {
     pub total_tasks: usize,
     pub total_waves: usize,
     pub waves: Vec<ExecutionWavePayload>,
+    pub next_steps: Vec<JsonNextStep>,
 }
 
 #[derive(Debug, Serialize)]
@@ -44,6 +46,8 @@ pub struct TaskPayload {
 
 impl From<&WaveSchedule> for JsonWavePlanSuccessResponse {
     fn from(schedule: &WaveSchedule) -> Self {
+        let first_wave_idx = schedule.waves.first().map(|w| w.wave_index).unwrap_or(1);
+        let steps = NextStepResolver::for_wave_plan(first_wave_idx);
         let waves = schedule
             .waves
             .iter()
@@ -69,6 +73,7 @@ impl From<&WaveSchedule> for JsonWavePlanSuccessResponse {
             total_tasks: schedule.total_tasks,
             total_waves: schedule.waves.len(),
             waves,
+            next_steps: NextStepPresenter::to_json_vec(&steps),
         }
     }
 }
@@ -162,6 +167,8 @@ fn render_output(outcome: &PlanExecutionWavesOutcome, json_mode: bool) -> String
         serde_json::to_string_pretty(&payload).unwrap_or_else(|_| "{}".to_string())
     } else {
         let s = &outcome.wave_schedule;
+        let first_wave_idx = s.waves.first().map(|w| w.wave_index).unwrap_or(1);
+        let steps = NextStepResolver::for_wave_plan(first_wave_idx);
         let mut out = format!(
             "[WAVES PLANNED]\nCycle ID: {}\nTotal Tasks: {} | Total Waves: {}\n",
             s.cycle_id,
@@ -177,6 +184,7 @@ fn render_output(outcome: &PlanExecutionWavesOutcome, json_mode: bool) -> String
                 ));
             }
         }
+        out.push_str(&NextStepPresenter::render_ascii_block(&steps));
         out
     }
 }

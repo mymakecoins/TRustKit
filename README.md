@@ -19,6 +19,7 @@ O projeto resolve os gargalos criticos de abordagens puramente declarativas (ski
 - Auditoria imutavel via Event Sourcing: persistencia transacional em SQLite em modo WAL (`.trustkit/state.db`) com registro auditavel de cada transicao de estado, evidencia de execucao e hash criptografico BLAKE3.
 - Memoria Perene do Projeto: wiki de documentacao viva (`.trustkit/wiki/`) indexada por SQLite FTS5 com busca semantica BM25 e suporte a wikilinks `[[slug]]`.
 - Inteligencia de Grafo Estrutural: extracao sintatica AST via Tree-Sitter de nos de codigo e arestas arquiteturais, fatiamento de contexto multi-hop (BFS/DFS), analise de acoplamento de ondas e deteccao de God Nodes.
+- Orientacao Contextual Deterministica de Proximo Passo (`NextStepResolver`): a cada comando executado e no diagnostico `trustkit status`, o motor calcula o estado real do ciclo no SQLite WAL e emite instrucoes acionaveis de proximo passo tanto em ASCII (`NEXT STEP:`) quanto em JSON livre de `null` (`next_steps`).
 
 ### O Paradigma Hybrid Rust Core + Thin Skill
 
@@ -72,7 +73,7 @@ TRustKit/
 O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 
 ```
-[Pre-Planejamento] Planejamento de Marcos (trustkit milestones plan --prd PRD.md --adr ADR.md)
+[Pre-Planejamento] Planejamento de Marcos de Entregas (trustkit milestones plan --prd PRD.md --adr ADR.md)
     |
 [Gate 0] Inicializacao de Sessao e Setup de Identidade (trustkit init --milestone M01.md ou --issue ID)
     |
@@ -101,13 +102,13 @@ trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] 
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
-### Planejamento Previo de Marcos: Decomposicao Aciclica de PRD e ADR (`trustkit milestones`)
-Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de marcos, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os marcos no SQLite WAL:
+### Planejamento Previo de Marcos de Entregas: Decomposicao Aciclica de PRD e ADR (`trustkit milestones`)
+Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de Marcos de Entregas, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os Marcos de Entregas no SQLite WAL:
 ```bash
 # Analisa PRD e ADR, gera arquivos M01..MNN.md com citacoes de linha e persiste no banco
 trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
 
-# Lista todos os marcos cadastrados, ordem topologica, dependencias e status
+# Lista todos os Marcos de Entregas cadastrados, ordem topologica, dependencias e status
 trustkit milestones list [--json]
 
 # Inspeciona detalhes completos, capacidades e citacoes de um marco especifico
@@ -214,7 +215,7 @@ trustkit pr --target develop [--json]
 ```
 
 ### Homologação Pré-Release: Auditoria Defensiva Global (`audit security`)
-Para homologação de marcos de versão ou antes de merges em branches estáveis (`staging` ou `main`), o TRustKit oferece um subcomando desacoplado de auditoria defensiva em 6 fases com validação de ledger determinístico (`coverage-ledger.json` e `findings.json`):
+Para homologação de Marcos de Entregas de versão ou antes de merges em branches estáveis (`staging` ou `main`), o TRustKit oferece um subcomando desacoplado de auditoria defensiva em 6 fases com validação de ledger determinístico (`coverage-ledger.json` e `findings.json`):
 ```bash
 # Executa auditoria global pré-release (perfis: quick, standard, deep)
 trustkit audit security [--profile standard] [--scope .] [--output-dir .trustkit/audits/security] [--json]
@@ -399,6 +400,8 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Revisao semantica multi-angulo (refactor), security review opcional e auditoria defensiva em 6 fases. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e autonomia completa. |
 | `010-trustkit-auto-orchestrator` | Motor Autonomo trustkit auto | Orquestracao unificada Gates 0 a 6, loop de ondas topologicas com isolamento de worktree e TDD estrito. |
+| `012-milestone-planning` | Planejamento Previo de Marcos | Decomposicao aciclica de PRD e ADR em marcos com citacoes de linha (`#LXX-LYY`) e `init --milestone`. |
+| `013-contextual-next-step-guidance` | Orientacao Contextual de Proximo Passo | Resolvedor deterministico `NextStepResolver`, rodape ASCII `NEXT STEP:`, array JSON `next_steps` e protocolo `trustkit-sdd` v4.2. |
 
 ---
 
@@ -411,22 +414,24 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | 2 | SpecOrTraceabilityIncomplete | Falha de Especificacao | Spec nao congelada, sintaxe Mermaid/Gherkin invalida ou lacuna na matriz. |
 | 3 | TddLifecycleViolation | Infracao de TDD | Tentativa de GREEN sem RED comprovado ou quebra de fluxo TDD. |
 | 4 | AstIntegrityOrInvariantViolation | Violacao de Invariantes | Emojis detectados, trailers de IA, ciclos no DAG ou adulteracao de assercoes. |
-| 5 | CriticSwarmOrPlaywrightFailed | Reprovacao no Gauntlet | Falha de compilação, linter, reprovacao em testes E2E ou parecer de critico. |
+| 5 | CriticSwarmOrPlaywrightFailed | Reprovacao no Gauntlet | Falha de compilacao, linter, reprovacao em testes E2E ou parecer de critico. |
 | 6 | CircuitBreakerTripped | Disjuntor Acionado | Disjuntor disparado apos 5 falhas consecutivas no Gauntlet. |
 
 ---
 
-## 13. Dual-Audience: Modos de Operacao
+## 13. Dual-Audience: Modos de Operacao e Orientacao Contextual (`NextStepResolver`)
 
 - Modo Humano (saida padrao em terminal TTY):
   - Interface textual em ASCII puro, sem emojis ou caracteres decorativos.
   - Prefixos padronizados: `[GATE-0]` a `[GATE-6]`, `[PASS]`, `[FAIL]`, `[WARN]`, `[INFO]`.
+  - Rodape padronizado `NEXT STEP:` ao final de cada comando e no `trustkit status`, indicando os proximos comandos priorizados (`[PRIMARY]`, `[SECONDARY]`, `[OPTIONAL]`) com o gate de destino e a acao exata a tomar.
   - Tabelas alinhadas e resumos executivos objetivos.
 
 - Modo Agente (`--json` ou via `TRUSTKIT_AGENT_MODE=1`):
   - Saida estrita em JSON deterministico e sem formatacoes superfluas.
   - Payloads 100% livres de campos `null` (arrays vazios `[]` e tipos Special Case explicitos).
-  - Economia maxima de tokens e integracao segura com parsers agênticos.
+  - Array estruturado `next_steps` presente em todos os retornos de comando e no `trustkit status --json` (contendo `priority`, `target_gate`, `command` e `description`), lido obrigatoriamente pela skill `trustkit-sdd` ao final de cada turno.
+  - Economia maxima de tokens e integracao segura com parsers agenticos.
 
 ---
 

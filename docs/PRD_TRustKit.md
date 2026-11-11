@@ -154,8 +154,8 @@ Historicamente, o desenvolvimento de software assistido por IA oscilava entre a 
 ```
 
 ### 4.3. Diretrizes de UX/UI para CLI Ultraleve (Dual-Audience Design)
-* **Modo Agente (`--json`):** Saída minificada, estritamente tipada, livre de códigos de escape ANSI e **livre de valores `null`** (uso de Objetos de Caso Especial e arrays vazios `[]`), minimizando consumo de tokens.
-* **Modo Humano (TTY Padrão):** Saída estruturada em tabelas ASCII, com status claros `[PASS]`, `[FAIL]`, `[WARN]`, `[GATE-N]`, sem emojis ou caracteres gráficos extravagantes, garantindo legibilidade corporativa.
+* **Modo Agente (`--json`):** Saída minificada, estritamente tipada, livre de códigos de escape ANSI, **livre de valores `null`** (uso de Objetos de Caso Especial e arrays vazios `[]`) e enriquecida em todos os comandos com o array determinístico `next_steps` (`priority`, `target_gate`, `command` e `description`), minimizando consumo de tokens e eliminando dúvidas de navegação.
+* **Modo Humano (TTY Padrão):** Saída estruturada em tabelas ASCII, com status claros `[PASS]`, `[FAIL]`, `[WARN]`, `[GATE-N]` e rodapé padronizado `NEXT STEP:` ao final de cada comando e no `trustkit status`, sem emojis ou caracteres gráficos extravagantes, garantindo legibilidade corporativa.
 * **Compatibilidade Headless:** Detecção automática de ausência de TTY (`atty::isnt`) para suprimir prompts interativos, adotando comportamentos seguros por política padrão.
 
 ---
@@ -224,6 +224,11 @@ Historicamente, o desenvolvimento de software assistido por IA oscilava entre a 
 * Subcomando `trustkit milestones list`: listagem ordenada de marcos, dependências topológicas e status.
 * Subcomando `trustkit milestones inspect`: inspeção detalhada de metadados, capacidades e citações de um marco.
 * Integração com `trustkit init --milestone`: inicialização direcionada de ciclos SDD a partir do marco planejado.
+
+#### 5.1.13. Orientação Contextual Determinística de Próximo Passo (`NextStepResolver` & `NextStepPresenter`)
+* Resolvedor puro de domínio (`NextStepResolver` em `trustkit-core`) que inspeciona o gate ativo, o estado de congelamento da spec, as tarefas pendentes na onda (`AwaitingRedPhase`, `RedVerified`, `GreenVerified`) e o estado do Circuit Breaker para recomendar exatamente o comando seguinte com argumentos reais preenchidos (ex.: `TASK-002`, `--wave 2`).
+* Padronização em todos os comandos de ciclo e no `trustkit status` do array JSON `next_steps` (livre de `null`) e do rodapé ASCII `NEXT STEP:`.
+* Protocolo obrigatório na skill declarativa `trustkit-sdd` (v4.2) para apresentar ao usuário o bloco `PROXIMO PASSO RECOMENDADO` ao final de cada turno.
 
 ### 5.2. Itens Fora do Escopo (V2)
 * Interface gráfica TUI complexa (`ratatui`) ou Dashboard Web local — o foco permanece 100% na eficiência de terminal e MCP.

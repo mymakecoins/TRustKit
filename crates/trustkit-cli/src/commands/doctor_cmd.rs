@@ -80,6 +80,7 @@ pub fn execute_with_db(
         consecutive_failures: cycle.gauntlet_attempt,
         diagnostics,
         remediation: remediation.clone(),
+        next_steps: Vec::new(),
     };
 
     println!("{}", GatePresenter::render_doctor(&response, json_mode));

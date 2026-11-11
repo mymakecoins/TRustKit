@@ -8,4 +8,5 @@ pub mod commands;
 pub mod error_handler;
 pub mod gate_presenter;
 pub mod milestones_presenter;
+pub mod next_step_presenter;
 pub mod presenter;

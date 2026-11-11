@@ -32,7 +32,7 @@ fn make_dummy_cycle(id: &str) -> SddCycle {
 }
 
 #[test]
-fn test_render_init_json_has_zero_null() {
+fn test_render_init_json_has_zero_null_and_next_steps() {
     let cycle = make_dummy_cycle("no-issue-202610271415");
     let outcome = InitializeCycleOutcome {
         cycle,
@@ -41,10 +41,12 @@ fn test_render_init_json_has_zero_null() {
     let rendered = Presenter::render_init(&outcome, true);
     assert!(!rendered.contains(": null"));
     assert!(rendered.contains("UNLINKED_LOCAL_CYCLE"));
+    assert!(rendered.contains("\"next_steps\""));
+    assert!(rendered.contains("trustkit spec prompt"));
 }
 
 #[test]
-fn test_render_init_ascii_has_no_emojis() {
+fn test_render_init_ascii_has_no_emojis_and_next_step_footer() {
     let mut cycle = make_dummy_cycle("issue-45-202610271415");
     cycle.issue_linkage = IssueLinkage::LinkedIssue {
         issue_number: 45,
@@ -61,6 +63,7 @@ fn test_render_init_ascii_has_no_emojis() {
     };
     let rendered = Presenter::render_init(&outcome, false);
     assert!(rendered.contains("[PASS] [GATE-0]"));
+    assert!(rendered.contains("NEXT STEP:"));
     assert!(rendered.is_ascii());
 }
 
@@ -78,36 +81,41 @@ fn test_render_hook_pre_tool_json_and_ascii() {
 }
 
 #[test]
-fn test_render_status_active_cycle_json_zero_null() {
+fn test_render_status_active_cycle_json_zero_null_and_next_steps() {
     let cycle = make_dummy_cycle("issue-45-202610271415");
     let lookup = ActiveCycleLookup::Found(Box::new(cycle));
     let out = Presenter::render_status(&lookup, true);
     assert!(!out.contains(": null"));
     assert!(out.contains("ACTIVE_CYCLE"));
     assert!(out.contains("issue-45-202610271415"));
+    assert!(out.contains("\"next_steps\""));
 }
 
 #[test]
-fn test_render_status_no_active_cycle_json_zero_null() {
+fn test_render_status_no_active_cycle_json_zero_null_and_next_steps() {
     let lookup = ActiveCycleLookup::NoActiveCycle;
     let out = Presenter::render_status(&lookup, true);
     assert!(!out.contains(": null"));
     assert!(out.contains("NO_ACTIVE_CYCLE"));
+    assert!(out.contains("\"next_steps\""));
+    assert!(out.contains("trustkit init --issue <ISSUE_ID>"));
 }
 
 #[test]
-fn test_render_status_active_ascii_has_no_emojis() {
+fn test_render_status_active_ascii_has_no_emojis_and_next_step() {
     let cycle = make_dummy_cycle("issue-45-202610271415");
     let lookup = ActiveCycleLookup::Found(Box::new(cycle));
     let out = Presenter::render_status(&lookup, false);
     assert!(out.is_ascii());
     assert!(out.contains("[PASS] [GATE-0] Active Cycle Status"));
+    assert!(out.contains("NEXT STEP:"));
 }
 
 #[test]
-fn test_render_status_no_active_ascii_has_no_emojis() {
+fn test_render_status_no_active_ascii_has_no_emojis_and_next_step() {
     let lookup = ActiveCycleLookup::NoActiveCycle;
     let out = Presenter::render_status(&lookup, false);
     assert!(out.is_ascii());
     assert!(out.contains("[PASS] No active cycle found."));
+    assert!(out.contains("NEXT STEP:"));
 }
