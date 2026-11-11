@@ -27,15 +27,15 @@ O avanço rápido de agentes autônomos de engenharia de software (como Claude C
 **Consolidar a arquitetura "Hybrid Rust Core + Thin Skill" através do binário unificado `trustkit` (Rust 2024 Edition), estruturado em um Cargo Workspace de 6 crates com isolamento hexagonal estrito, modelo de domínio puro baseado em Plain Old Rust Structs (PORS) com proibição absoluta de valores nulos (`null`), injeção de dependência via Composition Root único, persistência transacional em SQLite WAL com motor de busca textual FTS5, análise sintática Tree-sitter em memória, terminais virtuais multiplexados (PTY) e governança de harness de nível L4.**
 
 ### 2.1. Interface & Experiência do Usuário / Agente (Frontend CLI & MCP)
-* **Design de Audiência Dual (Dual-Audience):**
-  * **Modo Agente (`--json`):** Saída minificada, tipada via schemas de Casos Especiais, sem códigos de escape ANSI e **sem qualquer ocorrência de `: null`**, gerando payloads compactos com consumo mínimo de tokens.
-  * **Modo Humano (TTY padrão):** Apresentação visual limpa em tabelas ASCII, com marcadores semânticos formais (`[PASS]`, `[FAIL]`, `[GATE-0..6]`) em estrito respeito à proibição de emojis e ícones gráficos.
+* **Design de Audiência Dual (Dual-Audience) & Orientação Contextual (`NextStepPresenter`):**
+  * **Modo Agente (`--json`):** Saída minificada, tipada via schemas de Casos Especiais, sem códigos de escape ANSI, **sem qualquer ocorrência de `: null`** e com o array determinístico `next_steps` (`priority`, `target_gate`, `command` e `description`) calculado para o estado corrente do ciclo, gerando payloads compactos com consumo mínimo de tokens.
+  * **Modo Humano (TTY padrão):** Apresentação visual limpa em tabelas ASCII, com marcadores semânticos formais (`[PASS]`, `[FAIL]`, `[GATE-0..6]`) e rodapé padronizado `NEXT STEP:` ao final de cada comando e no `trustkit status`, em estrito respeito à proibição de emojis e ícones gráficos.
 * **Servidor MCP Nativo (`trustkit mcp`):** Exposição padronizada de ferramentas sobre canal `stdio` JSON-RPC (`trustkit_spec_template`, `trustkit_spec_context`, `trustkit_spec_lint`, `trustkit_graph_query`, `trustkit_memory_search`).
 * **Resolução Headless Não-Interativa:** Detecção automática de ambiente não-interativo para evitar bloqueios em pipelines CI, garantindo exit code 0 no stdout para `--help` e `--version`.
 
 ### 2.2. Motor de Execução, Memória & Persistência (Backend Core em Rust)
 * **Linguagem & Compilação:** Rust estável (Edition 2024), gerando binário estático com *Link-Time Optimization* (`lto = "thin"`) e eliminação de símbolos (`strip = true`).
-* **Núcleo de Domínio Puro (`trustkit-core`):** Depende exclusivamente de `std` (zero crates externas), implementando as entidades da Linguagem Ubíqua, as 20 Invariantes Constitucionais, a máquina de estados FSM (*Typestate Pattern*) e a definição de 20 Ports hexagonais abstratos.
+* **Núcleo de Domínio Puro (`trustkit-core`):** Depende exclusivamente de `std` (zero crates externas), implementando as entidades da Linguagem Ubíqua, as 20 Invariantes Constitucionais, a máquina de estados FSM (*Typestate Pattern*), o resolvedor contextual determinístico de próximos passos (`NextStepResolver` em `next_step_guidance` e `next_step_status_policy`) e a definição de 22 Ports hexagonais abstratos.
 * **Persistência Transacional & FTS5 (`trustkit-db`):** SQLite 3 embarcado via `rusqlite` em modo WAL, operando com 10 tabelas relacionais com restrição `NOT NULL`, tabela virtual `knowledge_pages_fts` indexada com algoritmo BM25 e hashing criptográfico paralelo com `blake3` e `rayon`.
 * **Análise Sintática & Grafo (`trustkit-ast`):** Tree-sitter estático para inspeção e contagem de nós de asserções em TS/Rust/Python/Go/SQL, com biblioteca `petgraph` para cálculo de DAG de tarefas e métricas de acoplamento estrutural.
 * **Isolamento de Processos & Concorrência (`trustkit-orch`):** Orquestrador assíncrono baseado em `tokio`, provedor de *Git Worktrees* efêmeras com links CoW, multiplexador de pseudo-terminais virtuais (`pty-process`) e motor autônomo `trustkit auto`.
@@ -110,6 +110,7 @@ O avanço rápido de agentes autônomos de engenharia de software (como Claude C
 |   | Camada de Borda & Composition Root (`trustkit-cli`)                                   |   |
 |   |  - `main.rs` & `bootstrap.rs` (DI Wiring: Fast Sync Hooks vs Tokio Async Engine)       |   |
 |   |  - `error_handler.rs` (DomainViolation -> POSIX ExitCode Semântico + JSON livre de null)|   |
+|   |  - `next_step_presenter.rs` (Rodapé ASCII `NEXT STEP:` e array JSON `next_steps`)     |   |
 |   |  - Comandos: auto, init, spec, wave, task, gauntlet, done, merge, pr, memory, graph   |   |
 |   |  - Servidor MCP: stdio JSON-RPC nativo                                                |   |
 |   +-------------------------------------------+-------------------------------------------+   |
@@ -118,9 +119,10 @@ O avanço rápido de agentes autônomos de engenharia de software (como Claude C
 |   | Núcleo de Domínio Puro (`trustkit-core` — std only / Zero NULL / 100% PORS)           |   |
 |   |  - Entidades: SddCycle, ArtifactSeal, TraceabilityLink, AtomicTask, ExecutionEvidence |   |
 |   |  - Typestate FSM: Gate0Discovery -> Gate1..Gate5 -> Gate6Certification                |   |
+|   |  - Orientação Contextual: NextStepResolver (next_step_guidance / status_policy)       |   |
 |   |  - Regras: 20 Hard Invariants + Circuit Breaker (Max 5 Loops)                         |   |
 |   |  - Casos de Uso: RunAutonomousCycle, PlanExecutionWaves, AuditAstLayer0, RunGauntlet  |   |
-|   |  - 20 Ports Hexagonais Abstratos (Traits)                                             |   |
+|   |  - 22 Ports Hexagonais Abstratos (Traits)                                             |   |
 |   +-------+--------------------+--------------------+--------------------+----------------+   |
 |           ^                    ^                    ^                    ^                    |
 |           | Implementa         | Implementa         | Implementa         | Implementa         |
