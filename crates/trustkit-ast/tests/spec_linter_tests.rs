@@ -7,6 +7,7 @@
 
 use std::time::Instant;
 use trustkit_ast::{SpecLintVerdict, SpecLinter};
+use trustkit_core::entities::{DomainGlossary, GlossaryEntry};
 
 const VALID_SPEC: &str = r#"# Especificacao: 009-sample-feature
 
@@ -110,4 +111,31 @@ fn test_spec_linter_performance_benchmark_sub_3ms() {
         "SpecLinter average time exceeded 3ms threshold: {:.4}ms",
         avg_ms
     );
+}
+
+#[test]
+fn test_spec_linter_detects_spec_008_glossary_conflict() {
+    let spec_with_rejected_term = format!(
+        "{}\n## 5. Notas Adicionais\nUsaremos uma sessao avulsa para testar.\n",
+        VALID_SPEC
+    );
+    let entry = GlossaryEntry::new(
+        "Ciclo SDD",
+        "Processo iterativo deterministico",
+        vec!["sessao avulsa".to_string(), "sprint ia".to_string()],
+    )
+    .expect("valid glossary entry");
+    let glossary = DomainGlossary::new(vec![entry]).expect("valid glossary");
+
+    let verdict = SpecLinter::lint_markdown_with_glossary(&spec_with_rejected_term, &glossary);
+    assert!(!verdict.is_clean());
+    let violations = verdict.violations();
+    let spec_008 = violations.iter().find(|v| v.code == "SPEC-008");
+    assert!(
+        spec_008.is_some(),
+        "Expected SPEC-008 violation for rejected term"
+    );
+    let v = spec_008.unwrap();
+    assert!(v.message.contains("sessao avulsa"));
+    assert!(v.message.contains("Ciclo SDD"));
 }

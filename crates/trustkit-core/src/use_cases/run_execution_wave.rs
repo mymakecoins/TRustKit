@@ -117,6 +117,19 @@ pub fn execute(
     let mut executed_reports = Vec::with_capacity(wave_tasks.len());
 
     for mut task in wave_tasks {
+        if task.worktree_allocation.is_merged_and_pruned() {
+            let sha = match &task.worktree_allocation {
+                WorktreeAllocation::MergedAndPruned { commit_sha } => commit_sha.clone(),
+                _ => String::new(),
+            };
+            executed_reports.push(ExecutedTaskReport {
+                task_id: task.task_id,
+                worktree_path: String::new(),
+                merged_commit_sha: sha,
+            });
+            continue;
+        }
+
         let allocation =
             worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
         let worktree_path = match &allocation {
