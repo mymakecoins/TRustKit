@@ -5,7 +5,7 @@
 
 use std::fs;
 use std::path::Path;
-use trustkit_core::entities::TaskNode;
+use trustkit_core::entities::{TaskNode, TaskSliceKind};
 use trustkit_core::errors::DomainViolation;
 
 pub fn parse_tasks_dir(dir_path: &Path) -> Result<Vec<TaskNode>, DomainViolation> {
@@ -71,6 +71,7 @@ pub fn parse_task_content(content: &str, fallback_id: &str) -> TaskNode {
     let mut target_test_file = String::new();
     let mut depends_on = Vec::new();
     let mut expected_files = Vec::new();
+    let mut slice_kind = TaskSliceKind::VerticalTracerBullet;
 
     let mut section_mode = "";
 
@@ -150,6 +151,17 @@ pub fn parse_task_content(content: &str, fallback_id: &str) -> TaskNode {
             continue;
         }
 
+        if lower.starts_with("slice_kind:")
+            || lower.starts_with("task_slice_kind:")
+            || lower.starts_with("slice:")
+            || lower.starts_with("kind:")
+        {
+            let val = trimmed.split_once(':').map(|(_, v)| v.trim()).unwrap_or("");
+            slice_kind = TaskSliceKind::from_str_loose(val);
+            section_mode = "";
+            continue;
+        }
+
         if trimmed.starts_with('-') || trimmed.starts_with('*') {
             let item = trimmed[1..].trim().trim_matches(|c| c == '\'' || c == '"');
             if section_mode == "depends_on" && !item.is_empty() {
@@ -167,6 +179,19 @@ pub fn parse_task_content(content: &str, fallback_id: &str) -> TaskNode {
         title = task_id.clone();
     }
 
+    if slice_kind == TaskSliceKind::VerticalTracerBullet {
+        let upper_title = title.to_uppercase();
+        let upper_content = content.to_uppercase();
+        if upper_title.contains("EXPAND") || upper_content.contains("WIDEREFACTOREXPAND") {
+            slice_kind = TaskSliceKind::WideRefactorExpand;
+        } else if upper_title.contains("MIGRATE") || upper_content.contains("WIDEREFACTORMIGRATE") {
+            slice_kind = TaskSliceKind::WideRefactorMigrateBatch;
+        } else if upper_title.contains("CONTRACT") || upper_content.contains("WIDEREFACTORCONTRACT")
+        {
+            slice_kind = TaskSliceKind::WideRefactorContract;
+        }
+    }
+
     TaskNode {
         task_id,
         title,
@@ -174,5 +199,7 @@ pub fn parse_task_content(content: &str, fallback_id: &str) -> TaskNode {
         depends_on,
         expected_files,
         target_test_file,
+        slice_kind,
+        blast_radius_score: 0,
     }
 }

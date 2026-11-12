@@ -40,14 +40,14 @@ fn setup_test_cycle_and_task(repo: &SqliteWalRepositoryAdapter, cycle_id: &str, 
     };
     repo.save_cycle(&cycle).expect("save cycle");
 
-    let task = TaskNode {
-        task_id: task_id.to_string(),
-        title: "Test task implementation".to_string(),
-        architectural_layer: "CORE".to_string(),
-        depends_on: vec![],
-        expected_files: vec!["crates/trustkit-core/src/entities.rs".to_string()],
-        target_test_file: "tests/task_tests.rs".to_string(),
-    };
+    let task = TaskNode::new(
+        task_id.to_string(),
+        "Test task implementation".to_string(),
+        "CORE".to_string(),
+        vec![],
+        vec!["crates/trustkit-core/src/entities.rs".to_string()],
+        "tests/task_tests.rs".to_string(),
+    );
     let schedule = WaveSchedule {
         cycle_id: cycle_id.to_string(),
         total_tasks: 1,

@@ -122,7 +122,7 @@ fn test_sync_bootstrap_merge_dispatches() {
     let cli = Cli {
         json: true,
         command: Command::Merge(MergeArgs {
-            target: "develop".to_string(),
+            target: Some("develop".to_string()),
             json: true,
         }),
     };

@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRustKit SDD - Deterministic Kanban Dashboard</title>
+  <style>
+    :root {
+      --bg-canvas: #090d16;
+      --bg-surface: #101623;
+      --bg-card: #162032;
+      --bg-card-hover: #1c2940;
+      --border-subtle: #233047;
+      --border-focus: #3b82f6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-purple: #c084fc;
+      --accent-green: #34d399;
+      --accent-red: #f87171;
+      --accent-yellow: #fbbf24;
+      --accent-amber: #f59e0b;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    /* Top Navbar */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+      font-family: var(--font-mono);
+      letter-spacing: -1px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .brand-version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      color: var(--accent-blue);
+    }
+
+    .metrics-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .metric-value.highlight-green {
+      color: var(--accent-green);
+    }
+
+    .metric-value.highlight-amber {
+      color: var(--accent-amber);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+
+    .btn:hover {
+      background: #273549;
+      border-color: #3b82f6;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* Sub-header Filter / Context Bar */
+    .filter-bar {
+      background: rgba(16, 22, 35, 0.7);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .invariants-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .invariant-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .invariant-tag.active {
+      border-color: rgba(52, 211, 153, 0.4);
+      color: var(--accent-green);
+      background: rgba(6, 78, 59, 0.2);
+    }
+
+    .tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .board-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-box {
+      background: #0f172a;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      width: 220px;
+      outline: none;
+      font-family: var(--font-sans);
+    }
+
+    .search-box:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Kanban Board Container */
+    .kanban-board {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      background: radial-gradient(circle at 50% 0%, #111a2e 0%, #090d16 80%);
+    }
+
+    /* Custom Scrollbar */
+    .kanban-board::-webkit-scrollbar {
+      height: 8px;
+    }
+    .kanban-board::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    .kanban-board::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+
+    /* Column Styles */
+    .kanban-column {
+      flex: 0 0 310px;
+      background: rgba(16, 22, 35, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      max-height: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.15s ease;
+    }
+
+    .kanban-column:hover {
+      border-color: #2e3e5c;
+    }
+
+    .column-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(22, 32, 50, 0.5);
+      border-top-left-radius: 7px;
+      border-top-right-radius: 7px;
+      position: relative;
+    }
+
+    .column-accent-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-top-left-radius: 7px;
+      border-top-right-radius: 7px;
+    }
+
+    .col-0 .column-accent-line { background: #64748b; }
+    .col-1 .column-accent-line { background: var(--accent-blue); }
+    .col-2 .column-accent-line { background: var(--accent-purple); }
+    .col-3 .column-accent-line { background: var(--accent-indigo); }
+    .col-4 .column-accent-line { background: var(--accent-amber); }
+    .col-5 .column-accent-line { background: var(--accent-yellow); }
+    .col-6 .column-accent-line { background: var(--accent-green); }
+
+    .column-title-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+
+    .column-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-family: var(--font-mono);
+      color: #fff;
+    }
+
+    .column-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 1px 7px;
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .column-subtitle {
+      font-size: 11px;
+      color: var(--accent-blue);
+      font-weight: 500;
+      letter-spacing: -0.2px;
+    }
+
+    .col-0 .column-subtitle { color: #94a3b8; }
+    .col-1 .column-subtitle { color: var(--accent-blue); }
+    .col-2 .column-subtitle { color: var(--accent-purple); }
+    .col-3 .column-subtitle { color: var(--accent-indigo); }
+    .col-4 .column-subtitle { color: #fbbf24; }
+    .col-5 .column-subtitle { color: #f59e0b; }
+    .col-6 .column-subtitle { color: var(--accent-green); }
+
+    .column-body {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .column-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .column-body::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+
+    /* Cards */
+    .kanban-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 7px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      position: relative;
+    }
+
+    .kanban-card:hover {
+      background: var(--bg-card-hover);
+      border-color: #38bdf8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .card-id {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .card-priority {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .priority-primary {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .priority-secondary {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+    }
+
+    .priority-optional {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #cbd5e1;
+    }
+
+    .card-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #f8fafc;
+      line-height: 1.4;
+    }
+
+    .card-details {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Card Badge Matrix */
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .card-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-hash {
+      color: var(--accent-purple);
+      border-color: rgba(192, 132, 252, 0.3);
+      background: rgba(192, 132, 252, 0.08);
+    }
+
+    .badge-tdd-red {
+      color: var(--accent-red);
+      border-color: rgba(248, 113, 113, 0.3);
+      background: rgba(248, 113, 113, 0.1);
+      font-weight: 700;
+    }
+
+    .badge-tdd-green {
+      color: var(--accent-green);
+      border-color: rgba(52, 211, 153, 0.3);
+      background: rgba(52, 211, 153, 0.1);
+      font-weight: 700;
+    }
+
+    .badge-worktree {
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .badge-critic {
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.08);
+    }
+
+    /* Next Step Command Box in Card */
+    .card-next-step {
+      background: #0b111c;
+      border: 1px solid #1e293b;
+      border-radius: 4px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .next-step-label {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .next-step-cmd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Circuit Breaker Warning Card */
+    .card-tripped {
+      border-color: rgba(239, 68, 68, 0.6);
+      background: rgba(69, 10, 10, 0.25);
+    }
+
+    .card-tripped:hover {
+      border-color: #ef4444;
+      background: rgba(69, 10, 10, 0.4);
+    }
+
+    /* Drawer / Modal Inspector */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 480px;
+      background: #0f172a;
+      border-left: 1px solid #334155;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-overlay.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #111a2e;
+    }
+
+    .drawer-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .drawer-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .drawer-subtitle {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-blue);
+    }
+
+    .drawer-close {
+      background: transparent;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .drawer-close:hover {
+      color: #fff;
+      border-color: #64748b;
+    }
+
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      background: #0b111c;
+      padding: 0 16px;
+    }
+
+    .drawer-tab {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .drawer-tab.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .drawer-content {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .drawer-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .kv-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px;
+      background: #162032;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    .kv-key {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .kv-val {
+      color: #fff;
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
+    .cli-box {
+      background: #060910;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background: #334155;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">TR</div>
+      <div>
+        <span class="brand-title">TRustKit SDD</span>
+        <span class="brand-version">v4.2.0</span>
+      </div>
+    </div>
+
+    <div class="metrics-bar">
+      <div class="metric-item">
+        <span class="metric-label">Ciclos em Execução</span>
+        <span class="metric-value">6 Ativos</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Taxa Gauntlet V2</span>
+        <span class="metric-value highlight-green">94.8% Pass</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Worktrees Isoladas</span>
+        <span class="metric-value">3 CoW Reflinks</span>
+      </div>
+      <div class="metric-item">
+        <span class="metric-label">Circuit Breakers</span>
+        <span class="metric-value highlight-amber">1 Atencao (2/5)</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn" onclick="filterBoard('all')">Atualizar FSM</button>
+      <button class="btn btn-primary" onclick="alert('Executando: trustkit init --issue <NOVA_ISSUE> --json')">+ Novo Ciclo SDD</button>
+    </div>
+  </header>
+
+  <!-- Filter & Invariants Bar -->
+  <div class="filter-bar">
+    <div class="invariants-badge-group">
+      <div class="invariant-tag active">
+        <span class="tag-dot"></span> Invariante I: Hexagonal Std Only
+      </div>
+      <div class="invariant-tag active">
+        <span class="tag-dot"></span> Invariante II: Zero Emojis
+      </div>
+      <div class="invariant-tag active">
+        <span class="tag-dot"></span> Invariante III: BLAKE3 Sealed
+      </div>
+      <div class="invariant-tag active">
+        <span class="tag-dot"></span> Invariante IV: TDD RED-to-GREEN
+      </div>
+    </div>
+
+    <div class="board-controls">
+      <input type="text" class="search-box" id="searchBox" placeholder="Filtrar por ID ou tag..." onkeyup="searchCards()">
+      <button class="btn" style="padding: 4px 10px;" onclick="alert('Modo de visualizacao alternado')">Visualizacao Compacta</button>
+    </div>
+  </div>
+
+  <!-- Kanban 7-Gates Columns -->
+  <main class="kanban-board" id="kanbanBoard">
+
+    <!-- Column 0: Discovery -->
+    <div class="kanban-column col-0">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 0: DISCOVERY</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="column-subtitle">Em Descoberta / Triagem</div>
+      </div>
+      <div class="column-body">
+        <div class="kanban-card" onclick="openDrawer('008', 'Native Specification & Autonomy', 'GATE 0: DISCOVERY', 'Em Descoberta / Triagem', 'PRIMARY', 'Draft', 'none', 'trustkit init --issue 108 --json')">
+          <div class="card-top">
+            <span class="card-id">#008-sdd-auto</span>
+            <span class="card-priority priority-primary">PRIMARY</span>
+          </div>
+          <div class="card-title">Native Specification and Autonomy</div>
+          <div class="card-details">Triagem inicial de requisitos a partir de issue remota e verificacao de credenciais de autor.</div>
+          <div class="card-badges">
+            <span class="card-badge">Issue #108</span>
+            <span class="card-badge">Git Identity: OK</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit spec prompt --idea "..."</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 1: Spec Drafting -->
+    <div class="kanban-column col-1">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 1: SPEC DRAFTING</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="column-subtitle">Em Refinamento / Especificacao</div>
+      </div>
+      <div class="column-body">
+        <div class="kanban-card" onclick="openDrawer('009', 'PTY Multiplexer and Agent Waves', 'GATE 1: SPEC DRAFTING', 'Em Refinamento / Especificacao', 'PRIMARY', 'Linting: CleanPass', 'none', 'trustkit spec lock --spec specs/009-pty/spec.md --json')">
+          <div class="card-top">
+            <span class="card-id">#009-pty-waves</span>
+            <span class="card-priority priority-primary">PRIMARY</span>
+          </div>
+          <div class="card-title">PTY Multiplexer and Agent Waves</div>
+          <div class="card-details">Redacao de cenarios Gherkin e diagramas Mermaid de multiplexacao assincrona.</div>
+          <div class="card-badges">
+            <span class="card-badge" style="color: var(--accent-green); border-color: rgba(52,211,153,0.3);">Linter: CleanPass</span>
+            <span class="card-badge">Gherkin: 4 Scenarios</span>
+            <span class="card-badge">Mermaid: Valid</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit spec lock --spec specs/009-pty/spec.md</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Spec Sealed -->
+    <div class="kanban-column col-2">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 2: SPEC SEALED</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="column-subtitle">Escopo Congelado / Aprovado</div>
+      </div>
+      <div class="column-body">
+        <div class="kanban-card" onclick="openDrawer('007', 'Semantic Review and Security Gates', 'GATE 2: SPEC SEALED', 'Escopo Congelado / Aprovado', 'SECONDARY', 'Sealed', 'e4b9...c11a', 'trustkit wave plan --json')">
+          <div class="card-top">
+            <span class="card-id">#007-sec-gates</span>
+            <span class="card-priority priority-secondary">SECONDARY</span>
+          </div>
+          <div class="card-title">Semantic Review and Security Gates</div>
+          <div class="card-details">Especificacao auditada e lacrada com selo BLAKE3. Contratos de seguranca fixados.</div>
+          <div class="card-badges">
+            <span class="card-badge badge-hash">BLAKE3: e4b9...c11a</span>
+            <span class="card-badge">Frozen: YES</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit wave plan --json</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Wave Planned -->
+    <div class="kanban-column col-3">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 3: WAVE PLANNED</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="column-subtitle">Pronto para Execucao (Planejado)</div>
+      </div>
+      <div class="column-body">
+        <div class="kanban-card" onclick="openDrawer('006', 'Structural Graph Intelligence', 'GATE 3: WAVE PLANNED', 'Pronto para Execucao (Planejado)', 'PRIMARY', 'Planned', '7d22...99ff', 'trustkit wave run --wave 0 --json')">
+          <div class="card-top">
+            <span class="card-id">#006-graph-intel</span>
+            <span class="card-priority priority-primary">PRIMARY</span>
+          </div>
+          <div class="card-title">Structural Graph Intelligence</div>
+          <div class="card-details">DAG de tarefas atômicas montado. 2 ondas planejadas com 5 tarefas paralelas no total.</div>
+          <div class="card-badges">
+            <span class="card-badge">Ondas: 2</span>
+            <span class="card-badge">Tasks: 5 atomicas</span>
+            <span class="card-badge badge-hash">BLAKE3: 7d22...99ff</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit wave run --wave 0 --json</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 4: Tasks Implemented -->
+    <div class="kanban-column col-4">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 4: TASKS IMPLEMENTED</span>
+          <span class="column-count">2</span>
+        </div>
+        <div class="column-subtitle">Em Desenvolvimento (TDD)</div>
+      </div>
+      <div class="column-body">
+        <!-- Normal Card in TDD -->
+        <div class="kanban-card" onclick="openDrawer('005', 'Project Knowledge Memory', 'GATE 4: TASKS IMPLEMENTED', 'Em Desenvolvimento (TDD)', 'PRIMARY', 'TDD: RED Verified', 'a19c...33de', 'trustkit task test TASK-002 --phase green --json')">
+          <div class="card-top">
+            <span class="card-id">#005-memory-fts5</span>
+            <span class="card-priority priority-primary">PRIMARY</span>
+          </div>
+          <div class="card-title">Project Knowledge Memory FTS5</div>
+          <div class="card-details">Onda 1 em execucao na worktree isolada. Fase RED registrada para TASK-002.</div>
+          <div class="card-badges">
+            <span class="card-badge badge-worktree">Worktree: wt-mem-1</span>
+            <span class="card-badge badge-tdd-red">TDD: RED PROVED</span>
+            <span class="card-badge">Wave: 1/2</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit task test TASK-002 --phase green</span>
+          </div>
+        </div>
+
+        <!-- Card with Warning / Retry Count -->
+        <div class="kanban-card card-tripped" onclick="openDrawer('004', 'Worktree TDD Gauntlet Refactor', 'GATE 4: TASKS IMPLEMENTED', 'Em Desenvolvimento (TDD)', 'SECONDARY', 'Retry 2/5', '5c41...88ab', 'trustkit gauntlet run --cycle 004 --json')">
+          <div class="card-top">
+            <span class="card-id">#004-tdd-gauntlet</span>
+            <span class="card-priority priority-secondary">SECONDARY</span>
+          </div>
+          <div class="card-title">Worktree TDD Gauntlet Refactor</div>
+          <div class="card-details">Falha na assercao anti-cheat de AST. Retornou para correcao com 2 tentativas acumuladas.</div>
+          <div class="card-badges">
+            <span class="card-badge" style="color: var(--accent-red); border-color: rgba(239,68,68,0.4);">Circuit Breaker: 2/5</span>
+            <span class="card-badge badge-tdd-green">TDD: GREEN</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit gauntlet run --cycle 004</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 5: Gauntlet Cleared -->
+    <div class="kanban-column col-5">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 5: GAUNTLET CLEARED</span>
+          <span class="column-count">1</span>
+        </div>
+        <div class="column-subtitle">Em Auditoria / Validacao Estrita</div>
+      </div>
+      <div class="column-body">
+        <div class="kanban-card" onclick="openDrawer('003', 'AST Layer 0 Context Slicer', 'GATE 5: GAUNTLET CLEARED', 'Em Auditoria / Validacao Estrita', 'PRIMARY', 'Gauntlet: 5/5 Pass', '3b11...90fe', 'trustkit cycle certify --cycle 003 --json')">
+          <div class="card-top">
+            <span class="card-id">#003-ast-slicer</span>
+            <span class="card-priority priority-primary">PRIMARY</span>
+          </div>
+          <div class="card-title">AST Layer 0 Context Slicer</div>
+          <div class="card-details">Gauntlet V2 completado com sucesso. Criticas de AppSec, Anti-cheat e Spec aprovadas sem ressalvas.</div>
+          <div class="card-badges">
+            <span class="card-badge badge-critic">Critics: 5/5 Pass</span>
+            <span class="card-badge" style="color: var(--accent-green); border-color: rgba(52,211,153,0.3);">Anti-Cheat: Clear</span>
+            <span class="card-badge">Consenso: 100%</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">NEXT STEP:</span>
+            <span class="next-step-cmd">trustkit cycle certify --cycle 003</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 6: Certified -->
+    <div class="kanban-column col-6">
+      <div class="column-header">
+        <div class="column-accent-line"></div>
+        <div class="column-title-wrap">
+          <span class="column-title">GATE 6: CERTIFIED</span>
+          <span class="column-count">2</span>
+        </div>
+        <div class="column-subtitle">Concluido / Certificado (Done)</div>
+      </div>
+      <div class="column-body">
+        <div class="kanban-card" onclick="openDrawer('001', 'Core DB & CLI Bootstrap', 'GATE 6: CERTIFIED', 'Concluido / Certificado (Done)', 'PRIMARY', 'Certified', 'f881...4401', 'PR on demand pronto')">
+          <div class="card-top">
+            <span class="card-id">#001-core-cli</span>
+            <span class="card-priority priority-primary">PRIMARY</span>
+          </div>
+          <div class="card-title">Core DB & CLI Bootstrap</div>
+          <div class="card-details">FSM hexagonal, banco SQLite WAL e CLI com rodape deterministico certificados.</div>
+          <div class="card-badges">
+            <span class="card-badge" style="color: var(--accent-green); border-color: rgba(52,211,153,0.4);">Certificado v4.0</span>
+            <span class="card-badge badge-hash">BLAKE3: f881...4401</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">STATUS FINAL:</span>
+            <span class="next-step-cmd">Merge em develop pronto (PR on-demand)</span>
+          </div>
+        </div>
+
+        <div class="kanban-card" onclick="openDrawer('002', 'DAG Wave Planner V2', 'GATE 6: CERTIFIED', 'Concluido / Certificado (Done)', 'SECONDARY', 'Certified', 'b233...1199', 'PR on demand pronto')">
+          <div class="card-top">
+            <span class="card-id">#002-wave-dag</span>
+            <span class="card-priority priority-secondary">SECONDARY</span>
+          </div>
+          <div class="card-title">DAG Wave Planner V2</div>
+          <div class="card-details">Planejamento e ordenacao topologica deterministica de tarefas em ondas de execucao.</div>
+          <div class="card-badges">
+            <span class="card-badge" style="color: var(--accent-green); border-color: rgba(52,211,153,0.4);">Certificado v4.1</span>
+            <span class="card-badge badge-hash">BLAKE3: b233...1199</span>
+          </div>
+          <div class="card-next-step">
+            <span class="next-step-label">STATUS FINAL:</span>
+            <span class="next-step-cmd">Merge em develop pronto (PR on-demand)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Side Drawer for Card Inspection -->
+  <aside class="drawer-overlay" id="cardDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <span class="drawer-title" id="drawerTitle">Feature Details</span>
+        <span class="drawer-subtitle" id="drawerSubtitle">GATE 0: DISCOVERY</span>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">X</button>
+    </div>
+
+    <div class="drawer-tabs">
+      <div class="drawer-tab active">Visao Geral</div>
+      <div class="drawer-tab">Evidencias SDD</div>
+      <div class="drawer-tab">Audit Gauntlet</div>
+    </div>
+
+    <div class="drawer-content">
+      <div class="drawer-section">
+        <span class="section-title">Dados do Ciclo SDD</span>
+        <div class="kv-grid">
+          <span class="kv-key">Cycle ID:</span>
+          <span class="kv-val" id="drawerCycleId">#000</span>
+          <span class="kv-key">Status Analogo:</span>
+          <span class="kv-val" id="drawerStatusAnalogo">-</span>
+          <span class="kv-key">Prioridade:</span>
+          <span class="kv-val" id="drawerPriority">PRIMARY</span>
+          <span class="kv-key">BLAKE3 Seal:</span>
+          <span class="kv-val" id="drawerBlake3">Nao selado</span>
+          <span class="kv-key">Worktree:</span>
+          <span class="kv-val">.trustkit/worktrees/wt-isolated</span>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <span class="section-title">Invariantes Verificados</span>
+        <div class="kv-grid">
+          <span class="kv-key">Zero Emojis:</span>
+          <span class="kv-val" style="color: var(--accent-green);">100% Validado</span>
+          <span class="kv-key">Zero AI Trailers:</span>
+          <span class="kv-val" style="color: var(--accent-green);">100% Validado</span>
+          <span class="kv-key">TDD Cycle:</span>
+          <span class="kv-val" style="color: var(--accent-green);">RED Comprovado</span>
+        </div>
+      </div>
+
+      <div class="drawer-section">
+        <span class="section-title">Proximo Passo Recomendado (Resolvedor Contextual)</span>
+        <div class="cli-box">
+          <span id="drawerCommand">trustkit status --json</span>
+          <button class="copy-btn" onclick="copyCli()">Copiar</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    function openDrawer(id, title, gate, statusAnalogo, priority, statusTag, blake3, command) {
+      document.getElementById('drawerTitle').innerText = title;
+      document.getElementById('drawerSubtitle').innerText = gate;
+      document.getElementById('drawerCycleId').innerText = '#' + id;
+      document.getElementById('drawerStatusAnalogo').innerText = statusAnalogo;
+      document.getElementById('drawerPriority').innerText = priority;
+      document.getElementById('drawerBlake3').innerText = blake3 !== 'none' ? blake3 : 'Nao selado';
+      document.getElementById('drawerCommand').innerText = command;
+      document.getElementById('cardDrawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('cardDrawer').classList.remove('open');
+    }
+
+    function copyCli() {
+      const text = document.getElementById('drawerCommand').innerText;
+      navigator.clipboard.writeText(text);
+      alert('Comando copiado para a area de transferencia: ' + text);
+    }
+
+    function searchCards() {
+      const query = document.getElementById('searchBox').value.toLowerCase();
+      const cards = document.querySelectorAll('.kanban-card');
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (text.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function filterBoard(type) {
+      document.getElementById('searchBox').value = '';
+      searchCards();
+    }
+  </script>
+</body>
+</html>

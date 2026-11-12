@@ -6,9 +6,9 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use trustkit_core::entities::{
-    ContextSliceRequest, ContextSliceResult, KnowledgeDocument, KnowledgeLookupOutcome,
-    KnowledgeRebuildSummary, KnowledgeSearchHit, KnowledgeSearchOutcome, KnowledgeSearchQuery,
-    KnowledgeWriteOutcome,
+    ContextSliceRequest, ContextSliceResult, DomainGlossary, GlossaryEntry, KnowledgeDocument,
+    KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchHit, KnowledgeSearchOutcome,
+    KnowledgeSearchQuery, KnowledgeWriteOutcome,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{ContextSlicerPort, KnowledgeRepositoryPort};
@@ -16,6 +16,7 @@ use trustkit_core::use_cases::compose_spec_context::{self, ComposeSpecContextReq
 
 struct MockKnowledgeRepo {
     hits: Vec<KnowledgeSearchHit>,
+    glossary: DomainGlossary,
 }
 
 impl KnowledgeRepositoryPort for MockKnowledgeRepo {
@@ -43,6 +44,10 @@ impl KnowledgeRepositoryPort for MockKnowledgeRepo {
 
     fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation> {
         unimplemented!()
+    }
+
+    fn load_glossary(&self) -> Result<DomainGlossary, DomainViolation> {
+        Ok(self.glossary.clone())
     }
 }
 
@@ -82,6 +87,7 @@ fn test_compose_spec_context_success_aggregates_wiki_and_ast_snippets() {
             snippet: "Documento de arquitetura do nucleo.".to_string(),
             adjacent_links: vec!["crates/trustkit-core/src/lib.rs".to_string()],
         }],
+        glossary: DomainGlossary::default(),
     };
     let slicer = MockSlicer;
 
@@ -97,4 +103,41 @@ fn test_compose_spec_context_success_aggregates_wiki_and_ast_snippets() {
             .contains("=== Contexto Relevante Extraido ===")
     );
     assert!(outcome.aggregated_context.contains("[[arch-core]]"));
+}
+
+#[test]
+fn test_compose_spec_context_injects_ubiquitous_glossary_guidance() {
+    let entry = GlossaryEntry::new(
+        "Ciclo SDD",
+        "Ciclo deterministico de Spec-Driven Development com gates formais.",
+        vec!["sessao avulsa".to_string(), "sprint ia".to_string()],
+    )
+    .expect("valid entry");
+
+    let glossary = DomainGlossary::new(vec![entry]).expect("valid glossary");
+
+    let repo = MockKnowledgeRepo {
+        hits: vec![],
+        glossary,
+    };
+    let slicer = MockSlicer;
+
+    let req =
+        ComposeSpecContextRequest::new("Criacao de nova feature", 2, 5).expect("valid request");
+    let outcome = compose_spec_context::execute(req, &repo, &slicer).expect("compose success");
+
+    assert!(
+        outcome
+            .aggregated_context
+            .contains("=== Vocabulario Ubiquo Obrigatorio (Glossario) ==="),
+        "aggregated_context deve conter o cabecalho de vocabulario ubiquo"
+    );
+    assert!(
+        outcome.aggregated_context.contains("Ciclo SDD"),
+        "aggregated_context deve conter o termo canonico"
+    );
+    assert!(
+        outcome.aggregated_context.contains("sessao avulsa"),
+        "aggregated_context deve orientar o banimento do termo rejeitado"
+    );
 }

@@ -114,6 +114,10 @@ impl Presenter {
             })
     }
 
+    pub fn render_close(res: &crate::gate_presenter::JsonCloseResponse, json_mode: bool) -> String {
+        crate::gate_presenter::GatePresenter::render_close(res, json_mode)
+    }
+
     pub fn render_init(outcome: &InitializeCycleOutcome, json_mode: bool) -> String {
         let has_populated_spec = Self::has_populated_file(&outcome.cycle.spec_file_path)
             || matches!(

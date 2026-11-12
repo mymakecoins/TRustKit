@@ -66,3 +66,67 @@ fn test_context_slice_request_and_result() {
     assert_eq!(result.total_lines, 10);
     assert_eq!(result.preserved_symbols[0], "AstAuditVerdict");
 }
+
+#[test]
+fn test_task_slice_kind_variants_and_parsing() {
+    assert_eq!(
+        TaskSliceKind::VerticalTracerBullet.as_str(),
+        "VERTICAL_TRACER_BULLET"
+    );
+    assert_eq!(
+        TaskSliceKind::WideRefactorExpand.as_str(),
+        "WIDE_REFACTOR_EXPAND"
+    );
+    assert_eq!(
+        TaskSliceKind::WideRefactorMigrateBatch.as_str(),
+        "WIDE_REFACTOR_MIGRATE_BATCH"
+    );
+    assert_eq!(
+        TaskSliceKind::WideRefactorContract.as_str(),
+        "WIDE_REFACTOR_CONTRACT"
+    );
+
+    assert!(!TaskSliceKind::VerticalTracerBullet.is_wide_refactor());
+    assert!(TaskSliceKind::WideRefactorExpand.is_wide_refactor());
+    assert!(TaskSliceKind::WideRefactorMigrateBatch.is_wide_refactor());
+    assert!(TaskSliceKind::WideRefactorContract.is_wide_refactor());
+
+    assert_eq!(
+        TaskSliceKind::from_str_loose("expand"),
+        TaskSliceKind::WideRefactorExpand
+    );
+    assert_eq!(
+        TaskSliceKind::from_str_loose("migrate_batch"),
+        TaskSliceKind::WideRefactorMigrateBatch
+    );
+    assert_eq!(
+        TaskSliceKind::from_str_loose("contract"),
+        TaskSliceKind::WideRefactorContract
+    );
+    assert_eq!(
+        TaskSliceKind::from_str_loose("other"),
+        TaskSliceKind::VerticalTracerBullet
+    );
+}
+
+#[test]
+fn test_task_blast_radius_report_risk_evaluation() {
+    let report_low = TaskBlastRadiusReport::new(
+        "TASK-001".to_string(),
+        TaskSliceKind::VerticalTracerBullet,
+        2,
+        2,
+        vec![],
+    );
+    assert!(!report_low.is_high_risk());
+
+    let report_high = TaskBlastRadiusReport::new(
+        "TASK-002".to_string(),
+        TaskSliceKind::WideRefactorExpand,
+        10,
+        9,
+        vec!["crates/trustkit-core/src/ports.rs".to_string()],
+    );
+    assert!(report_high.is_high_risk());
+    assert_eq!(report_high.touched_high_degree_nodes.len(), 1);
+}

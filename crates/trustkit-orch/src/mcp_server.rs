@@ -9,7 +9,8 @@ use std::io::{BufRead, Write};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_core::knowledge_entities::{
-    KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeSearchQuery, KnowledgeWriteOutcome,
+    AdrTriageAssessment, GlossaryEntry, KnowledgeDocument, KnowledgeLookupOutcome,
+    KnowledgeSearchQuery, KnowledgeWriteOutcome,
 };
 use trustkit_core::ports::{
     KnowledgeRepositoryPort, StructuralGraphAnalyzerPort, StructuralGraphRepositoryPort,
@@ -163,6 +164,21 @@ impl McpServer {
                 "Reconstroi deterministicamente o indice FTS5 e grafo de wikilinks",
                 json!({"type":"object","properties":{}}),
             ),
+            tool(
+                "trustkit_knowledge_glossary_add",
+                "Adiciona termo canonico e sinonimos rejeitados ao glossario perene",
+                json!({"type":"object","properties":{"term":{"type":"string"},"definition":{"type":"string"},"rejected_synonyms":{"type":"array","items":{"type":"string"}}},"required":["term","definition"]}),
+            ),
+            tool(
+                "trustkit_knowledge_glossary_list",
+                "Lista todos os termos do glossario de linguagem ubiqua",
+                json!({"type":"object","properties":{}}),
+            ),
+            tool(
+                "trustkit_knowledge_adr_check",
+                "Aplica triagem de 3 criterios para criacao de ADR (hard-to-reverse, surprising, tradeoff)",
+                json!({"type":"object","properties":{"title":{"type":"string"},"context":{"type":"string"},"is_hard_to_reverse":{"type":"boolean"},"is_surprising_without_context":{"type":"boolean"},"has_genuine_alternatives_tradeoff":{"type":"boolean"}},"required":["title","context"]}),
+            ),
         ];
         tools.extend(crate::mcp_graph_dispatch::graph_tools());
         tools.extend(crate::mcp_spec_dispatch::spec_tools());
@@ -292,6 +308,59 @@ impl McpServer {
                 Ok(s) => (json!({"verdict":"PASS","tool":tool_name,"outcome":"REBUILT","notes_restored":s.notes_restored,"links_restored":s.links_restored,"duration_ms":s.duration_ms}).to_string(), false),
                 Err(e) => (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true),
             },
+            "trustkit_knowledge_glossary_add" => {
+                let term = args.get("term").and_then(Value::as_str).unwrap_or("");
+                let definition = args.get("definition").and_then(Value::as_str).unwrap_or("");
+                let rejected_synonyms = extract_tags(args.get("rejected_synonyms"));
+                match GlossaryEntry::new(term, definition, rejected_synonyms) {
+                    Ok(entry) => match repo.load_glossary() {
+                        Ok(mut glossary) => {
+                            if let Err(e) = glossary.add_entry(entry.clone()) {
+                                (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true)
+                            } else if let Err(e) = repo.save_glossary(&glossary) {
+                                (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true)
+                            } else {
+                                (json!({"verdict":"PASS","tool":tool_name,"outcome":"SUCCESS","entry":{"term":entry.term,"definition":entry.definition,"rejected_synonyms":entry.rejected_synonyms}}).to_string(), false)
+                            }
+                        }
+                        Err(e) => (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true),
+                    },
+                    Err(e) => (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true),
+                }
+            }
+            "trustkit_knowledge_glossary_list" => match repo.load_glossary() {
+                Ok(glossary) => {
+                    let entries: Vec<Value> = glossary
+                        .entries
+                        .iter()
+                        .map(|e| json!({"term":e.term,"definition":e.definition,"rejected_synonyms":e.rejected_synonyms}))
+                        .collect();
+                    (json!({"verdict":"PASS","tool":tool_name,"outcome":"RESULTS","total":entries.len(),"entries":entries}).to_string(), false)
+                }
+                Err(e) => (json!({"verdict":"FAIL","tool":tool_name,"error":e.to_string()}).to_string(), true),
+            }
+            "trustkit_knowledge_adr_check" => {
+                let title = args.get("title").and_then(Value::as_str).unwrap_or("");
+                let context = args.get("context").and_then(Value::as_str).unwrap_or("");
+                let hard_to_reverse = args.get("is_hard_to_reverse").and_then(Value::as_bool).unwrap_or(false);
+                let surprising = args.get("is_surprising_without_context").and_then(Value::as_bool).unwrap_or(false);
+                let tradeoff = args.get("has_genuine_alternatives_tradeoff").and_then(Value::as_bool).unwrap_or(false);
+                let assessment = AdrTriageAssessment::evaluate(title, context, hard_to_reverse, surprising, tradeoff);
+                (json!({
+                    "verdict": "PASS",
+                    "tool": tool_name,
+                    "outcome": assessment.verdict.as_str(),
+                    "assessment": {
+                        "proposed_title": assessment.proposed_title,
+                        "context_summary": assessment.context_summary,
+                        "is_hard_to_reverse": assessment.is_hard_to_reverse,
+                        "is_surprising_without_context": assessment.is_surprising_without_context,
+                        "has_genuine_alternatives_tradeoff": assessment.has_genuine_alternatives_tradeoff,
+                        "verdict": assessment.verdict.as_str(),
+                        "rationale": assessment.rationale,
+                    }
+                }).to_string(), false)
+            }
             _ => (json!({"verdict":"FAIL","tool":tool_name,"error":"Unsupported knowledge tool"}).to_string(), true),
         }
     }
@@ -390,7 +459,22 @@ mod tests {
             .as_array()
             .unwrap()
             .clone();
-        assert_eq!(tools_arr.len(), 22);
+        assert_eq!(tools_arr.len(), 25);
+        assert!(
+            tools_arr
+                .iter()
+                .any(|t| t["name"] == "trustkit_knowledge_glossary_add")
+        );
+        assert!(
+            tools_arr
+                .iter()
+                .any(|t| t["name"] == "trustkit_knowledge_glossary_list")
+        );
+        assert!(
+            tools_arr
+                .iter()
+                .any(|t| t["name"] == "trustkit_knowledge_adr_check")
+        );
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_lock"));
         assert!(
             tools_arr

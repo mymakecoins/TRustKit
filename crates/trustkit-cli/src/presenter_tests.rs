@@ -119,3 +119,28 @@ fn test_render_status_no_active_ascii_has_no_emojis_and_next_step() {
     assert!(out.contains("[PASS] No active cycle found."));
     assert!(out.contains("NEXT STEP:"));
 }
+
+#[test]
+fn test_render_close_dual_mode_null_free_and_no_emojis() {
+    let res = crate::gate_presenter::JsonCloseResponse {
+        verdict: "PASS".to_string(),
+        cycle_id: "issue-16-202611121758".to_string(),
+        board_column: "ReadyForTest".to_string(),
+        next_steps: Vec::new(),
+    };
+
+    let json_out = Presenter::render_close(&res, true);
+    assert!(!json_out.is_empty());
+    assert!(!json_out.contains(": null"));
+    assert!(
+        json_out.contains("\"verdict\":\"PASS\"") || json_out.contains("\"verdict\": \"PASS\"")
+    );
+    assert!(json_out.contains("ReadyForTest"));
+    assert!(json_out.contains("trustkit pr --target develop"));
+
+    let ascii_out = Presenter::render_close(&res, false);
+    assert!(ascii_out.is_ascii());
+    assert!(ascii_out.contains("[PASS] SDD cycle governance closed"));
+    assert!(ascii_out.contains("ReadyForTest"));
+    assert!(ascii_out.contains("trustkit pr --target develop"));
+}

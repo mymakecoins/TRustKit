@@ -127,6 +127,15 @@ pub struct JsonDoneResponse {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct JsonCloseResponse {
+    pub verdict: String,
+    pub cycle_id: String,
+    pub board_column: String,
+    #[serde(default)]
+    pub next_steps: Vec<JsonNextStep>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct JsonMergeResponse {
     pub verdict: String,
     pub cycle_id: String,
@@ -298,6 +307,22 @@ impl GatePresenter {
             let mut out = format!(
                 "[{}] Gate 6 Cycle Certified: {}\nReport: {}\nComment:\n{}",
                 res.verdict, res.cycle_id, res.report_file, res.issue_comment
+            );
+            out.push_str(&NextStepPresenter::render_json_steps_ascii_block(&steps));
+            out
+        }
+    }
+
+    pub fn render_close(res: &JsonCloseResponse, json_mode: bool) -> String {
+        let steps = Self::ensure_steps(&res.next_steps, NextStepResolver::for_close("develop"));
+        if json_mode {
+            let mut payload = res.clone();
+            payload.next_steps = steps;
+            serde_json::to_string(&payload).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
+        } else {
+            let mut out = format!(
+                "[{}] SDD cycle governance closed for cycle {}\nBoard column: {}",
+                res.verdict, res.cycle_id, res.board_column
             );
             out.push_str(&NextStepPresenter::render_json_steps_ascii_block(&steps));
             out

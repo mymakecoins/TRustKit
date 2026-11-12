@@ -205,10 +205,19 @@ impl DoneArgs {
     }
 }
 
-#[derive(Args, Debug, PartialEq, Eq, Clone)]
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct CloseArgs {
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct MergeArgs {
-    #[arg(long, help = "Target branch for deterministic merge (e.g. develop)")]
-    pub target: String,
+    #[arg(
+        long,
+        help = "Target branch for deterministic merge (e.g. develop) (DEPRECATED: use 'trustkit close')"
+    )]
+    pub target: Option<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,

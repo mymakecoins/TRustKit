@@ -6,7 +6,8 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use crate::cli_contract::{
-    MemoryArgs, MemoryListArgs, MemoryReadArgs, MemoryRebuildArgs, MemorySearchArgs,
+    MemoryAdrCheckArgs, MemoryArgs, MemoryGlossaryAddArgs, MemoryGlossaryListArgs,
+    MemoryGlossarySubcommand, MemoryListArgs, MemoryReadArgs, MemoryRebuildArgs, MemorySearchArgs,
     MemorySubcommand, MemoryWriteArgs,
 };
 use crate::error_handler::DomainOutcome;
@@ -16,8 +17,8 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::knowledge_entities::{
-    KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeSearchOutcome, KnowledgeSearchQuery,
-    KnowledgeWriteOutcome,
+    AdrTriageAssessment, GlossaryEntry, KnowledgeDocument, KnowledgeLookupOutcome,
+    KnowledgeSearchOutcome, KnowledgeSearchQuery, KnowledgeWriteOutcome,
 };
 use trustkit_core::ports::KnowledgeRepositoryPort;
 use trustkit_db::KnowledgeWikiFsRepository;
@@ -65,6 +66,11 @@ pub fn execute_with_repo(
         MemorySubcommand::Search(s) => handle_search(s, json_mode, repo),
         MemorySubcommand::List(l) => handle_list(l, json_mode, repo),
         MemorySubcommand::Rebuild(rb) => handle_rebuild(rb, json_mode, repo),
+        MemorySubcommand::Glossary(g) => match &g.action {
+            MemoryGlossarySubcommand::Add(a) => handle_glossary_add(a, json_mode, repo),
+            MemoryGlossarySubcommand::List(l) => handle_glossary_list(l, json_mode, repo),
+        },
+        MemorySubcommand::AdrCheck(a) => handle_adr_check(a, json_mode),
     }
 }
 
@@ -271,6 +277,115 @@ fn handle_rebuild(
         println!(
             "[PASS] Knowledge index rebuilt: {} notes and {} links restored in {}ms",
             s.notes_restored, s.links_restored, s.duration_ms
+        );
+    }
+    Ok(DomainOutcome::Success)
+}
+
+fn handle_glossary_add(
+    args: &MemoryGlossaryAddArgs,
+    json_mode: bool,
+    repo: &dyn KnowledgeRepositoryPort,
+) -> Result<DomainOutcome, DomainViolation> {
+    let entry = GlossaryEntry::new(&args.term, &args.definition, args.reject.clone())?;
+    let mut glossary = repo.load_glossary()?;
+    glossary.add_entry(entry.clone())?;
+    repo.save_glossary(&glossary)?;
+
+    if json_mode || args.json {
+        let payload = json!({
+            "verdict": "PASS",
+            "outcome": "SUCCESS",
+            "entry": {
+                "term": entry.term,
+                "definition": entry.definition,
+                "rejected_synonyms": entry.rejected_synonyms,
+            }
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
+    } else {
+        println!("[PASS] Glossary entry added: {}", entry.term);
+    }
+    Ok(DomainOutcome::Success)
+}
+
+fn handle_glossary_list(
+    args: &MemoryGlossaryListArgs,
+    json_mode: bool,
+    repo: &dyn KnowledgeRepositoryPort,
+) -> Result<DomainOutcome, DomainViolation> {
+    let glossary = repo.load_glossary()?;
+    let entries: Vec<serde_json::Value> = glossary
+        .entries
+        .iter()
+        .map(|e| {
+            json!({
+                "term": e.term,
+                "definition": e.definition,
+                "rejected_synonyms": e.rejected_synonyms,
+            })
+        })
+        .collect();
+
+    if json_mode || args.json {
+        let payload = json!({
+            "verdict": "PASS",
+            "outcome": "RESULTS",
+            "total": entries.len(),
+            "entries": entries,
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
+    } else {
+        println!("[PASS] Ubiquitous Glossary ({} entries):", entries.len());
+        for e in &glossary.entries {
+            println!("  {}", e.to_markdown());
+        }
+    }
+    Ok(DomainOutcome::Success)
+}
+
+fn handle_adr_check(
+    args: &MemoryAdrCheckArgs,
+    json_mode: bool,
+) -> Result<DomainOutcome, DomainViolation> {
+    let assessment = AdrTriageAssessment::evaluate(
+        &args.title,
+        &args.context,
+        args.hard_to_reverse,
+        args.surprising,
+        args.tradeoff,
+    );
+
+    if json_mode || args.json {
+        let payload = json!({
+            "verdict": "PASS",
+            "outcome": assessment.verdict.as_str(),
+            "assessment": {
+                "proposed_title": assessment.proposed_title,
+                "context_summary": assessment.context_summary,
+                "is_hard_to_reverse": assessment.is_hard_to_reverse,
+                "is_surprising_without_context": assessment.is_surprising_without_context,
+                "has_genuine_alternatives_tradeoff": assessment.has_genuine_alternatives_tradeoff,
+                "verdict": assessment.verdict.as_str(),
+                "rationale": assessment.rationale,
+            }
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).unwrap_or_default()
+        );
+    } else {
+        println!(
+            "[PASS] ADR Triage for '{}': {} - {}",
+            assessment.proposed_title,
+            assessment.verdict.as_str(),
+            assessment.rationale
         );
     }
     Ok(DomainOutcome::Success)

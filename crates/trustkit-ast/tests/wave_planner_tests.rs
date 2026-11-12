@@ -1,38 +1,28 @@
 use std::fs;
 use tempfile::tempdir;
 use trustkit_ast::WaveExecutionPlanner;
-use trustkit_core::entities::TaskNode;
+use trustkit_core::entities::{TaskNode, TaskSliceKind};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::WaveExecutionPlannerPort;
+
+fn make_task(id: &str, layer: &str, deps: &[&str], files: &[&str]) -> TaskNode {
+    TaskNode::new(
+        id.to_string(),
+        format!("Task {id}"),
+        layer.to_string(),
+        deps.iter().map(|s| s.to_string()).collect(),
+        files.iter().map(|s| s.to_string()).collect(),
+        format!("tests/{id}_test.rs"),
+    )
+}
 
 #[test]
 fn test_plan_waves_simple_dag() {
     let planner = WaveExecutionPlanner;
     let tasks = vec![
-        TaskNode {
-            task_id: "TASK-001".to_string(),
-            title: "Core Domain".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec![],
-            expected_files: vec!["crates/core/src/lib.rs".to_string()],
-            target_test_file: "tests/core_test.rs".to_string(),
-        },
-        TaskNode {
-            task_id: "TASK-002".to_string(),
-            title: "Database Adapter".to_string(),
-            architectural_layer: "DB".to_string(),
-            depends_on: vec!["TASK-001".to_string()],
-            expected_files: vec!["crates/db/src/lib.rs".to_string()],
-            target_test_file: "tests/db_test.rs".to_string(),
-        },
-        TaskNode {
-            task_id: "TASK-003".to_string(),
-            title: "AST Parser".to_string(),
-            architectural_layer: "AST".to_string(),
-            depends_on: vec!["TASK-001".to_string()],
-            expected_files: vec!["crates/ast/src/lib.rs".to_string()],
-            target_test_file: "tests/ast_test.rs".to_string(),
-        },
+        make_task("TASK-001", "CORE", &[], &["crates/core/src/lib.rs"]),
+        make_task("TASK-002", "DB", &["TASK-001"], &["crates/db/src/lib.rs"]),
+        make_task("TASK-003", "AST", &["TASK-001"], &["crates/ast/src/lib.rs"]),
     ];
 
     let schedule = planner
@@ -60,22 +50,8 @@ fn test_plan_waves_simple_dag() {
 fn test_plan_waves_detects_cycle() {
     let planner = WaveExecutionPlanner;
     let tasks = vec![
-        TaskNode {
-            task_id: "TASK-001".to_string(),
-            title: "Task 1".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec!["TASK-002".to_string()],
-            expected_files: vec!["crates/a.rs".to_string()],
-            target_test_file: "tests/a_test.rs".to_string(),
-        },
-        TaskNode {
-            task_id: "TASK-002".to_string(),
-            title: "Task 2".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec!["TASK-001".to_string()],
-            expected_files: vec!["crates/b.rs".to_string()],
-            target_test_file: "tests/b_test.rs".to_string(),
-        },
+        make_task("TASK-001", "CORE", &["TASK-002"], &["crates/a.rs"]),
+        make_task("TASK-002", "CORE", &["TASK-001"], &["crates/b.rs"]),
     ];
 
     let result = planner.plan_waves(&tasks);
@@ -96,30 +72,9 @@ fn test_plan_waves_detects_cycle() {
 fn test_plan_waves_shared_files_isolated_by_task_number() {
     let planner = WaveExecutionPlanner;
     let tasks = vec![
-        TaskNode {
-            task_id: "TASK-001".to_string(),
-            title: "Modelo de Dados".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec![],
-            expected_files: vec!["src/auth.rs".to_string()],
-            target_test_file: "".to_string(),
-        },
-        TaskNode {
-            task_id: "TASK-002".to_string(),
-            title: "Validador TOTP".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec!["TASK-001".to_string()],
-            expected_files: vec!["src/totp.rs".to_string()],
-            target_test_file: "".to_string(),
-        },
-        TaskNode {
-            task_id: "TASK-003".to_string(),
-            title: "Logger de Auditoria".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec![],
-            expected_files: vec!["src/auth.rs".to_string()],
-            target_test_file: "".to_string(),
-        },
+        make_task("TASK-001", "CORE", &[], &["src/auth.rs"]),
+        make_task("TASK-002", "CORE", &["TASK-001"], &["src/totp.rs"]),
+        make_task("TASK-003", "CORE", &[], &["src/auth.rs"]),
     ];
 
     let schedule = planner
@@ -183,4 +138,50 @@ Arquivos Esperados:
         .plan_waves(&tasks)
         .expect("Planning waves should succeed");
     assert_eq!(schedule.total_tasks, 3);
+}
+
+#[test]
+fn test_wave_planner_expand_migrate_contract_strict_dag_ordering() {
+    let t_expand = make_task("TASK-001", "CORE", &[], &["crates/ports.rs"])
+        .with_slice_kind(TaskSliceKind::WideRefactorExpand);
+    let t_migrate_1 = make_task("TASK-002", "CORE", &["TASK-001"], &["crates/adapter_a.rs"])
+        .with_slice_kind(TaskSliceKind::WideRefactorMigrateBatch);
+    let t_migrate_2 = make_task("TASK-003", "CORE", &["TASK-001"], &["crates/adapter_b.rs"])
+        .with_slice_kind(TaskSliceKind::WideRefactorMigrateBatch);
+    let t_contract = make_task(
+        "TASK-004",
+        "CORE",
+        &["TASK-002", "TASK-003"],
+        &["crates/ports.rs"],
+    )
+    .with_slice_kind(TaskSliceKind::WideRefactorContract);
+
+    let tasks = vec![t_contract, t_migrate_1, t_expand, t_migrate_2];
+
+    let planner = WaveExecutionPlanner;
+    let schedule = planner.plan_waves(&tasks).expect("Should succeed");
+
+    assert_eq!(schedule.waves.len(), 3);
+    assert_eq!(schedule.waves[0].tasks.len(), 1);
+    assert_eq!(schedule.waves[0].tasks[0].task_id, "TASK-001");
+    assert_eq!(
+        schedule.waves[0].tasks[0].slice_kind,
+        TaskSliceKind::WideRefactorExpand
+    );
+
+    assert_eq!(schedule.waves[1].tasks.len(), 2);
+    let wave_1_ids: Vec<&str> = schedule.waves[1]
+        .tasks
+        .iter()
+        .map(|t| t.task_id.as_str())
+        .collect();
+    assert!(wave_1_ids.contains(&"TASK-002"));
+    assert!(wave_1_ids.contains(&"TASK-003"));
+
+    assert_eq!(schedule.waves[2].tasks.len(), 1);
+    assert_eq!(schedule.waves[2].tasks[0].task_id, "TASK-004");
+    assert_eq!(
+        schedule.waves[2].tasks[0].slice_kind,
+        TaskSliceKind::WideRefactorContract
+    );
 }

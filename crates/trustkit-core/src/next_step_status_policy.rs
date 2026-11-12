@@ -76,6 +76,28 @@ impl NextStepResolver {
         ]
     }
 
+    pub fn for_close(target_branch: &str) -> Vec<NextStepRecommendation> {
+        let branch = if target_branch.trim().is_empty() {
+            "develop"
+        } else {
+            target_branch
+        };
+        vec![
+            NextStepRecommendation::new(
+                NextStepPriority::Primary,
+                "GATE-6",
+                format!("trustkit pr --target {branch}"),
+                "Open Pull Request on demand if required by repository governance.",
+            ),
+            NextStepRecommendation::new(
+                NextStepPriority::Secondary,
+                "GATE-0",
+                "trustkit init --issue <ISSUE_ID>",
+                "Start the next SDD cycle when ready.",
+            ),
+        ]
+    }
+
     pub fn for_merge(target_branch: &str) -> Vec<NextStepRecommendation> {
         let branch = if target_branch.trim().is_empty() {
             "develop"
@@ -213,7 +235,9 @@ impl NextStepResolver {
             .iter()
             .find(|t| t.tdd_lifecycle_state.is_awaiting_red())
         {
-            if pending_task.worktree_allocation.is_provisioned() {
+            if pending_task.worktree_allocation.is_provisioned()
+                || pending_task.worktree_allocation.is_merged_and_pruned()
+            {
                 return vec![NextStepRecommendation::new(
                     NextStepPriority::Primary,
                     "GATE-4",

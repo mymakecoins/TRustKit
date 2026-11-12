@@ -5,9 +5,10 @@
 
 use tempfile::TempDir;
 use trustkit_core::knowledge_entities::{
-    KnowledgeDocument, KnowledgeSearchOutcome, KnowledgeSearchQuery, WikiLink,
+    DomainGlossary, GlossaryEntry, KnowledgeDocument, KnowledgeSearchOutcome, KnowledgeSearchQuery,
+    WikiLink,
 };
-use trustkit_db::SqliteWalRepositoryAdapter;
+use trustkit_db::{KnowledgeWikiFsRepository, SqliteWalRepositoryAdapter};
 
 #[test]
 fn test_fts5_bm25_search_ranks_relevance_and_populates_adjacent_links() {
@@ -171,4 +172,54 @@ fn test_fts5_upsert_and_remove_updates_index_and_links() {
         .search_knowledge_fts5(&KnowledgeSearchQuery::new("beta", 5))
         .expect("search after remove");
     assert_eq!(after_remove, KnowledgeSearchOutcome::EmptyKnowledgeList);
+}
+
+#[test]
+fn test_glossary_markdown_persistence_and_fts5_search() {
+    let tmp = TempDir::new().expect("create tempdir");
+    let wiki_dir = tmp.path().join("wiki");
+    let db_path = tmp.path().join("state.db");
+    let wiki_repo = KnowledgeWikiFsRepository::open(&wiki_dir, &db_path).expect("open wiki repo");
+
+    let entry1 = GlossaryEntry::new(
+        "Ciclo SDD",
+        "Ciclo deterministico de Spec-Driven Development com gates formais.",
+        vec!["sessao avulsa".to_string(), "sprint ia".to_string()],
+    )
+    .expect("valid entry1");
+
+    let entry2 = GlossaryEntry::new(
+        "Linguagem Ubiqua",
+        "Vocabulario compartilhado e rigoroso entre especialistas de negocio e desenvolvedores.",
+        vec!["jargao tecnico".to_string()],
+    )
+    .expect("valid entry2");
+
+    let glossary = DomainGlossary::new(vec![entry1, entry2]).expect("valid glossary");
+
+    wiki_repo.save_glossary(&glossary).expect("save glossary");
+
+    let glossary_file = wiki_dir.join("glossary.md");
+    assert!(glossary_file.exists());
+    let file_content = std::fs::read_to_string(&glossary_file).expect("read glossary");
+    assert!(file_content.contains("Ciclo SDD"));
+    assert!(file_content.contains("sessao avulsa"));
+
+    let loaded = wiki_repo.load_glossary().expect("load glossary");
+    assert_eq!(loaded.entries.len(), 2);
+    assert_eq!(loaded.entries[0].term, "Ciclo SDD");
+
+    let query_canonical = KnowledgeSearchQuery::new("Ciclo SDD", 5);
+    let outcome_can = wiki_repo
+        .search_documents(&query_canonical)
+        .expect("search canonical");
+    assert!(!outcome_can.is_empty());
+    assert_eq!(outcome_can.as_slice()[0].slug, "glossary");
+
+    let query_rejected = KnowledgeSearchQuery::new("sessao avulsa", 5);
+    let outcome_rej = wiki_repo
+        .search_documents(&query_rejected)
+        .expect("search rejected");
+    assert!(!outcome_rej.is_empty());
+    assert_eq!(outcome_rej.as_slice()[0].slug, "glossary");
 }
