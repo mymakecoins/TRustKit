@@ -748,16 +748,16 @@ trustkit pr --target develop
 
 ---
 
-### 3.8 Orquestracao Autonoma de Ponta a Ponta (`trustkit auto`)
+### 3.8 Orquestracao Autonoma de Ponta a Ponta (`trustkit auto` v2.2)
 
-Para situacoes em que uma funcionalidade ja possui requisitos claros ou uma especificacao pronta, o TRustKit disponibiliza o comando unificado `trustkit auto`. Ele atua como um maestro deterministico, orquestrando sequencialmente todos os Gates (0 ao 6) sem exigir comandos manuais intermediarios:
+Para situacoes em que uma funcionalidade ja possui requisitos claros ou uma especificacao pronta, o TRustKit disponibiliza o comando unificado `trustkit auto`. A versao 2.2 atua como um maestro deterministico resiliente, orquestrando sequencialmente todos os Gates (0 ao 6) com atomizacao automatica, scaffolding de testes RED, despacho de construtores e merge seguro:
 
 1. **Gate 0 (Setup & Init):** Inspeciona a identidade Git, branches e baseline limpo, inicializando a sessao no SQLite WAL.
 2. **Gate 1 (Spec Lint):** Valida a especificacao com o linter nativo AST em microssegundos (sem emojis, formato Gherkin e matriz fechada).
 3. **Gate 2 (Spec Lock):** Sela a especificacao congelada com hash BLAKE3 criptografico.
-4. **Gate 3 (Wave Plan):** Le as tarefas atomicas em `tasks/`, analisa o grafo DAG e calcula o escalonamento em ondas topologicas.
-5. **Gate 4 (Multi-Wave TDD Loop):** Executa o ciclo TDD (RED -> GREEN -> REFACTOR) em worktrees efemeras e conclui as tarefas da feature.
-6. **Gate 5 (Gauntlet V2):** Executa a auditoria sintatica Camada 0 e consolida os vereditos dos criticos de verificacao.
+4. **Gate 3 (Wave Plan & Atomizacao):** Verifica as tarefas no ciclo. Se o diretorio `tasks/` nao existir previamente, executa a atomizacao deterministica da Matriz de Rastreabilidade (`spec.md`) ou do corpo da issue (`IssueBodyAtomizer`), materializando `tasks/TASK-NNN.md` no disco e no SQLite WAL. Se a atomizacao resultar em zero tarefas, o disjuntor `EmptyTaskBacklogFault` aborta a transicao para o Gate 4 com exit code 1. Existindo tarefas validas, calcula o escalonamento em ondas topologicas (DAG).
+5. **Gate 4 (Multi-Wave TDD Loop & Builder Dispatch):** Provisiona Git Worktrees isoladas para as tarefas da onda. Gera o esqueleto de teste RED compilavel (`RedTestScaffolder`) quando ausente, valida que ao menos uma assercao falhe e que nao haja erro de compilacao (rejeitando `ZeroFilteredTestsFault` e `CompilationFailureInRedPhaseFault`), aciona o construtor (`BuilderAgentDispatcher`) para codificar a solucao em espaco isolado, comprova a fase GREEN, realiza a revisao semantica e integra os commits via merge cumulativo seguro (`SafeWorktreeMerge`) sem reset forçado.
+6. **Gate 5 (Gauntlet V2):** Executa a auditoria sintatica Camada 0 e consolida os vereditos dos criticos de verificacao (adversarial, contratos, estatico e visual).
 7. **Gate 6 (Certify & Merge):** Emite o relatorio oficial `gauntlet-report.md`, atualiza o board e realiza o merge deterministico na branch de destino.
 
 #### Como Executar
@@ -958,9 +958,9 @@ Ao integrar scripts de automacao ou investigar encerramentos inesperados, utiliz
 | Codigo | Identificador Semantico | Significado | O que fazer |
 | :---: | :--- | :--- | :--- |
 | **0** | `CleanPass` | Operacao concluida com aprovacao integral. | Prosseguir para a proxima etapa do fluxo. |
-| **1** | `InfrastructureBoundaryFault` | Falha de disco, permissao, banco SQLite WAL ou Git. | Verificar espaco em disco, permissoes de escrita e integridade do `.git`. |
+| **1** | `InfrastructureBoundaryFault` | Falha de disco, permissao, banco SQLite WAL, Git ou backlog vazio (`EmptyTaskBacklogFault`). | Verificar espaco em disco, permissoes de escrita, integridade do `.git` ou revisar a especificacao para garantir tarefas atomicas acionaveis. |
 | **2** | `SpecOrTraceabilityIncomplete` | Spec incompleta, falha em Mermaid/Gherkin ou regra orfa. | Executar `trustkit spec lint` e preencher as colunas pendentes da matriz. |
-| **3** | `TddLifecycleViolation` | Tentativa de registrar GREEN sem registro previo de RED. | Executar primeiro `trustkit task test <ID> --phase red` com o teste falhando. |
+| **3** | `TddLifecycleViolation` | Infracao de TDD: GREEN sem RED previo, filtro vazio (`ZeroFilteredTestsFault`) ou erro de compilacao no RED (`CompilationFailureInRedPhaseFault`). | Executar primeiro `trustkit task test <ID> --phase red` com o teste compilando e falhando legitimamente por assercao de dominio. |
 | **4** | `AstIntegrityOrInvariantViolation` | Violacao de invariantes: emojis, trailers IA, assercoes removidas. | Executar `trustkit gauntlet ast-audit` para visualizar o arquivo e linha exatos. |
 | **5** | `CriticSwarmOrPlaywrightFailed` | Falha de compilacao, erro de linter ou reprovacao em testes E2E. | Verificar os logs de erro da suite de testes ou relatorio do Playwright. |
 | **6** | `CircuitBreakerTripped` | Disjuntor acionado apos 5 reprovacoes consecutivas no Gauntlet. | Executar `trustkit doctor` para diagnostico e corrigir as falhas antes de reiniciar. |
@@ -980,6 +980,18 @@ Ao integrar scripts de automacao ou investigar encerramentos inesperados, utiliz
 #### Bloqueio 3: `TraceabilityGap: OrphanRule`
 * **Causa:** Uma regra de negocio `RN-XXX` listada na especificacao nao possui uma tarefa `TASK` ou cenario de teste `E2E` amarrado na tabela de rastreabilidade.
 * **Solucao:** Abra a especificacao `spec.md`, localize a tabela da Matriz de Rastreabilidade e garanta que todas as linhas de `RN` possuam vinculo completo ate a coluna de evidencias.
+
+#### Bloqueio 4: `EmptyTaskBacklogFault`
+* **Causa:** O Gate 3 tentou planejar ondas, mas nenhuma tarefa atomica foi encontrada na pasta `tasks/` e a atomizacao automatica a partir da especificacao ou issue nao produziu tarefas validas.
+* **Solucao:** Certifique-se de que a especificacao `spec.md` contenha a secao 4 (Matriz de Rastreabilidade) devidamente preenchida ou que a GitHub Issue contenha lista de itens acionaveis. O TRustKit bloqueia a transicao com exit code 1 para evitar a falsa aprovacao de ciclos vazios.
+
+#### Bloqueio 5: `ZeroFilteredTestsFault`
+* **Causa:** Na fase RED do Gate 4, a suite de testes foi executada pelo Cargo, mas nenhum teste com o nome correspondente a tarefa foi filtrado (`0 passed; 0 failed`).
+* **Solucao:** Verifique se o arquivo de teste alvo foi criado com o nome correto sob a pasta `tests/` e se contem ao menos uma funcao anotada com `#[test]`.
+
+#### Bloqueio 6: `CompilationFailureInRedPhaseFault`
+* **Causa:** Na fase RED do Gate 4, o comando `cargo test` falhou com erro de sintaxe ou erro de compilacao do `rustc` (`error[E...`), em vez de falhar por assercao de dominio (`assert!`).
+* **Solucao:** O ciclo TDD exige que o codigo de teste compile perfeitamente. Corrija imports, tipos e sintaxe para que o binario de teste compile e a falha ocorra estritamente na assercao de negocio.
 
 ---
 

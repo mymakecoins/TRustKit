@@ -113,9 +113,15 @@ trustkit status --json
 
 ---
 
-## 4. Modo Autonomo de Ponta a Ponta (`trustkit auto`)
+## 4. Modo Autonomo de Ponta a Ponta (`trustkit auto` v2.2)
 
-Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando `trustkit auto`, capaz de conduzir todo o fluxo do Gate 0 ao Gate 6:
+Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando unificado `trustkit auto`. A versao 2.2 incorpora motor de atomizacao deterministica, protecao por Circuit Breaker contra backlogs vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
+
+- **Atomizacao Automatica (Gate 3):** Se o diretorio `tasks/` nao existir, o motor extrai da Matriz de Rastreabilidade (`spec.md`) ou da issue remota (`IssueBodyAtomizer`) as tarefas `tasks/TASK-NNN.md` no disco e no SQLite WAL.
+- **Circuit Breaker contra Ciclo Vazio (`EmptyTaskBacklogFault`):** Aborta a transicao para o Gate 4 com exit code 1 caso a especificacao resulte em zero tarefas executaveis.
+- **Scaffolding de Teste RED (`RedTestScaffolder`):** Sintetiza esqueletos de teste compilaveis na worktree, rejeitando filtros vazios (`ZeroFilteredTestsFault`) e mascaramento de erros de compilacao (`CompilationFailureInRedPhaseFault`).
+- **Builder Agent Dispatcher:** Despacha agentes construtores entre as fases RED e GREEN com isolamento de `CARGO_TARGET_DIR`.
+- **Merge Acumulativo Seguro (`SafeWorktreeMerge`):** Integra tarefas concorrentes da mesma onda sem executar `git branch -f` destrutivo, preservando todo o historico de commits.
 
 ```bash
 # Execucao autonoma a partir de issue remota
@@ -283,7 +289,7 @@ trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db
 
 | Comando | Descricao |
 | :--- | :--- |
-| `trustkit auto` | Executa o ciclo SDD completo de forma autonoma (Gates 0 a 6). |
+| `trustkit auto` | Executa o ciclo SDD de forma autonoma (Gates 0 a 6) com atomizacao, disjuntor e merge seguro. |
 | `trustkit milestones plan` | Decompoe PRD e ADR em marcos aciclicos com citacoes exatas de linhas. |
 | `trustkit milestones list` | Lista todos os marcos planejados e persistidos no banco WAL. |
 | `trustkit milestones inspect` | Inspeciona capacidades, restricoes e citacoes de um marco. |
