@@ -72,6 +72,11 @@ impl Cli {
                 MemorySubcommand::Search(a) => a.json,
                 MemorySubcommand::List(a) => a.json,
                 MemorySubcommand::Rebuild(a) => a.json,
+                MemorySubcommand::Glossary(g) => match &g.action {
+                    MemoryGlossarySubcommand::Add(a) => a.json,
+                    MemoryGlossarySubcommand::List(a) => a.json,
+                },
+                MemorySubcommand::AdrCheck(a) => a.json,
             },
             Command::Graph(GraphArgs { action }) => match action {
                 GraphSubcommand::Build(a) => a.json,
