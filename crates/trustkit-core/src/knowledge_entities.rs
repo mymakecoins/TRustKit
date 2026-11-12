@@ -4,6 +4,7 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 
 use crate::errors::DomainViolation;
+pub use crate::glossary_entities::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KnowledgeDocument {

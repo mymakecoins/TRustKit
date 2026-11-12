@@ -213,7 +213,9 @@ impl NextStepResolver {
             .iter()
             .find(|t| t.tdd_lifecycle_state.is_awaiting_red())
         {
-            if pending_task.worktree_allocation.is_provisioned() {
+            if pending_task.worktree_allocation.is_provisioned()
+                || pending_task.worktree_allocation.is_merged_and_pruned()
+            {
                 return vec![NextStepRecommendation::new(
                     NextStepPriority::Primary,
                     "GATE-4",

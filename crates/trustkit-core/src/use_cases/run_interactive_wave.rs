@@ -86,15 +86,16 @@ pub fn execute(
 
     for mut task in wave_tasks {
         if task.worktree_allocation.is_merged_and_pruned() {
+            let sha = match &task.worktree_allocation {
+                WorktreeAllocation::MergedAndPruned { commit_sha } => commit_sha.clone(),
+                _ => String::new(),
+            };
             reports.push(InteractiveTaskReport {
                 task_id: task.task_id,
                 worktree_path: String::new(),
-                terminal_id: String::new(),
+                terminal_id: "merged".to_string(),
                 state: AgentSemanticState::Done { exit_code: 0 },
-                merged_commit_sha: match &task.worktree_allocation {
-                    WorktreeAllocation::MergedAndPruned { commit_sha } => commit_sha.clone(),
-                    _ => String::new(),
-                },
+                merged_commit_sha: sha,
             });
             continue;
         }
