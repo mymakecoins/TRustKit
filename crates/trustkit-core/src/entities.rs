@@ -6,6 +6,7 @@ pub use crate::ast_entities::*;
 use crate::errors::DomainViolation;
 pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
+pub use crate::glossary_entities::*;
 pub use crate::graph_entities::*;
 pub use crate::knowledge_entities::*;
 pub use crate::milestone_entities::*;

@@ -240,3 +240,69 @@ fn test_knowledge_repository_port_contract() {
     let rebuild = repo.rebuild_index().expect("rebuild should succeed");
     assert_eq!(rebuild.notes_restored, 1);
 }
+
+#[test]
+fn test_knowledge_entities_tests_task_001_glossary_entry_and_adr_triage() {
+    let entry = GlossaryEntry::new(
+        "Ciclo SDD",
+        "Ciclo estruturado de desenvolvimento orientado a especificacao.",
+        vec!["sessao avulsa".to_string(), "sprint ia".to_string()],
+    )
+    .expect("valid glossary entry");
+
+    assert_eq!(entry.term, "Ciclo SDD");
+    assert!(entry.matches_canonical("ciclo sdd"));
+    assert!(entry.matches_rejected("sessao avulsa"));
+    assert!(entry.matches_rejected("sprint ia"));
+    assert!(!entry.matches_rejected("ciclo sdd"));
+
+    // Code snippet rejection in definition
+    let snippet_err = GlossaryEntry::new(
+        "Snippet Invalido",
+        "Definicao com ```code snippet``` proibido.",
+        vec![],
+    );
+    assert!(snippet_err.is_err());
+
+    // Implementation file path rejection
+    let path_err = GlossaryEntry::new(
+        "Path Invalido",
+        "Definicao contendo src/main.rs proibido.",
+        vec![],
+    );
+    assert!(path_err.is_err());
+
+    // DomainGlossary mapping
+    let glossary = DomainGlossary::new(vec![entry]).expect("valid glossary");
+    let lookup = glossary.find_canonical_for_rejected("sessao avulsa");
+    assert!(lookup.is_some());
+    let (found_entry, synonym) = lookup.unwrap();
+    assert_eq!(found_entry.term, "Ciclo SDD");
+    assert_eq!(synonym, "sessao avulsa");
+
+    // ADR Triage: Approved when all 3 mandatory criteria are true
+    let approved_adr = AdrTriageAssessment::evaluate(
+        "Armazenamento de Estado no SQLite WAL",
+        "Substituicao de arquivos soltos por banco relacional embarcado.",
+        true,
+        true,
+        true,
+    );
+    assert_eq!(approved_adr.verdict, AdrTriageVerdict::ApproveAdr);
+    assert!(approved_adr.verdict.is_approved());
+    assert!(approved_adr.to_json().contains("\"verdict\":\"ApproveAdr\""));
+
+    // ADR Triage: Skipped when any criterion is false
+    let skipped_adr = AdrTriageAssessment::evaluate(
+        "Renomeacao de Variavel Auxiliar",
+        "Mudanca simples e reversivel sem tradeoffs.",
+        false,
+        false,
+        false,
+    );
+    assert_eq!(skipped_adr.verdict, AdrTriageVerdict::SkipAdr);
+    assert!(!skipped_adr.verdict.is_approved());
+    assert!(skipped_adr.to_json().contains("\"verdict\":\"SkipAdr\""));
+}
+
+
