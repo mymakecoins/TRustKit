@@ -177,19 +177,47 @@ pub fn execute_with_db(
         waves.dedup();
         total_waves = waves.len();
         gates_cleared.push(3);
-    } else if tasks_dir.exists() {
-        if let Ok(parsed_tasks) = WaveExecutionPlanner::parse_tasks_dir(&tasks_dir) {
-            if !parsed_tasks.is_empty() {
-                total_tasks = parsed_tasks.len();
-                let planner = WaveExecutionPlanner;
-                let plan_req = PlanExecutionWavesRequest {
-                    tasks: parsed_tasks,
-                };
-                if let Ok(outcome) = plan_execution_waves::execute(plan_req, &repo, &planner) {
-                    total_waves = outcome.wave_schedule.waves.len();
-                    gates_cleared.push(3);
+    } else {
+        if !tasks_dir.exists() && !_spec_raw.is_empty() {
+            if let Ok(drafts) = trustkit_ast::SpecMatrixAtomizer::atomize_markdown(&_spec_raw) {
+                if !drafts.is_empty() {
+                    let _ =
+                        trustkit_orch::TaskSynthesizer::materialize_tasks_dir(&tasks_dir, &drafts);
+                    if let Some(ref source_spec) = resolved_spec {
+                        let source_path = Path::new(source_spec);
+                        if let Some(parent) = source_path.parent() {
+                            let source_tasks = parent.join("tasks");
+                            let _ = trustkit_orch::TaskSynthesizer::materialize_tasks_dir(
+                                &source_tasks,
+                                &drafts,
+                            );
+                        }
+                    }
                 }
             }
+        }
+
+        if tasks_dir.exists() {
+            if let Ok(parsed_tasks) = WaveExecutionPlanner::parse_tasks_dir(&tasks_dir) {
+                if !parsed_tasks.is_empty() {
+                    total_tasks = parsed_tasks.len();
+                    let planner = WaveExecutionPlanner;
+                    let plan_req = PlanExecutionWavesRequest {
+                        tasks: parsed_tasks,
+                    };
+                    if let Ok(outcome) = plan_execution_waves::execute(plan_req, &repo, &planner) {
+                        total_waves = outcome.wave_schedule.waves.len();
+                        gates_cleared.push(3);
+                    }
+                }
+            }
+        }
+
+        if total_tasks == 0 {
+            trustkit_core::use_cases::plan_execution_waves::enforce_non_empty_backlog(
+                &active_cycle.cycle_id,
+                0,
+            )?;
         }
     }
 
@@ -206,11 +234,16 @@ pub fn execute_with_db(
             let worktree_port = WorktreeIsolationProvider::new(repo_dir);
             let supervisor = trustkit_orch::AsyncExecutionSupervisor::new();
             let reviewer = DefaultSemanticCodeReviewer::new();
+            let mut dispatcher = trustkit_orch::BuilderAgentDispatcher::new();
+            if !args.agent_cmd.is_empty() {
+                dispatcher = dispatcher.with_agent_command(&args.agent_cmd);
+            }
             let deps = MultiWaveDependencies {
                 repo: &repo,
                 worktree_port: &worktree_port,
                 supervisor: &supervisor,
                 reviewer: &reviewer,
+                builder_dispatcher: Some(&dispatcher),
             };
             let multi_req = MultiWaveExecutionRequest {
                 cycle_id: &active_cycle.cycle_id,

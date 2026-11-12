@@ -11,6 +11,7 @@ pub mod milestone_citation;
 pub mod milestone_extractor;
 pub mod module_depth_analyzer;
 pub mod prd_ingestor;
+pub mod red_test_scaffolder;
 pub mod rust_assertion_counter;
 pub mod rust_graph_extractor;
 pub mod seam_classifier;
@@ -37,6 +38,7 @@ pub use milestone_citation::{
 pub use milestone_extractor::{ExtractedMarkdownBlock, PrdAdrMilestoneExtractor};
 pub use module_depth_analyzer::ModuleDepthAnalyzer;
 pub use prd_ingestor::PrdSpecificationIngestor;
+pub use red_test_scaffolder::{RedTestScaffolder, ScaffoldingTarget};
 pub use rust_assertion_counter::RustAssertionCounter;
 pub use spec_linter::{SpecLintVerdict, SpecLintViolation, SpecLinter};
 pub use spec_matrix_atomizer::SpecMatrixAtomizer;

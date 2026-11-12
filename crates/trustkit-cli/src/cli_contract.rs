@@ -253,6 +253,7 @@ pub struct GauntletArgs {
 pub enum GauntletSubcommand {
     #[command(
         name = "ast-audit",
+        visible_alias = "audit",
         about = "Execute Layer 0 syntactic AST invariant and anti-cheat audit"
     )]
     AstAudit(GauntletAstAuditArgs),

@@ -1,8 +1,9 @@
-// Record TDD Phase Use Case (TASK-003).
+// Record TDD Phase Use Case (TASK-003, TASK-006).
 // Constitutional Principle I: Strict Hexagonal Isolation (std only).
 // Constitutional Principle II: Absolute Prohibition of NULL.
 // Constitutional Principle IV: Zero Panic.
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
+// Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use crate::entities::{
     EvidenceKind, ExecutionEvidence, GateStage, GateVerdict, TddExecutionProof, TddPhase,
@@ -12,6 +13,53 @@ use crate::ports::{
     AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SupervisedExecutionRequest,
 };
 use crate::special_cases::TddLifecycleState;
+
+pub struct RedVerifier;
+
+impl RedVerifier {
+    pub fn verify(
+        task_id: &str,
+        exit_code: i32,
+        stdout: &str,
+        stderr: &str,
+    ) -> Result<(), DomainViolation> {
+        let combined = format!("{stdout}\n{stderr}");
+        let combined_lower = combined.to_lowercase();
+
+        if combined.contains("error[E")
+            || combined_lower.contains("could not compile")
+            || combined_lower.contains("compilation failed")
+            || combined_lower.contains("no test target named")
+        {
+            let snippet = if !stderr.trim().is_empty() {
+                stderr.trim().lines().next().unwrap_or("could not compile")
+            } else {
+                stdout.trim().lines().next().unwrap_or("could not compile")
+            };
+            return Err(DomainViolation::CompilationFailureInRedPhaseFault {
+                task_id: task_id.to_string(),
+                reason: format!("Rust test compilation failure detected in RED phase: {snippet}"),
+            });
+        }
+
+        if combined.contains("0 passed; 0 failed") {
+            return Err(DomainViolation::ZeroFilteredTestsFault {
+                task_id: task_id.to_string(),
+                reason: "Zero tests filtered or executed (0 passed; 0 failed)".to_string(),
+            });
+        }
+
+        if exit_code == 0 {
+            return Err(DomainViolation::TddLifecycleViolation {
+                task_id: task_id.to_string(),
+                reason: "Red phase requires a failing test execution (non-zero exit code)"
+                    .to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecordTddPhaseRequest {
@@ -65,6 +113,15 @@ pub fn execute(
     };
 
     let outcome = supervisor.execute_supervised(&exec_request)?;
+
+    if req.phase == TddPhase::Red {
+        RedVerifier::verify(
+            &req.task_id,
+            outcome.exit_code,
+            &outcome.stdout_tail,
+            &outcome.stderr_tail,
+        )?;
+    }
 
     let is_phase_valid = match req.phase {
         TddPhase::Red => outcome.exit_code != 0,

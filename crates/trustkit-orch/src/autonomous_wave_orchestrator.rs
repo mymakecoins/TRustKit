@@ -11,8 +11,8 @@ use trustkit_core::entities::{
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
-    AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SemanticCodeReviewerPort,
-    WorktreeIsolationPort,
+    AsyncExecutionSupervisorPort, BuilderAgentDispatcherPort, CycleEvidenceRepositoryPort,
+    SemanticCodeReviewerPort, WorktreeIsolationPort,
 };
 use trustkit_core::special_cases::WorktreeAllocation;
 use trustkit_core::use_cases::complete_task::{self, CompleteTaskRequest};
@@ -52,6 +52,7 @@ pub struct MultiWaveDependencies<'a> {
     pub worktree_port: &'a dyn WorktreeIsolationPort,
     pub supervisor: &'a dyn AsyncExecutionSupervisorPort,
     pub reviewer: &'a dyn SemanticCodeReviewerPort,
+    pub builder_dispatcher: Option<&'a dyn BuilderAgentDispatcherPort>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -149,6 +150,16 @@ impl AutonomousWaveOrchestrator {
                     .unwrap_or(task.clone());
 
                 if !current_task.tdd_lifecycle_state.is_red_verified() {
+                    let target = trustkit_ast::ScaffoldingTarget {
+                        task_id: task.task_id.clone(),
+                        target_test_file: task.target_test_file.clone(),
+                        criteria_summary: task.title.clone(),
+                    };
+                    let _ = trustkit_ast::RedTestScaffolder::scaffold(
+                        Path::new(&worktree_path),
+                        &target,
+                    );
+
                     let red_req = RecordTddPhaseRequest {
                         cycle_id: req.cycle_id.to_string(),
                         task_id: task.task_id.clone(),
@@ -160,6 +171,17 @@ impl AutonomousWaveOrchestrator {
                         now_iso: req.now_iso.to_string(),
                     };
                     record_tdd_phase::execute(red_req, deps.repo, deps.supervisor)?;
+                }
+
+                // Step 1.5: Dispatch Builder Agent between RED and GREEN (TASK-007 / RF-007)
+                if let Some(dispatcher) = deps.builder_dispatcher {
+                    dispatcher.dispatch_builder_in_worktree(
+                        req.cycle_id,
+                        &task.task_id,
+                        &worktree_path,
+                        &task.target_test_file,
+                        &task.expected_files,
+                    )?;
                 }
 
                 // Step 2: GREEN phase
