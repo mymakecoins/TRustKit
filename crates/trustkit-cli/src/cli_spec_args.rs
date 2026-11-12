@@ -333,7 +333,10 @@ pub struct MemoryGlossaryArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
 pub enum MemoryGlossarySubcommand {
-    #[command(name = "add", about = "Add or update a canonical term in the ubiquitous glossary")]
+    #[command(
+        name = "add",
+        about = "Add or update a canonical term in the ubiquitous glossary"
+    )]
     Add(MemoryGlossaryAddArgs),
     #[command(name = "list", about = "List all canonical glossary terms")]
     List(MemoryGlossaryListArgs),
@@ -347,7 +350,11 @@ pub struct MemoryGlossaryAddArgs {
     #[arg(long, help = "Ubiquitous domain definition")]
     pub definition: String,
 
-    #[arg(long, value_delimiter = ',', help = "Comma-separated rejected/ambiguous synonyms")]
+    #[arg(
+        long,
+        value_delimiter = ',',
+        help = "Comma-separated rejected/ambiguous synonyms"
+    )]
     pub reject: Vec<String>,
 
     #[arg(long, help = "Emit null-free JSON output")]
@@ -371,7 +378,10 @@ pub struct MemoryAdrCheckArgs {
     #[arg(long, help = "Is this decision hard to reverse?")]
     pub hard_to_reverse: bool,
 
-    #[arg(long, help = "Is this decision surprising to a newcomer without context?")]
+    #[arg(
+        long,
+        help = "Is this decision surprising to a newcomer without context?"
+    )]
     pub surprising: bool,
 
     #[arg(long, help = "Are there genuine alternatives with real tradeoffs?")]
@@ -380,4 +390,3 @@ pub struct MemoryAdrCheckArgs {
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }
-

@@ -390,4 +390,3 @@ fn handle_adr_check(
     }
     Ok(DomainOutcome::Success)
 }
-

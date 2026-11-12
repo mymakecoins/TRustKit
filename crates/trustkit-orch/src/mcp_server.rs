@@ -459,7 +459,22 @@ mod tests {
             .as_array()
             .unwrap()
             .clone();
-        assert_eq!(tools_arr.len(), 22);
+        assert_eq!(tools_arr.len(), 25);
+        assert!(
+            tools_arr
+                .iter()
+                .any(|t| t["name"] == "trustkit_knowledge_glossary_add")
+        );
+        assert!(
+            tools_arr
+                .iter()
+                .any(|t| t["name"] == "trustkit_knowledge_glossary_list")
+        );
+        assert!(
+            tools_arr
+                .iter()
+                .any(|t| t["name"] == "trustkit_knowledge_adr_check")
+        );
         assert!(tools_arr.iter().any(|t| t["name"] == "trustkit_spec_lock"));
         assert!(
             tools_arr

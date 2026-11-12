@@ -302,16 +302,24 @@ fn test_cli_memory_glossary_add_and_list() {
         .expect("trustkit binary")
         .current_dir(tmp.path())
         .args([
-            "memory", "glossary", "add",
-            "--term", "Ciclo SDD",
-            "--definition", "Processo estruturado de especificacao e testes",
-            "--reject", "sessao avulsa,sprint ia",
+            "memory",
+            "glossary",
+            "add",
+            "--term",
+            "Ciclo SDD",
+            "--definition",
+            "Processo estruturado de especificacao e testes",
+            "--reject",
+            "sessao avulsa,sprint ia",
             "--json",
         ])
         .output()
         .expect("run memory glossary add");
 
-    assert!(add_out.status.success(), "memory glossary add should exit 0");
+    assert!(
+        add_out.status.success(),
+        "memory glossary add should exit 0"
+    );
     let add_stdout = String::from_utf8(add_out.stdout).expect("utf8 stdout");
     assert!(!add_stdout.contains("null"), "JSON must be null-free");
     let add_json: Value = serde_json::from_str(&add_stdout).expect("valid json");
@@ -327,7 +335,10 @@ fn test_cli_memory_glossary_add_and_list() {
         .output()
         .expect("run memory glossary list");
 
-    assert!(list_out.status.success(), "memory glossary list should exit 0");
+    assert!(
+        list_out.status.success(),
+        "memory glossary list should exit 0"
+    );
     let list_stdout = String::from_utf8(list_out.stdout).expect("utf8 stdout");
     assert!(!list_stdout.contains("null"), "JSON must be null-free");
     let list_json: Value = serde_json::from_str(&list_stdout).expect("valid json");
@@ -343,9 +354,12 @@ fn test_cli_memory_adr_check_evaluation() {
         .expect("trustkit binary")
         .current_dir(tmp.path())
         .args([
-            "memory", "adr-check",
-            "--title", "Estrategia WAL",
-            "--context", "Persistencia segura SQLite",
+            "memory",
+            "adr-check",
+            "--title",
+            "Estrategia WAL",
+            "--context",
+            "Persistencia segura SQLite",
             "--hard-to-reverse",
             "--surprising",
             "--tradeoff",
@@ -354,7 +368,10 @@ fn test_cli_memory_adr_check_evaluation() {
         .output()
         .expect("run memory adr-check");
 
-    assert!(approve_out.status.success(), "adr-check approve should exit 0");
+    assert!(
+        approve_out.status.success(),
+        "adr-check approve should exit 0"
+    );
     let approve_stdout = String::from_utf8(approve_out.stdout).expect("utf8 stdout");
     assert!(!approve_stdout.contains("null"), "JSON must be null-free");
     let approve_json: Value = serde_json::from_str(&approve_stdout).expect("valid json");
@@ -365,9 +382,12 @@ fn test_cli_memory_adr_check_evaluation() {
         .expect("trustkit binary")
         .current_dir(tmp.path())
         .args([
-            "memory", "adr-check",
-            "--title", "Formatacao de Codigo",
-            "--context", "Estilo de tabulacao",
+            "memory",
+            "adr-check",
+            "--title",
+            "Formatacao de Codigo",
+            "--context",
+            "Estilo de tabulacao",
             "--json",
         ])
         .output()
@@ -463,5 +483,3 @@ fn test_mcp_knowledge_glossary_and_adr_triage_tools() {
     assert_eq!(adr_payload["outcome"], "ApproveAdr");
     assert_eq!(adr_payload["assessment"]["verdict"], "ApproveAdr");
 }
-
-
