@@ -21,6 +21,9 @@ release/
 .DS_Store
 Thumbs.db
 node_modules/
+test-results/
+crates/trustkit-cli/.gitignore
+crates/trustkit-cli/trustkit.toml
 # TRustKit runtime transacional e worktrees efemeras
 .trustkit/state.db*
 .trustkit/worktrees/

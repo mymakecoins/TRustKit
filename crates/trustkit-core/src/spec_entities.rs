@@ -78,3 +78,54 @@ pub struct WaveSchedule {
     pub total_tasks: usize,
     pub waves: Vec<ExecutionWave>,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AtomizationSource {
+    SpecificationMarkdown {
+        spec_path: String,
+        markdown_content: String,
+    },
+    GitHubIssueBody {
+        issue_number: u64,
+        title: String,
+        body_markdown: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtomicTaskDraft {
+    pub task_id: String,
+    pub title: String,
+    pub architectural_layer: String,
+    pub depends_on: Vec<String>,
+    pub expected_files: Vec<String>,
+    pub target_test_file: String,
+    pub context_summary: String,
+    pub given_clause: String,
+    pub when_clause: String,
+    pub then_clause: String,
+    pub business_rule_id: String,
+    pub functional_req_id: String,
+    pub mermaid_node: String,
+    pub evidence_artifact: String,
+}
+
+impl AtomicTaskDraft {
+    pub fn to_task_node(&self) -> TaskNode {
+        TaskNode {
+            task_id: self.task_id.clone(),
+            title: self.title.clone(),
+            architectural_layer: self.architectural_layer.clone(),
+            depends_on: self.depends_on.clone(),
+            expected_files: self.expected_files.clone(),
+            target_test_file: self.target_test_file.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RedTestScaffold {
+    pub task_id: String,
+    pub target_test_file: String,
+    pub generated_rust_code: String,
+}
