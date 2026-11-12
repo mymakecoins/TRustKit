@@ -10,8 +10,9 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::knowledge_entities::{
-    KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome,
-    KnowledgeSearchQuery, KnowledgeWriteOutcome, WikiLink,
+    DomainGlossary, GlossaryEntry, KnowledgeDocument, KnowledgeLookupOutcome,
+    KnowledgeRebuildSummary, KnowledgeSearchOutcome, KnowledgeSearchQuery, KnowledgeWriteOutcome,
+    WikiLink,
 };
 use trustkit_core::ports::KnowledgeRepositoryPort;
 
@@ -51,6 +52,53 @@ impl KnowledgeWikiFsRepository {
     pub fn rebuild_from_wiki_directory(&self) -> Result<KnowledgeRebuildSummary, DomainViolation> {
         rebuild_from_wiki_directory(&self.wiki_dir, &self.db)
     }
+
+    pub fn search_documents(
+        &self,
+        query: &KnowledgeSearchQuery,
+    ) -> Result<KnowledgeSearchOutcome, DomainViolation> {
+        self.db.search_knowledge_fts5(query)
+    }
+
+    pub fn save_glossary(&self, glossary: &DomainGlossary) -> Result<(), DomainViolation> {
+        let glossary_file = self.wiki_dir.join("glossary.md");
+        if let Some(parent) = glossary_file.parent() {
+            fs::create_dir_all(parent).map_err(|e| boundary_err("Failed creating wiki dir", e))?;
+        }
+        let rendered = glossary.to_markdown();
+        let digest = blake3::hash(rendered.as_bytes()).to_hex().to_string();
+
+        let tmp_path = glossary_file.with_extension("md.tmp");
+        fs::write(&tmp_path, rendered.as_bytes())
+            .map_err(|e| boundary_err("Failed writing temp glossary file", e))?;
+        fs::rename(&tmp_path, &glossary_file)
+            .map_err(|e| boundary_err("Failed renaming glossary file", e))?;
+
+        let doc = KnowledgeDocument::new(
+            "glossary",
+            "Glossario de Linguagem Ubiqua",
+            vec![
+                "glossary".to_string(),
+                "ubiquitous".to_string(),
+                "domain".to_string(),
+            ],
+            rendered,
+            "2026-11-11T00:00:00Z",
+            digest,
+        );
+        self.db.upsert_knowledge_index(&doc, &[])?;
+        Ok(())
+    }
+
+    pub fn load_glossary(&self) -> Result<DomainGlossary, DomainViolation> {
+        let glossary_file = self.wiki_dir.join("glossary.md");
+        if !glossary_file.exists() {
+            return Ok(DomainGlossary::default());
+        }
+        let raw = fs::read_to_string(&glossary_file)
+            .map_err(|e| boundary_err("Failed reading glossary file", e))?;
+        parse_glossary_markdown(&raw)
+    }
 }
 
 impl KnowledgeRepositoryPort for KnowledgeWikiFsRepository {
@@ -82,6 +130,14 @@ impl KnowledgeRepositoryPort for KnowledgeWikiFsRepository {
 
     fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation> {
         rebuild_from_wiki_directory(&self.wiki_dir, &self.db)
+    }
+
+    fn save_glossary(&self, glossary: &DomainGlossary) -> Result<(), DomainViolation> {
+        self.save_glossary(glossary)
+    }
+
+    fn load_glossary(&self) -> Result<DomainGlossary, DomainViolation> {
+        self.load_glossary()
     }
 }
 
@@ -333,4 +389,43 @@ fn boundary_err(ctx: &str, err: impl std::fmt::Display) -> DomainViolation {
         subsystem: "knowledge_wiki_fs".to_string(),
         details: format!("{ctx}: {err}"),
     }
+}
+
+pub fn parse_glossary_markdown(content: &str) -> Result<DomainGlossary, DomainViolation> {
+    let mut entries = Vec::new();
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if !trimmed.starts_with("- **") {
+            continue;
+        }
+        let after_prefix = &trimmed[4..];
+        let Some(term_end) = after_prefix.find("**") else {
+            continue;
+        };
+        let term = &after_prefix[..term_end];
+        let remainder = after_prefix[term_end + 2..].trim();
+
+        let (rejected_synonyms, definition) = if remainder.starts_with("(rejeitados:") {
+            let Some(close_paren) = remainder.find(')') else {
+                continue;
+            };
+            let syn_str = &remainder[12..close_paren];
+            let syns: Vec<String> = syn_str
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            let def_part = remainder[close_paren + 1..].trim();
+            let def = def_part.strip_prefix(':').unwrap_or(def_part).trim();
+            (syns, def)
+        } else {
+            let def = remainder.strip_prefix(':').unwrap_or(remainder).trim();
+            (Vec::new(), def)
+        };
+
+        if let Ok(entry) = GlossaryEntry::new(term, definition, rejected_synonyms) {
+            entries.push(entry);
+        }
+    }
+    DomainGlossary::new(entries)
 }

@@ -7,13 +7,14 @@ pub use crate::port_dtos::*;
 
 use crate::entities::{
     AgentSemanticState, ArtifactSeal, AstAuditVerdict, AtomicTask, CertificationSummary,
-    CodeReviewEffortLevel, ContextSliceRequest, ContextSliceResult, CycleStatus, ExecutionEvidence,
-    FileGraphManifest, GateStage, GraphHealthReport, GraphHealthVerdict, GraphTraversalOutcome,
-    KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeRebuildSummary, KnowledgeSearchOutcome,
-    KnowledgeSearchQuery, KnowledgeWriteOutcome, Milestone, MilestonePlan, MilestoneStatus,
-    MultiplexedTerminalHandle, MultiplexedTerminalRequest, SddCycle, SemanticReviewFinding,
-    ShortestPathOutcome, SpecPromptPayload, SpecPromptRequest, SpecificationV2, StructuralEdge,
-    StructuralNode, TaskNode, TraversalMode, WaveSchedule, WikiLink,
+    CodeReviewEffortLevel, ContextSliceRequest, ContextSliceResult, CycleStatus, DomainGlossary,
+    ExecutionEvidence, FileGraphManifest, GateStage, GraphHealthReport, GraphHealthVerdict,
+    GraphTraversalOutcome, KnowledgeDocument, KnowledgeLookupOutcome, KnowledgeRebuildSummary,
+    KnowledgeSearchOutcome, KnowledgeSearchQuery, KnowledgeWriteOutcome, Milestone, MilestonePlan,
+    MilestoneStatus, MultiplexedTerminalHandle, MultiplexedTerminalRequest, SddCycle,
+    SemanticReviewFinding, ShortestPathOutcome, SpecPromptPayload, SpecPromptRequest,
+    SpecificationV2, StructuralEdge, StructuralNode, TaskNode, TraversalMode, WaveSchedule,
+    WikiLink,
 };
 use crate::errors::DomainViolation;
 use crate::special_cases::{
@@ -220,6 +221,12 @@ pub trait KnowledgeRepositoryPort: Send + Sync {
         Ok(vec![])
     }
     fn rebuild_index(&self) -> Result<KnowledgeRebuildSummary, DomainViolation>;
+    fn save_glossary(&self, _glossary: &DomainGlossary) -> Result<(), DomainViolation> {
+        Ok(())
+    }
+    fn load_glossary(&self) -> Result<DomainGlossary, DomainViolation> {
+        Ok(DomainGlossary::default())
+    }
 }
 
 pub trait StructuralGraphRepositoryPort: Send + Sync {

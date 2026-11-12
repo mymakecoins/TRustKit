@@ -290,7 +290,11 @@ fn test_knowledge_entities_tests_task_001_glossary_entry_and_adr_triage() {
     );
     assert_eq!(approved_adr.verdict, AdrTriageVerdict::ApproveAdr);
     assert!(approved_adr.verdict.is_approved());
-    assert!(approved_adr.to_json().contains("\"verdict\":\"ApproveAdr\""));
+    assert!(
+        approved_adr
+            .to_json()
+            .contains("\"verdict\":\"ApproveAdr\"")
+    );
 
     // ADR Triage: Skipped when any criterion is false
     let skipped_adr = AdrTriageAssessment::evaluate(
@@ -304,5 +308,3 @@ fn test_knowledge_entities_tests_task_001_glossary_entry_and_adr_triage() {
     assert!(!skipped_adr.verdict.is_approved());
     assert!(skipped_adr.to_json().contains("\"verdict\":\"SkipAdr\""));
 }
-
-

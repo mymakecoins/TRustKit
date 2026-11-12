@@ -54,8 +54,9 @@ impl GlossaryEntry {
         {
             return Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "glossary".to_string(),
-                details: "Definition cannot contain implementation details, code snippets, or file paths"
-                    .to_string(),
+                details:
+                    "Definition cannot contain implementation details, code snippets, or file paths"
+                        .to_string(),
             });
         }
         Ok(())
