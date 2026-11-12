@@ -23,6 +23,7 @@ pub mod ports;
 pub mod security_review_policy;
 pub mod semantic_review_entities;
 pub mod spec_entities;
+pub mod spec_prompt_builder;
 pub mod spec_scaffold_entities;
 pub mod special_cases;
 pub mod terminal_multiplexer_entities;

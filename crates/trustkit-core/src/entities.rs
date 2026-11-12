@@ -14,6 +14,7 @@ pub use crate::next_step_guidance::*;
 pub use crate::osc7501_encoder::*;
 pub use crate::semantic_review_entities::*;
 pub use crate::spec_entities::*;
+pub use crate::spec_prompt_builder::*;
 pub use crate::spec_scaffold_entities::*;
 pub use crate::special_cases::{CircuitBreakerState, SpecLockState, WorktreeAllocation};
 use crate::special_cases::{IssueLinkage, TddLifecycleState};
