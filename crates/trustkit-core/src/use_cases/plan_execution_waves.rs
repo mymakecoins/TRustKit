@@ -235,14 +235,14 @@ mod tests {
         let planner = FakePlanner {
             should_fail_cycle: false,
         };
-        let task = TaskNode {
-            task_id: "TASK-001".to_string(),
-            title: "Task 1".to_string(),
-            architectural_layer: "CORE".to_string(),
-            depends_on: vec![],
-            expected_files: vec!["file.rs".to_string()],
-            target_test_file: "test.rs".to_string(),
-        };
+        let task = TaskNode::new(
+            "TASK-001".to_string(),
+            "Task 1".to_string(),
+            "CORE".to_string(),
+            vec![],
+            vec!["file.rs".to_string()],
+            "test.rs".to_string(),
+        );
         let req = PlanExecutionWavesRequest { tasks: vec![task] };
 
         let outcome = execute(req, &repo, &planner).expect("Should succeed");

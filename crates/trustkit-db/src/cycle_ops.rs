@@ -71,7 +71,8 @@ pub fn find_active_cycle(conn: &Connection) -> Result<ActiveCycleLookup, DomainV
         "SELECT cycle_id, issue_linkage_kind, issue_number, issue_url, project_board_id, project_item_id, board_column,
                 methodology_profile, current_gate, lifecycle_status, gauntlet_attempt, spec_dir, spec_file_path,
                 spec_lock_state, spec_blake3_digest, work_branch, base_commit_sha, pre_existing_dirty_json, created_at, updated_at
-         FROM sdd_cycles WHERE lifecycle_status IN ('ACTIVE', 'CERTIFIED', 'MERGED') ORDER BY created_at DESC LIMIT 1"
+         FROM sdd_cycles WHERE lifecycle_status IN ('ACTIVE', 'CERTIFIED', 'MERGED')
+         ORDER BY CASE lifecycle_status WHEN 'ACTIVE' THEN 1 WHEN 'CERTIFIED' THEN 2 WHEN 'MERGED' THEN 3 ELSE 4 END ASC, created_at DESC LIMIT 1"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault { subsystem: "sqlite_adapter".into(), details: format!("Prepare failed: {e}") })?;
     let mut rows = stmt
         .query([])

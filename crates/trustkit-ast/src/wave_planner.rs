@@ -9,7 +9,9 @@ use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::EdgeRef;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
-use trustkit_core::entities::{ExecutionWave, StructuralEdge, TaskNode, WaveSchedule};
+use trustkit_core::entities::{
+    ExecutionWave, StructuralEdge, TaskNode, TaskSliceKind, WaveSchedule,
+};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::WaveExecutionPlannerPort;
 
@@ -66,6 +68,65 @@ impl WaveExecutionPlanner {
         task_parser::parse_tasks_dir(dir_path)
     }
 
+    pub fn validate_expand_contract_topology(tasks: &[TaskNode]) -> Result<(), DomainViolation> {
+        let expands: Vec<&TaskNode> = tasks
+            .iter()
+            .filter(|t| t.slice_kind == TaskSliceKind::WideRefactorExpand)
+            .collect();
+        let migrates: Vec<&TaskNode> = tasks
+            .iter()
+            .filter(|t| t.slice_kind == TaskSliceKind::WideRefactorMigrateBatch)
+            .collect();
+        let contracts: Vec<&TaskNode> = tasks
+            .iter()
+            .filter(|t| t.slice_kind == TaskSliceKind::WideRefactorContract)
+            .collect();
+
+        if !contracts.is_empty() && !migrates.is_empty() {
+            for contract in &contracts {
+                for migrate in &migrates {
+                    if !contract.depends_on.contains(&migrate.task_id) {
+                        return Err(DomainViolation::AstIntegrityOrInvariantViolation {
+                            invariant_id: "RN-004".to_string(),
+                            intercepted_command: "trustkit wave plan".to_string(),
+                            reason: format!(
+                                "Tarefa Contract '{}' viola topologia Expand-Contract: nao declara dependencia do lote migrate '{}'",
+                                contract.task_id, migrate.task_id
+                            ),
+                            remediation: format!(
+                                "Declare '{}' no campo depends_on de '{}'.",
+                                migrate.task_id, contract.task_id
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+
+        if !migrates.is_empty() && !expands.is_empty() {
+            for migrate in &migrates {
+                for expand in &expands {
+                    if !migrate.depends_on.contains(&expand.task_id) {
+                        return Err(DomainViolation::AstIntegrityOrInvariantViolation {
+                            invariant_id: "RN-004".to_string(),
+                            intercepted_command: "trustkit wave plan".to_string(),
+                            reason: format!(
+                                "Tarefa MigrateBatch '{}' viola topologia Expand-Contract: nao declara dependencia da tarefa expand '{}'",
+                                migrate.task_id, expand.task_id
+                            ),
+                            remediation: format!(
+                                "Declare '{}' no campo depends_on de '{}'.",
+                                expand.task_id, migrate.task_id
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn plan_waves_with_edges(
         &self,
         tasks: &[TaskNode],
@@ -79,12 +140,23 @@ impl WaveExecutionPlanner {
         edges: &[StructuralEdge],
         god_node_threshold: usize,
     ) -> Result<WaveSchedule, DomainViolation> {
+        let mut sorted_tasks = tasks.to_vec();
+        sorted_tasks.sort_by(|a, b| a.task_id.cmp(&b.task_id));
+
+        Self::validate_expand_contract_topology(&sorted_tasks)?;
+
+        let analyzer = WaveCouplingAnalyzer::new(god_node_threshold);
+        for task in &mut sorted_tasks {
+            let report = analyzer.analyze_task_blast_radius(task, edges);
+            task.blast_radius_score = report.blast_radius_score;
+            if task.slice_kind == TaskSliceKind::VerticalTracerBullet && report.is_high_risk() {
+                task.slice_kind = TaskSliceKind::WideRefactorExpand;
+            }
+        }
+
         let mut graph = DiGraph::<String, ()>::new();
         let mut node_indices = HashMap::new();
         let mut task_map = HashMap::new();
-
-        let mut sorted_tasks = tasks.to_vec();
-        sorted_tasks.sort_by(|a, b| a.task_id.cmp(&b.task_id));
 
         for task in &sorted_tasks {
             let idx = graph.add_node(task.task_id.clone());

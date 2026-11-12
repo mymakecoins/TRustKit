@@ -131,7 +131,7 @@ pub fn execute(args: &InitArgs, json_mode: bool) -> Result<DomainOutcome, Domain
     Ok(DomainOutcome::Success)
 }
 
-fn current_timestamps() -> (String, String) {
+pub fn current_timestamps() -> (String, String) {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

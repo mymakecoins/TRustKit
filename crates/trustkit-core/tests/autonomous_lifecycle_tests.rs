@@ -141,14 +141,14 @@ fn test_task_002_nominal_autonomous_cycle_clears_gates_0_to_3() {
         now_iso: "2026-11-05T12:00:00Z".to_string(),
         timestamp_slug: "202611051200".to_string(),
         spec_content: "# Spec\n## 1. Product Trio\n## 2. Mermaid\n## 3. Gherkin\n".to_string(),
-        tasks: vec![TaskNode {
-            task_id: "TASK-001".to_string(),
-            title: "Task 1".to_string(),
-            architectural_layer: "CLI".to_string(),
-            depends_on: vec![],
-            expected_files: vec![],
-            target_test_file: "".to_string(),
-        }],
+        tasks: vec![TaskNode::new(
+            "TASK-001".to_string(),
+            "Task 1".to_string(),
+            "CLI".to_string(),
+            vec![],
+            vec![],
+            "".to_string(),
+        )],
     };
 
     let outcome = run_autonomous_cycle::execute(req, &repo, &hasher, &validator, &planner)
