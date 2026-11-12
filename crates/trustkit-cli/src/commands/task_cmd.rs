@@ -153,13 +153,41 @@ fn resolve_task_test_args(
         && !task.target_test_file.is_empty()
     {
         let path = Path::new(&task.target_test_file);
+        let pkg = if task.target_test_file.starts_with("crates/") {
+            path.iter().nth(1).and_then(|s| s.to_str())
+        } else {
+            None
+        };
+
         if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+            let mut args = vec!["test".to_string()];
+            if let Some(p) = pkg {
+                args.push("-p".to_string());
+                args.push(p.to_string());
+            }
             if task.target_test_file.contains("/tests/")
                 || task.target_test_file.starts_with("tests/")
             {
-                return vec!["test".to_string(), "--test".to_string(), stem.to_string()];
+                args.push("--test".to_string());
+                args.push(stem.to_string());
+            } else if task.target_test_file.contains("/src/")
+                || task.target_test_file.starts_with("src/")
+            {
+                args.push("--lib".to_string());
+                let filter = stem
+                    .trim_end_matches("_tests")
+                    .trim_end_matches("_test")
+                    .replace('-', "_");
+                args.push(if filter.is_empty() {
+                    stem.replace('-', "_")
+                } else {
+                    filter
+                });
+            } else {
+                args.push("--".to_string());
+                args.push(stem.replace('-', "_"));
             }
-            return vec!["test".to_string(), "--".to_string(), stem.replace('-', "_")];
+            return args;
         }
     }
     vec![

@@ -42,7 +42,15 @@ impl RedVerifier {
             });
         }
 
-        if combined.contains("0 passed; 0 failed") {
+        let has_passing_tests = combined
+            .lines()
+            .any(|l| l.contains("passed") && !l.contains("0 passed"));
+        let has_failing_tests = combined
+            .lines()
+            .any(|l| l.contains("failed") && !l.contains("0 failed"));
+        let has_executed_tests = has_passing_tests || has_failing_tests;
+
+        if !has_executed_tests && combined.contains("0 passed; 0 failed") {
             return Err(DomainViolation::ZeroFilteredTestsFault {
                 task_id: task_id.to_string(),
                 reason: "Zero tests filtered or executed (0 passed; 0 failed)".to_string(),
