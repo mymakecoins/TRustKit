@@ -217,4 +217,3 @@ fn test_close_cycle_rejects_uncertified_cycle() {
         _ => panic!("Expected InfrastructureBoundaryFault for close_gate"),
     }
 }
-

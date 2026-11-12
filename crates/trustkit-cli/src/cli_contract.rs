@@ -61,6 +61,7 @@ impl Cli {
             },
             Command::Doctor(args) => args.json,
             Command::Done(args) => args.json,
+            Command::Close(args) => args.json,
             Command::Merge(args) => args.json,
             Command::Pr(args) => args.json,
             Command::Mcp(McpArgs { action }) => match action {
@@ -129,7 +130,12 @@ pub enum Command {
     #[command(about = "Certify completed cycle, compile gauntlet report, and format issue comment")]
     Done(DoneArgs),
 
-    #[command(about = "Perform deterministic merge into target branch at Gate 6")]
+    #[command(about = "Close active SDD cycle and transition issue to ReadyForTest")]
+    Close(CloseArgs),
+
+    #[command(
+        about = "Perform deterministic merge into target branch at Gate 6 (DEPRECATED: use 'trustkit close')"
+    )]
     Merge(MergeArgs),
 
     #[command(about = "Open human-directed Pull Request to target branch")]
