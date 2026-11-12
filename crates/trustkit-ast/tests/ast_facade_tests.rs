@@ -127,3 +127,68 @@ impl Service {{
     assert!(result.total_lines <= 10);
     assert!(!result.sliced_content.is_empty());
 }
+
+#[test]
+fn test_wave_planner_rejects_contract_without_all_migrate_dependencies() {
+    use trustkit_ast::WaveExecutionPlanner;
+    use trustkit_core::entities::{TaskNode, TaskSliceKind};
+    use trustkit_core::errors::DomainViolation;
+
+    let t_expand = TaskNode::new(
+        "TASK-001".to_string(),
+        "Expand ports".to_string(),
+        "CORE".to_string(),
+        vec![],
+        vec!["crates/ports.rs".to_string()],
+        "tests/t1.rs".to_string(),
+    )
+    .with_slice_kind(TaskSliceKind::WideRefactorExpand);
+
+    let t_migrate_1 = TaskNode::new(
+        "TASK-002".to_string(),
+        "Migrate batch 1".to_string(),
+        "CORE".to_string(),
+        vec!["TASK-001".to_string()],
+        vec!["crates/a.rs".to_string()],
+        "tests/t2.rs".to_string(),
+    )
+    .with_slice_kind(TaskSliceKind::WideRefactorMigrateBatch);
+
+    let t_migrate_2 = TaskNode::new(
+        "TASK-003".to_string(),
+        "Migrate batch 2".to_string(),
+        "CORE".to_string(),
+        vec!["TASK-001".to_string()],
+        vec!["crates/b.rs".to_string()],
+        "tests/t3.rs".to_string(),
+    )
+    .with_slice_kind(TaskSliceKind::WideRefactorMigrateBatch);
+
+    // Contract missing dependency on TASK-003!
+    let t_contract = TaskNode::new(
+        "TASK-004".to_string(),
+        "Contract old port".to_string(),
+        "CORE".to_string(),
+        vec!["TASK-002".to_string()],
+        vec!["crates/ports.rs".to_string()],
+        "tests/t4.rs".to_string(),
+    )
+    .with_slice_kind(TaskSliceKind::WideRefactorContract);
+
+    let tasks = vec![t_expand, t_migrate_1, t_migrate_2, t_contract];
+
+    let result = WaveExecutionPlanner::plan_with_options(&tasks, &[], 8);
+    match result {
+        Err(DomainViolation::AstIntegrityOrInvariantViolation {
+            invariant_id,
+            reason,
+            ..
+        }) => {
+            assert_eq!(invariant_id, "RN-004");
+            assert!(reason.contains("TASK-003"));
+        }
+        other => {
+            panic!("Expected RN-004 violation for contract missing migrate dep, got: {other:?}")
+        }
+    }
+}

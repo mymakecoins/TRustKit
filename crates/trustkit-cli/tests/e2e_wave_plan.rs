@@ -230,3 +230,86 @@ Arquivos Esperados:
         .failure()
         .code(1);
 }
+
+#[test]
+fn test_wave_plan_expand_contract_slice_kind_and_blast_radius_presentation() {
+    let dir = tempdir().expect("create temp dir");
+    let base_dir = dir.path();
+
+    let spec_path = base_dir.join("specs/service/service-spec.md");
+    if let Some(parent) = spec_path.parent() {
+        fs::create_dir_all(parent).expect("create spec dir");
+    }
+    fs::write(&spec_path, VALID_SPEC_CONTENT).expect("write valid spec");
+
+    let mut lock_cmd = Command::cargo_bin("trustkit").expect("find trustkit binary");
+    lock_cmd
+        .current_dir(base_dir)
+        .args(["spec", "lock", "--spec", spec_path.to_str().unwrap()])
+        .assert()
+        .success();
+
+    let tasks_dir = base_dir.join("specs/service/tasks");
+    fs::create_dir_all(&tasks_dir).expect("create tasks dir");
+
+    let t1 = r#"# TASK-001: Expand core interface
+slice_kind: WIDE_REFACTOR_EXPAND
+depends_on: []
+expected_files:
+- src/core.rs
+"#;
+    let t2 = r#"# TASK-002: Migrate caller batch 1
+slice_kind: WIDE_REFACTOR_MIGRATE_BATCH
+depends_on:
+- TASK-001
+expected_files:
+- src/caller1.rs
+"#;
+    let t3 = r#"# TASK-003: Contract old interface
+slice_kind: WIDE_REFACTOR_CONTRACT
+depends_on:
+- TASK-002
+expected_files:
+- src/core.rs
+"#;
+
+    fs::write(tasks_dir.join("TASK-001.md"), t1).unwrap();
+    fs::write(tasks_dir.join("TASK-002.md"), t2).unwrap();
+    fs::write(tasks_dir.join("TASK-003.md"), t3).unwrap();
+
+    // 1. JSON mode check
+    let mut cmd_json = Command::cargo_bin("trustkit").expect("find trustkit binary");
+    let assert_json = cmd_json
+        .current_dir(base_dir)
+        .args([
+            "wave",
+            "plan",
+            "--tasks-dir",
+            tasks_dir.to_str().unwrap(),
+            "--json",
+        ])
+        .assert()
+        .success();
+
+    let out_json = String::from_utf8_lossy(&assert_json.get_output().stdout);
+    assert!(!out_json.contains("null"));
+    let json: serde_json::Value = serde_json::from_str(&out_json).expect("valid json");
+    let waves = json["waves"].as_array().expect("waves array");
+    assert_eq!(waves.len(), 3);
+
+    let task1_json = &waves[0]["tasks"][0];
+    assert_eq!(task1_json["slice_kind"], "WIDE_REFACTOR_EXPAND");
+    assert!(task1_json["blast_radius_score"].is_number());
+
+    // 2. ASCII mode check
+    let mut cmd_ascii = Command::cargo_bin("trustkit").expect("find trustkit binary");
+    let assert_ascii = cmd_ascii
+        .current_dir(base_dir)
+        .args(["wave", "plan", "--tasks-dir", tasks_dir.to_str().unwrap()])
+        .assert()
+        .success();
+
+    let out_ascii = String::from_utf8_lossy(&assert_ascii.get_output().stdout);
+    assert!(out_ascii.contains("slice: WIDE_REFACTOR_EXPAND"));
+    assert!(out_ascii.contains("blast_radius:"));
+}

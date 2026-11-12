@@ -7,7 +7,10 @@
 use petgraph::algo::has_path_connecting;
 use petgraph::graph::{DiGraph, NodeIndex};
 use std::collections::{HashMap, HashSet};
-use trustkit_core::entities::{EdgeConfidence, EdgeRelationKind, StructuralEdge, TaskNode};
+use trustkit_core::entities::{
+    EdgeConfidence, EdgeRelationKind, StructuralEdge, TaskBlastRadiusReport, TaskNode,
+    TaskSliceKind,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct WaveCouplingAnalyzer {
@@ -23,6 +26,47 @@ impl WaveCouplingAnalyzer {
                 god_node_threshold
             },
         }
+    }
+
+    pub fn analyze_task_blast_radius(
+        &self,
+        task: &TaskNode,
+        edges: &[StructuralEdge],
+    ) -> TaskBlastRadiusReport {
+        let mut in_degree = 0;
+        let mut touched_high_degree_nodes = HashSet::new();
+
+        for file in &task.expected_files {
+            let mut file_in_degree = 0;
+            for edge in edges {
+                let matches_target =
+                    &edge.target_id == file || edge.target_id.starts_with(&format!("{file}::"));
+                if matches_target {
+                    file_in_degree += 1;
+                }
+            }
+            in_degree += file_in_degree;
+            if file_in_degree >= self.god_node_threshold {
+                touched_high_degree_nodes.insert(file.clone());
+            }
+        }
+
+        let slice_kind = if in_degree >= self.god_node_threshold {
+            TaskSliceKind::WideRefactorExpand
+        } else {
+            TaskSliceKind::VerticalTracerBullet
+        };
+
+        let mut high_degree_vec: Vec<String> = touched_high_degree_nodes.into_iter().collect();
+        high_degree_vec.sort();
+
+        TaskBlastRadiusReport::new(
+            task.task_id.clone(),
+            slice_kind,
+            in_degree as u32,
+            in_degree,
+            high_degree_vec,
+        )
     }
 
     pub fn detect_coupling_dependencies(

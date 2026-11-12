@@ -56,6 +56,8 @@ pub struct SpecificationV2 {
     pub lock_state: SpecLockState,
 }
 
+use crate::ast_entities::TaskSliceKind;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TaskNode {
     pub task_id: String,
@@ -64,6 +66,40 @@ pub struct TaskNode {
     pub depends_on: Vec<String>,
     pub expected_files: Vec<String>,
     pub target_test_file: String,
+    pub slice_kind: TaskSliceKind,
+    pub blast_radius_score: u32,
+}
+
+impl TaskNode {
+    pub fn new(
+        task_id: String,
+        title: String,
+        architectural_layer: String,
+        depends_on: Vec<String>,
+        expected_files: Vec<String>,
+        target_test_file: String,
+    ) -> Self {
+        Self {
+            task_id,
+            title,
+            architectural_layer,
+            depends_on,
+            expected_files,
+            target_test_file,
+            slice_kind: TaskSliceKind::VerticalTracerBullet,
+            blast_radius_score: 0,
+        }
+    }
+
+    pub fn with_slice_kind(mut self, slice_kind: TaskSliceKind) -> Self {
+        self.slice_kind = slice_kind;
+        self
+    }
+
+    pub fn with_blast_radius(mut self, blast_radius_score: u32) -> Self {
+        self.blast_radius_score = blast_radius_score;
+        self
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -112,14 +148,14 @@ pub struct AtomicTaskDraft {
 
 impl AtomicTaskDraft {
     pub fn to_task_node(&self) -> TaskNode {
-        TaskNode {
-            task_id: self.task_id.clone(),
-            title: self.title.clone(),
-            architectural_layer: self.architectural_layer.clone(),
-            depends_on: self.depends_on.clone(),
-            expected_files: self.expected_files.clone(),
-            target_test_file: self.target_test_file.clone(),
-        }
+        TaskNode::new(
+            self.task_id.clone(),
+            self.title.clone(),
+            self.architectural_layer.clone(),
+            self.depends_on.clone(),
+            self.expected_files.clone(),
+            self.target_test_file.clone(),
+        )
     }
 }
 

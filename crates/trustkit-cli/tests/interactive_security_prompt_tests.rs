@@ -72,14 +72,14 @@ fn seed_passed_gauntlet_cycle(dir: &std::path::Path) -> std::path::PathBuf {
     };
     repo.save_cycle(&cycle).expect("save cycle");
 
-    let task = TaskNode {
-        task_id: "TASK-005".to_string(),
-        title: "TTY Prompt".to_string(),
-        architectural_layer: "CLI".to_string(),
-        depends_on: vec![],
-        expected_files: vec!["src/cmd.rs".to_string()],
-        target_test_file: "tests/tty.rs".to_string(),
-    };
+    let task = TaskNode::new(
+        "TASK-005".to_string(),
+        "TTY Prompt".to_string(),
+        "CLI".to_string(),
+        vec![],
+        vec!["src/cmd.rs".to_string()],
+        "tests/tty.rs".to_string(),
+    );
     let tasks_slice = [task.clone()];
     repo.save_atomic_tasks(
         &cycle.cycle_id,

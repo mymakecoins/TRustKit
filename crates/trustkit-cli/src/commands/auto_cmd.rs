@@ -6,11 +6,10 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use crate::cli_contract::AutoArgs;
-use crate::commands::init_cmd;
+use crate::commands::init_cmd::{self, current_timestamps};
 use crate::error_handler::DomainOutcome;
 use std::fs;
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_ast::{SpecValidator, WaveExecutionPlanner};
 use trustkit_core::entities::{
     CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
@@ -34,14 +33,6 @@ use trustkit_orch::autonomous_wave_orchestrator::{
 };
 use trustkit_orch::worktree_provider::WorktreeIsolationProvider;
 use trustkit_orch::{AutonomousWaveOrchestrator, CycleCertificationReporter};
-
-fn current_timestamps() -> (String, String) {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    (format!("{now}"), format!("{now}"))
-}
 
 pub fn execute(args: &AutoArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     args.validate()?;

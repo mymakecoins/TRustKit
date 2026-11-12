@@ -8,14 +8,14 @@ use trustkit_ast::wave_planner::WaveExecutionPlanner;
 use trustkit_core::entities::{EdgeConfidence, EdgeRelationKind, StructuralEdge, TaskNode};
 
 fn make_task(id: &str, layer: &str, deps: &[&str], files: &[&str]) -> TaskNode {
-    TaskNode {
-        task_id: id.to_string(),
-        title: format!("Task {id}"),
-        architectural_layer: layer.to_string(),
-        depends_on: deps.iter().map(|s| s.to_string()).collect(),
-        expected_files: files.iter().map(|s| s.to_string()).collect(),
-        target_test_file: format!("tests/{id}_tests.rs"),
-    }
+    TaskNode::new(
+        id.to_string(),
+        format!("Task {id}"),
+        layer.to_string(),
+        deps.iter().map(|s| s.to_string()).collect(),
+        files.iter().map(|s| s.to_string()).collect(),
+        format!("tests/{id}_tests.rs"),
+    )
 }
 
 #[test]
@@ -152,4 +152,38 @@ fn test_wave_coupling_analyzer_preserves_acyclicity() {
     let analyzer = WaveCouplingAnalyzer::new(3);
     let deps = analyzer.detect_coupling_dependencies(&tasks, &edges);
     assert!(!deps.is_empty());
+}
+
+#[test]
+fn test_wave_coupling_analyzer_detects_high_blast_radius() {
+    let task = make_task(
+        "TASK-001",
+        "CORE",
+        &[],
+        &["crates/trustkit-core/src/ports.rs"],
+    );
+
+    let mut edges = Vec::new();
+    for i in 0..10 {
+        edges.push(StructuralEdge::new(
+            format!("crates/consumer_{i}.rs"),
+            "crates/trustkit-core/src/ports.rs",
+            EdgeRelationKind::Imports,
+            EdgeConfidence::Extracted,
+            format!("crates/consumer_{i}.rs"),
+        ));
+    }
+
+    let analyzer = WaveCouplingAnalyzer::new(8);
+    let report = analyzer.analyze_task_blast_radius(&task, &edges);
+
+    assert_eq!(report.task_id, "TASK-001");
+    assert_eq!(report.in_degree, 10);
+    assert!(report.is_high_risk());
+    assert_eq!(report.blast_radius_score, 10);
+    assert!(
+        report
+            .touched_high_degree_nodes
+            .contains(&"crates/trustkit-core/src/ports.rs".to_string())
+    );
 }
