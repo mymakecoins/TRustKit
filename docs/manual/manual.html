@@ -1382,17 +1382,17 @@ trustkit pr --target develop</code></pre>
 
       <!-- 3.8 Modo Autonomo de Ponta a Ponta -->
       <div id="modo-autonomo" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color);">
-        <h3>3.8 Orquestracao Autonoma de Ponta a Ponta (<code>trustkit auto</code>)</h3>
-        <p>Para fluxos em que os requisitos ja foram formulados ou a especificacao formal ja esta pronta, o comando unificado <code>trustkit auto</code> orquestra todos os 7 gates (0 ao 6) de forma 100% deterministica e ininterrupta:</p>
+        <h3>3.8 Orquestracao Autonoma de Ponta a Ponta (<code>trustkit auto</code> v2.2)</h3>
+        <p>Para fluxos em que os requisitos ja foram formulados ou a especificacao formal ja esta pronta, a versao 2.2 do comando unificado <code>trustkit auto</code> orquestra todos os 7 gates (0 ao 6) de forma 100% deterministica, com atomizacao automatica, verificador TDD rigoroso e merge cumulativo seguro:</p>
         
         <ul style="margin: 14px 0 24px 28px; color: var(--text-secondary); line-height: 1.8;">
           <li><strong>Gate 0 (Setup &amp; Init):</strong> Inspeciona identidade Git, branches e baseline limpo, inicializando no SQLite WAL.</li>
           <li><strong>Gate 1 (Spec Lint):</strong> Valida o linter nativo AST em microssegundos (sem emojis, Gherkin e matriz fechada).</li>
           <li><strong>Gate 2 (Spec Lock):</strong> Sela a especificacao congelada com hash BLAKE3 criptografico.</li>
-          <li><strong>Gate 3 (Wave Plan):</strong> Le tarefas atomicas em <code>tasks/</code> e calcula as ondas topologicas DAG.</li>
-          <li><strong>Gate 4 (Multi-Wave TDD Loop):</strong> Executa o ciclo TDD (RED &rarr; GREEN &rarr; REFACTOR) em worktrees efemeras.</li>
-          <li><strong>Gate 5 (Gauntlet V2):</strong> Executa auditoria Camada 0 e consolida vereditos dos criticos.</li>
-          <li><strong>Gate 6 (Certify &amp; Merge):</strong> Emite <code>gauntlet-report.md</code> e realiza merge deterministico na branch alvo.</li>
+          <li><strong>Gate 3 (Wave Plan &amp; Atomizacao):</strong> Atomiza deterministicamente a especificacao ou issue se <code>tasks/</code> nao existir, dispara o disjuntor <code>EmptyTaskBacklogFault</code> se houver zero tarefas e calcula as ondas DAG.</li>
+          <li><strong>Gate 4 (Multi-Wave TDD Loop &amp; Builder Dispatch):</strong> Sintetiza testes RED compilaveis (<code>RedTestScaffolder</code>), bloqueia filtros vazios e erros de compilacao mascarados, despacha agentes construtores e executa merge seguro sem force reset.</li>
+          <li><strong>Gate 5 (Gauntlet V2):</strong> Executa auditoria Camada 0 e consolida vereditos dos criticos adversariais, de contrato, estaticos e Playwright.</li>
+          <li><strong>Gate 6 (Certify &amp; Merge):</strong> Emite <code>gauntlet-report.md</code>, atualiza o board e realiza merge deterministico na branch alvo.</li>
         </ul>
 
         <div class="code-container">
@@ -1609,8 +1609,8 @@ trustkit context slice --file crates/trustkit-core/src/entities.rs --hops 2 --st
             <tr>
               <td><span class="badge badge-fail">1</span></td>
               <td><code>InfrastructureBoundaryFault</code></td>
-              <td>Erro de I/O em disco, SQLite WAL ou Git.</td>
-              <td>Verificar permissoes de escrita e espaco em disco.</td>
+              <td>Erro de I/O em disco, SQLite WAL, Git ou disjuntor de tarefas vazias (<code>EmptyTaskBacklogFault</code>).</td>
+              <td>Verificar permissoes de escrita, espaco em disco ou revisar itens acionaveis na especificacao.</td>
             </tr>
             <tr>
               <td><span class="badge badge-fail">2</span></td>
@@ -1621,8 +1621,8 @@ trustkit context slice --file crates/trustkit-core/src/entities.rs --hops 2 --st
             <tr>
               <td><span class="badge badge-fail">3</span></td>
               <td><code>TddLifecycleViolation</code></td>
-              <td>Tentativa de GREEN sem RED comprovado.</td>
-              <td>Executar o teste falhando com <code>--phase red</code> antes.</td>
+              <td>Tentativa de GREEN sem RED comprovado, filtro vazio (<code>ZeroFilteredTestsFault</code>) ou erro de compilacao no RED (<code>CompilationFailureInRedPhaseFault</code>).</td>
+              <td>Garantir teste compilavel que falhe exclusivamente por assercao de dominio na fase red.</td>
             </tr>
             <tr>
               <td><span class="badge badge-fail">4</span></td>

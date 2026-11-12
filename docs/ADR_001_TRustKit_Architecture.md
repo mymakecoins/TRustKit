@@ -334,7 +334,7 @@ crates/
 
 | Subcomando CLI | Portão / Função | Responsabilidade Arquitetural |
 | :--- | :---: | :--- |
-| `trustkit auto [--issue\|--spec] [--json]` | **Gates 0 a 6** | Motor autônomo unificado com orquestração desatendida e auto-merge. |
+| `trustkit auto [--issue\|--spec] [--json]` | **Gates 0 a 6** | Motor autônomo unificado (v2.2) com atomização de tarefas no Gate 3, disjuntor EmptyTaskBacklogFault, testes RED compiláveis e merge cumulativo seguro. |
 | `trustkit milestones plan\|list\|inspect` | **Planejamento** | Extração estática de PRD/ADR via AST com citações exatas de linhas e persistência. |
 | `trustkit init [--issue <id>\|--milestone <path>]` | **Gate 0** | Valida identidade, ramos, preserva arquivos modificados e cria sessão (com suporte a marco). |
 | `trustkit spec prompt --idea "<texto>"` | **Gate 1** | Compõe prompt contextualizado via AST context hops e busca FTS5. |
@@ -368,6 +368,8 @@ crates/
 * **Fases 8 a 10:** Autonomia de Especificação nativa, Multiplexação de Terminais PTY, Motor Autônomo `trustkit auto` e execução headless.
 * **Fase 11:** Governança Agêntica de Nível L4 (100% no `harness-score`), padronização da suíte de Thin Skills SDD e diagramas Archify.
 * **Fase 12:** Planejamento e Decomposição de Marcos (`trustkit milestones`), mapeamento de citações exatas de linhas AST (`#LXX-LYY`), persistência transacional de milestones e inicialização direcionada (`trustkit init --milestone`).
+* **Fase 13:** Orientação Contextual de Próximo Passo (`NextStepResolver`, rodapé ASCII `NEXT STEP:` e array JSON `next_steps` em todos os comandos do CLI).
+* **Fase 14:** Motor Autônomo V2.2 (`SpecMatrixAtomizer` e `IssueBodyAtomizer` no Gate 3, disjuntor `EmptyTaskBacklogFault`, síntese de testes RED compiláveis `RedTestScaffolder` e merge cumulativo seguro `SafeWorktreeMerge`).
 
 ### Roadmap Futuro (V2.1):
 * **Otimização de KV-Cache Compartilhado:** Cache semântico de embeddings locais para complementar o FTS5 em bases ultra-extensas.

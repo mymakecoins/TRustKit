@@ -90,8 +90,14 @@ The software development lifecycle is governed by 7 deterministic gates:
 [Pre-Release] Global 6-Phase Defensive Security Audit (trustkit audit security)
 ```
 
-### End-to-End Autonomous Execution (`trustkit auto`)
-For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a remote GitHub issue or local specification:
+### End-to-End Autonomous Execution (`trustkit auto` v2.2)
+For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a remote GitHub issue or local specification. Version 2.2 incorporates automatic task atomization, Circuit Breaker protection against empty backlogs, compilable RED test scaffolding, and safe accumulative worktree merging:
+- **Automatic Task Atomization (Gate 3):** Decomposes the Traceability Matrix (`spec.md`) or remote issue body (`IssueBodyAtomizer`) into atomic tasks `tasks/TASK-NNN.md` on disk and SQLite WAL when the directory is not present.
+- **Empty Task Backlog Circuit Breaker (`EmptyTaskBacklogFault`):** Halts Gate 4 transition immediately with POSIX exit code 1 if a specification yields zero actionable tasks.
+- **Compilable RED Test Scaffolding (`RedTestScaffolder`):** Synthesizes compilable RED test suites in worktrees, preventing zero-filtered runs (`ZeroFilteredTestsFault`) and distinguishing syntax/compilation faults from true domain assertion failures (`CompilationFailureInRedPhaseFault`).
+- **Builder Agent Dispatcher:** Dispatches builder agents between RED and GREEN phases under isolated `CARGO_TARGET_DIR`.
+- **Safe Accumulative Merging (`SafeWorktreeMerge`):** Merges concurrent tasks in the wave cleanly without destructive `git branch -f`, preserving all commit histories.
+
 ```bash
 # Execute full deterministic cycle from a remote GitHub issue
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
@@ -380,7 +386,7 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | AST code/wiki graph, multi-hop slicer, God Node detector, and GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Multi-angle semantic review (refactor phase), optional security review, and 6-phase pre-release audit. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Native prompt scaffolding, FTS5/AST context slicing, sub-3ms pre-lock linter, MCP tools, and sdd decoupling. |
-| `010-trustkit-auto-orchestrator` | Autonomous Orchestrator trustkit auto | Unified Gates 0 to 6 orchestration, topological wave loop with worktree isolation and strict TDD. |
+| `010-trustkit-auto-orchestrator` | Autonomous Orchestrator trustkit auto (v2.2) | Unified Gates 0-6, AST/Issue atomization, EmptyTaskBacklog breaker, RED scaffolding & safe merge. |
 | `012-milestone-planning` | Milestone Planning | Acyclic PRD and ADR decomposition into milestones with exact line citations (`#LXX-LYY`) and `init --milestone`. |
 | `013-contextual-next-step-guidance` | Contextual Next-Step Guidance | Deterministic `NextStepResolver`, `NEXT STEP:` ASCII footer, `next_steps` JSON array, and `trustkit-sdd` v4.2 protocol. |
 
@@ -391,9 +397,9 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
 | Exit Code | Identifier | Category | Description |
 |---|---|---|---|
 | 0 | CleanPass | Success | Operation completed successfully, satisfying all quality gates. |
-| 1 | InfrastructureBoundaryFault | Infrastructure Fault | Disk I/O error, SQLite WAL failure, Git command failure, or network fault. |
+| 1 | InfrastructureBoundaryFault | Infrastructure Fault | Disk I/O error, SQLite WAL failure, Git command failure, network fault, or empty task backlog (`EmptyTaskBacklogFault`). |
 | 2 | SpecOrTraceabilityIncomplete | Specification Defect | Spec not frozen, Mermaid/Gherkin syntax error, or traceability gap. |
-| 3 | TddLifecycleViolation | TDD Lifecycle Defect | Attempting GREEN without verified RED, or test assertions bypassed. |
+| 3 | TddLifecycleViolation | TDD Lifecycle Defect | Attempting GREEN without verified RED, zero-filtered tests (`ZeroFilteredTestsFault`), or compilation failure in RED phase (`CompilationFailureInRedPhaseFault`). |
 | 4 | AstIntegrityOrInvariantViolation | Invariant Breach | Emojis detected, AI trailers present, DAG cycles found, or test dilution. |
 | 5 | CriticSwarmOrPlaywrightFailed | Gauntlet Rejection | Compilation failure, linter warning, Playwright E2E failure, or critic rejection. |
 | 6 | CircuitBreakerTripped | Circuit Breaker Tripped | Safety shutdown triggered after 5 consecutive Gauntlet rejections. |

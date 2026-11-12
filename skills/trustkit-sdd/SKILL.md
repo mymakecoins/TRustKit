@@ -45,8 +45,8 @@ Caso o usuario retome uma sessao sem saber o estado atual, execute `trustkit sta
 
 ## Jornada dos Gates
 
-### Modo Autonomo Unificado (Gates 0 ao 6)
-Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais:
+### Modo Autonomo Unificado (Gates 0 ao 6 - v2.2)
+Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais. O motor v2.2 atomiza tarefas a partir da especificacao ou issue se `tasks/` nao existir, dispara disjuntor `EmptyTaskBacklogFault` para especificacoes vazias, sintetiza scaffolds RED compilaveis e realiza merge seguro:
 ```bash
 # Execucao autonoma a partir de issue remota
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] --json
@@ -85,10 +85,11 @@ trustkit spec lock [--spec <CAMINHO_SPEC>] --json
 ```
 
 ### Gate 3: Tarefas Atomicas e Planejamento de Ondas
-Elabore as tarefas atomicas em `tasks/TASK-NNN.md` e planeje o DAG de ondas paralelas:
+Elabore as tarefas atomicas em `tasks/TASK-NNN.md` (ou permita que `trustkit auto` atomize a partir da Matriz de Rastreabilidade ou da Issue) e planeje o DAG de ondas paralelas:
 ```bash
 trustkit wave plan --json
 ```
+Nota de Governanca: se o backlog de tarefas atomicas resultar vazio no Gate 3, o disjuntor `EmptyTaskBacklogFault` bloqueia imediatamente o ciclo com exit code 1.
 
 ### Gate 4: Execucao em Git Worktrees, Multiplexacao de Terminais e TDD Estrito
 Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (multiplexador PTY ou nativo) e garanta as fases TDD:
@@ -96,7 +97,7 @@ Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (mul
 # Executa a onda com isolamento de worktree e runtime de terminais (auto, pty, native)
 trustkit wave run --wave <WAVE_INDEX> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] --json
 
-# Registra a fase RED (falha obrigatoria comprovada)
+# Registra a fase RED (falha obrigatoria comprovada por assercao de dominio, rejeitando ZeroFilteredTests e CompilationFailure)
 trustkit task test <TASK_ID> --phase red --json
 
 # Registra a fase GREEN (sucesso obrigatorio comprovado)

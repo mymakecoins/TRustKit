@@ -92,8 +92,14 @@ O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 [Pre-Release] Auditoria Defensiva Global em 6 Fases (trustkit audit security)
 ```
 
-### Modo Autonomo de Ponta a Ponta (`trustkit auto`)
-Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue remota ou especificacao local:
+### Modo Autonomo de Ponta a Ponta (`trustkit auto` v2.2)
+Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue remota ou especificacao local. A versao 2.2 incorpora motor de atomizacao deterministica, protecao por Circuit Breaker contra ciclos vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
+- **Atomizacao Automatica (Gate 3):** Decompoe a Matriz de Rastreabilidade (`spec.md`) ou o corpo da issue remota (`IssueBodyAtomizer`) em tarefas `tasks/TASK-NNN.md` no disco e no SQLite WAL caso o diretorio nao exista previamente.
+- **Circuit Breaker de Backlog (`EmptyTaskBacklogFault`):** Aborta a transicao para o Gate 4 com exit code 1 caso a especificacao resulte em zero tarefas executaveis.
+- **Scaffolding de Teste RED (`RedTestScaffolder`):** Sintetiza esqueletos de teste compilaveis na worktree, rejeitando filtros vazios (`ZeroFilteredTestsFault`) e mascaramento de erros de compilacao (`CompilationFailureInRedPhaseFault`).
+- **Builder Agent Dispatcher:** Despacha agentes construtores entre as fases RED e GREEN com isolamento de `CARGO_TARGET_DIR`.
+- **Merge Acumulativo Seguro (`SafeWorktreeMerge`):** Integra tarefas concorrentes da mesma onda sem executar `git branch -f` destrutivo, preservando todo o historico de commits.
+
 ```bash
 # Executa ciclo completo a partir de uma issue remota do GitHub
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
@@ -402,7 +408,7 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | `006-structural-graph-intelligence` | Structural Graph Intelligence | Grafo AST de codigo e documentacao, multi-hop slicer, detector de God Nodes e GRAPH_REPORT.md. |
 | `007-semantic-review-and-security-gates` | Semantic Review & Security Gates | Revisao semantica multi-angulo (refactor), security review opcional e auditoria defensiva em 6 fases. |
 | `008-native-specification-and-autonomy` | Native Spec & Autonomy | Scaffolding de prompt nativo, fatiamento FTS5/AST, linter pre-lock sub-3ms, ferramentas MCP e autonomia completa. |
-| `010-trustkit-auto-orchestrator` | Motor Autonomo trustkit auto | Orquestracao unificada Gates 0 a 6, loop de ondas topologicas com isolamento de worktree e TDD estrito. |
+| `010-trustkit-auto-orchestrator` | Motor Autonomo trustkit auto (v2.2) | Orquestracao Gates 0-6, atomizacao AST/Issue, disjuntor EmptyTaskBacklog, scaffolding RED e merge seguro. |
 | `012-milestone-planning` | Planejamento Previo de Marcos | Decomposicao aciclica de PRD e ADR em marcos com citacoes de linha (`#LXX-LYY`) e `init --milestone`. |
 | `013-contextual-next-step-guidance` | Orientacao Contextual de Proximo Passo | Resolvedor deterministico `NextStepResolver`, rodape ASCII `NEXT STEP:`, array JSON `next_steps` e protocolo `trustkit-sdd` v4.2. |
 
@@ -413,9 +419,9 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
 | Codigo | Identificador | Categoria | Descricao |
 |---|---|---|---|
 | 0 | CleanPass | Sucesso | Operacao concluida com aprovacao integral em todos os gates. |
-| 1 | InfrastructureBoundaryFault | Falha de Infraestrutura | Erro de I/O de disco, SQLite WAL, subprocessos Git ou rede. |
+| 1 | InfrastructureBoundaryFault | Falha de Infraestrutura | Erro de I/O de disco, SQLite WAL, subprocessos Git, rede ou disjuntor de tarefas vazias (`EmptyTaskBacklogFault`). |
 | 2 | SpecOrTraceabilityIncomplete | Falha de Especificacao | Spec nao congelada, sintaxe Mermaid/Gherkin invalida ou lacuna na matriz. |
-| 3 | TddLifecycleViolation | Infracao de TDD | Tentativa de GREEN sem RED comprovado ou quebra de fluxo TDD. |
+| 3 | TddLifecycleViolation | Infracao de TDD | Tentativa de GREEN sem RED comprovado, filtro vazio (`ZeroFilteredTestsFault`) ou erro de compilacao na fase RED (`CompilationFailureInRedPhaseFault`). |
 | 4 | AstIntegrityOrInvariantViolation | Violacao de Invariantes | Emojis detectados, trailers de IA, ciclos no DAG ou adulteracao de assercoes. |
 | 5 | CriticSwarmOrPlaywrightFailed | Reprovacao no Gauntlet | Falha de compilacao, linter, reprovacao em testes E2E ou parecer de critico. |
 | 6 | CircuitBreakerTripped | Disjuntor Acionado | Disjuntor disparado apos 5 falhas consecutivas no Gauntlet. |
