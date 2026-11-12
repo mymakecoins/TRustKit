@@ -193,3 +193,28 @@ fn test_close_cycle_nominal_success() {
         Some((45, BoardColumn::ReadyForTest))
     );
 }
+
+#[test]
+fn test_close_cycle_rejects_uncertified_cycle() {
+    let repo = InMemoryTestRepo {
+        cycle: Mutex::new(Some(build_cycle(CycleStatus::Active))),
+    };
+    let board = MockBoardGateway {
+        last_transition: Mutex::new(None),
+    };
+
+    let req = CloseCycleRequest {
+        cycle_id: "cycle-test-1".to_string(),
+        now_iso: "2026-11-12T12:00:00Z".to_string(),
+    };
+
+    let err = execute(req, &repo, &board).expect_err("close_cycle must reject uncertified cycle");
+    match err {
+        DomainViolation::InfrastructureBoundaryFault { subsystem, details } => {
+            assert_eq!(subsystem, "close_gate");
+            assert!(details.contains("Gate 6 certification required (RN-002)"));
+        }
+        _ => panic!("Expected InfrastructureBoundaryFault for close_gate"),
+    }
+}
+
