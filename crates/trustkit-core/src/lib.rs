@@ -4,6 +4,8 @@
 //! Constitutional Principle II: Absolute Prohibition of NULL & Special Cases.
 
 pub mod ast_entities;
+pub mod dual_axis_entities;
+pub mod dual_axis_scope_creep;
 pub mod entities;
 pub mod errors;
 pub mod gate_entities;
