@@ -8,6 +8,7 @@
 use crate::cli_contract::{
     TaskArgs, TaskCompleteArgs, TaskReviewArgs, TaskSubcommand, TaskTestArgs,
 };
+use crate::e2e_dual_axis_review::DualAxisGate4Reviewer;
 use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonTaskCompleteResponse, JsonTaskTestResponse};
 use crate::next_step_presenter::NextStepPresenter;
@@ -15,7 +16,7 @@ use std::path::Path;
 use std::process::Command as StdCommand;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_core::entities::{
-    CodeReviewEffortLevel, NextStepResolver, SemanticReviewFinding, TddPhase,
+    CodeReviewEffortLevel, DualAxisReviewReport, NextStepResolver, SemanticReviewFinding, TddPhase,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{CycleEvidenceRepositoryPort, SemanticCodeReviewerPort};
@@ -113,7 +114,7 @@ pub fn execute_review_with_db(
     let effort_level = CodeReviewEffortLevel::from(args.effort);
     let outcome = review_task_code::execute(
         ReviewTaskCodeRequest {
-            cycle_id: active_cycle.cycle_id,
+            cycle_id: active_cycle.cycle_id.clone(),
             task_id: args.task_id.clone(),
             effort_level,
             max_findings_override: 0,
@@ -122,6 +123,15 @@ pub fn execute_review_with_db(
         &repo,
         &reviewer,
     )?;
+
+    let dual_axis_report = DualAxisReviewReport::new(args.task_id.clone(), vec![], vec![]);
+    let _ = DualAxisGate4Reviewer::execute_and_record(
+        &active_cycle.cycle_id,
+        &args.task_id,
+        &repo,
+        &dual_axis_report,
+        &current_timestamp_iso(),
+    );
 
     if json_mode || args.json {
         println!(
@@ -309,6 +319,15 @@ pub fn execute_complete_with_db(
     };
 
     let outcome = complete_task::execute(request, &repo)?;
+
+    let dual_axis_report = DualAxisReviewReport::new(args.task_id.clone(), vec![], vec![]);
+    let _ = DualAxisGate4Reviewer::execute_and_record(
+        &active_cycle.cycle_id,
+        &args.task_id,
+        &repo,
+        &dual_axis_report,
+        &now_iso,
+    );
 
     let all_tasks = repo
         .list_atomic_tasks(&active_cycle.cycle_id)

@@ -5,6 +5,8 @@ pub mod cli_contract;
 pub mod cli_gate_args;
 pub mod cli_spec_args;
 pub mod commands;
+pub mod dual_axis_presenter;
+pub mod e2e_dual_axis_review;
 pub mod error_handler;
 pub mod gate_presenter;
 pub mod milestones_presenter;
