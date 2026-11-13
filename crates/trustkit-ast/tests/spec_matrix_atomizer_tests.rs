@@ -94,13 +94,13 @@ fn test_task_atomizer_port_extracts_real_project_spec() {
             .unwrap()
             .parent()
             .unwrap()
-            .join("docs/specs/spec-autonomous-task-atomization.md"),
+            .join("docs/specs/autonomous-task-atomization/spec.md"),
     )
     .expect("read project spec");
 
     let atomizer = SpecMatrixAtomizer::new();
     let source = AtomizationSource::SpecificationMarkdown {
-        spec_path: "docs/specs/spec-autonomous-task-atomization.md".to_string(),
+        spec_path: "docs/specs/autonomous-task-atomization/spec.md".to_string(),
         markdown_content: content,
     };
 
