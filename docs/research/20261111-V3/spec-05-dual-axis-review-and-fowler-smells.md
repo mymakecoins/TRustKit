@@ -53,8 +53,8 @@ flowchart LR
 
 | Regra Negocio | Requisito Funcional | Tarefa | No Mermaid | Teste Unitario / Integracao | Evidencia / Verificacao |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| RN-001 | RF-001 | TASK-001 | Node1 | crates/trustkit-core/src/semantic_review_entities_tests.rs | EV-001-dual-axis-and-fowler-entities.json |
-| RN-002 | RF-002 | TASK-002 | Node3 | crates/trustkit-core/tests/gate4_code_review_use_case_tests.rs | EV-002-spec-scope-creep-detection.json |
-| RN-003 | RF-003 | TASK-003 | Node2 | crates/trustkit-ast/tests/lexical_scanner_tests.rs | EV-003-repo-standard-override-smell.json |
-| RN-004 | RF-004 | TASK-004 | Node4 | crates/trustkit-cli/src/presenter_tests.rs | EV-004-dual-axis-non-compensatory.json |
-| RN-005 | RF-005 | TASK-005 | Node5 | crates/trustkit-cli/tests/e2e_gates_4_to_6.rs | EV-005-e2e-gate4-dual-review.json |
+| RN-001 | RF-001 | TASK-001 | Node1 | crates/trustkit-core/tests/dual_axis_entities_tests.rs | EV-001-dual-axis-and-fowler-entities.json |
+| RN-002 | RF-002 | TASK-002 | Node3 | crates/trustkit-core/tests/dual_axis_scope_creep_tests.rs | EV-002-spec-scope-creep-detection.json |
+| RN-003 | RF-003 | TASK-003 | Node2 | crates/trustkit-ast/tests/fowler_smells_lexical_tests.rs | EV-003-repo-standard-override-smell.json |
+| RN-004 | RF-004 | TASK-004 | Node4 | crates/trustkit-cli/tests/dual_axis_presenter_tests.rs | EV-004-dual-axis-non-compensatory.json |
+| RN-005 | RF-005 | TASK-005 | Node5 | crates/trustkit-cli/tests/e2e_dual_axis_review_tests.rs | EV-005-e2e-gate4-dual-review.json |
