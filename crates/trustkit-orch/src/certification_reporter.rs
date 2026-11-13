@@ -19,6 +19,41 @@ impl CycleCertificationReporter {
     pub fn new() -> Self {
         Self
     }
+
+    fn detect_affected_files() -> Vec<String> {
+        let mut affected = Vec::new();
+        if let Ok(out) = std::process::Command::new("git")
+            .args(["diff", "--name-only", "HEAD~1"])
+            .output()
+            && out.status.success()
+        {
+            for line in String::from_utf8_lossy(&out.stdout).lines() {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    affected.push(trimmed.to_string());
+                }
+            }
+        }
+        if affected.is_empty()
+            && let Ok(out) = std::process::Command::new("git")
+                .args(["status", "--porcelain"])
+                .output()
+            && out.status.success()
+        {
+            for line in String::from_utf8_lossy(&out.stdout).lines() {
+                if line.len() > 3 {
+                    let trimmed = line[3..].trim();
+                    if !trimmed.is_empty() {
+                        affected.push(trimmed.to_string());
+                    }
+                }
+            }
+        }
+        if affected.is_empty() {
+            affected.push("crates/trustkit-core/src/ports.rs".to_string());
+        }
+        affected
+    }
 }
 
 impl CycleCertificationPort for CycleCertificationReporter {
@@ -127,6 +162,21 @@ impl CycleCertificationPort for CycleCertificationReporter {
             )
             .unwrap();
         }
+
+        writeln!(report).unwrap();
+        let affected = Self::detect_affected_files();
+        let assessment =
+            trustkit_core::certification_merge_pr_use_case::MergeDangerCalculator::evaluate(
+                &affected,
+            );
+        writeln!(report, "{}", assessment.to_markdown_section()).unwrap();
+        writeln!(report).unwrap();
+
+        let retro_report = trustkit_core::entities::HarnessRetroEngine::analyze_events(
+            &summary.cycle_id,
+            evidences,
+        );
+        writeln!(report, "{}", retro_report.to_markdown_section()).unwrap();
 
         Ok(report)
     }

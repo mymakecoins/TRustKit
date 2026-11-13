@@ -28,6 +28,11 @@ pub enum AstViolation {
         file_path: String,
         line: usize,
     },
+    ResidualDebugProbe {
+        file_path: String,
+        line: usize,
+        probe: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

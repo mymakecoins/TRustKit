@@ -116,3 +116,58 @@ fn test_scanner_verifies_bilingual_readmes_and_diagrams_have_zero_violations() {
         }
     }
 }
+
+#[test]
+fn test_scanner_detects_residual_debug_probes() {
+    let scanner = InvariantLexicalScanner::new();
+    let content =
+        "fn execute() {\n    let s = 42;\n    println!(\"[DEBUG-a4f2] state={:?}\", s);\n}";
+    let violations = scanner.scan_content("src/service.rs", content);
+
+    assert_eq!(violations.len(), 1);
+    match &violations[0] {
+        AstViolation::ResidualDebugProbe {
+            file_path,
+            line,
+            probe,
+        } => {
+            assert_eq!(file_path, "src/service.rs");
+            assert_eq!(*line, 3);
+            assert!(probe.contains("[DEBUG-a4f2]"));
+        }
+        other => panic!("Expected ResidualDebugProbe, got: {other:?}"),
+    }
+}
+
+#[test]
+fn test_scanner_detects_multiple_residual_debug_probes_and_preserves_line_numbers() {
+    let scanner = InvariantLexicalScanner::new();
+    let content = "fn compute() {\n    let a = 1;\n    // [DEBUG-0001] check a\n    let b = 2;\n    println!(\"[DEBUG-0002] b={}\", b);\n}\n";
+    let violations = scanner.scan_content("src/compute.rs", content);
+
+    assert_eq!(violations.len(), 2);
+    match &violations[0] {
+        AstViolation::ResidualDebugProbe {
+            file_path,
+            line,
+            probe,
+        } => {
+            assert_eq!(file_path, "src/compute.rs");
+            assert_eq!(*line, 3);
+            assert!(probe.contains("[DEBUG-0001]"));
+        }
+        other => panic!("Expected ResidualDebugProbe, got: {other:?}"),
+    }
+    match &violations[1] {
+        AstViolation::ResidualDebugProbe {
+            file_path,
+            line,
+            probe,
+        } => {
+            assert_eq!(file_path, "src/compute.rs");
+            assert_eq!(*line, 5);
+            assert!(probe.contains("[DEBUG-0002]"));
+        }
+        other => panic!("Expected ResidualDebugProbe, got: {other:?}"),
+    }
+}

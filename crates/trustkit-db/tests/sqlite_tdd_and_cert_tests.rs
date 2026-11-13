@@ -14,6 +14,7 @@ use trustkit_core::ports::CycleEvidenceRepositoryPort;
 use trustkit_core::special_cases::{
     ActiveCycleLookup, IssueLinkage, SpecLockState, TddLifecycleState, WorktreeAllocation,
 };
+use trustkit_db::HarnessRetroEngine;
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 
 fn setup_test_cycle_and_task(repo: &SqliteWalRepositoryAdapter, cycle_id: &str, task_id: &str) {
@@ -360,4 +361,120 @@ fn test_certification_evidences_ordered_chronologically() {
     assert_eq!(cert_evidences[0].recorded_at, "2026-10-28T10:00:00Z");
     assert_eq!(cert_evidences[1].recorded_at, "2026-10-28T10:05:00Z");
     assert_eq!(cert_evidences[2].recorded_at, "2026-10-28T10:10:00Z");
+}
+
+#[test]
+fn test_harness_retro_engine_generates_report_ordered_by_severity_from_wal_events() {
+    let dir = tempdir().expect("temp dir");
+    let db_path = dir.path().join("state.db");
+    let repo = SqliteWalRepositoryAdapter::open(&db_path).expect("open repo");
+
+    let cycle_id = "cycle-retro-wal-1";
+    setup_test_cycle_and_task(&repo, cycle_id, "TASK-004");
+
+    // 1. Falha do Gauntlet no Gate 5 (Severidade HIGH -> Novas Checagens Automatizadas)
+    let ev_gauntlet_fail = ExecutionEvidence {
+        evidence_id: 0,
+        cycle_id: cycle_id.to_string(),
+        gate_stage: GateStage::Gate5GauntletCleared,
+        gauntlet_attempt: 1,
+        actor_role: "CRITIC:AST_AUDIT".to_string(),
+        evidence_kind: EvidenceKind::AstAudit,
+        executed_command: "trustkit gauntlet ast-audit".to_string(),
+        exit_code: 1,
+        duration_ms: 250,
+        sanitized_stdout_tail: "AST invariant violation detected".to_string(),
+        sanitized_stderr_tail: String::new(),
+        output_blake3_digest: "a".repeat(64),
+        verdict: GateVerdict::Fail,
+        recorded_at: "2026-10-28T10:10:00Z".to_string(),
+    };
+
+    // 2. Reprovacao de Code Review / Regras de Revisao (Severidade MEDIUM -> Regras de Revisao)
+    let ev_review_fail = ExecutionEvidence {
+        evidence_id: 0,
+        cycle_id: cycle_id.to_string(),
+        gate_stage: GateStage::Gate4TasksImplemented,
+        gauntlet_attempt: 0,
+        actor_role: "REVIEWER:SEMANTIC".to_string(),
+        evidence_kind: EvidenceKind::CodeReview,
+        executed_command: "trustkit task review TASK-004".to_string(),
+        exit_code: 1,
+        duration_ms: 180,
+        sanitized_stdout_tail: "Fowler smell or pattern mismatch found".to_string(),
+        sanitized_stderr_tail: String::new(),
+        output_blake3_digest: "b".repeat(64),
+        verdict: GateVerdict::Fail,
+        recorded_at: "2026-10-28T10:12:00Z".to_string(),
+    };
+
+    // 3. Multiplas execucoes de comandos repetidos (Severidade MEDIUM / LOW -> Economia de Ferramentas)
+    for i in 0..6 {
+        let ev_cmd = ExecutionEvidence {
+            evidence_id: 0,
+            cycle_id: cycle_id.to_string(),
+            gate_stage: GateStage::Gate4TasksImplemented,
+            gauntlet_attempt: 0,
+            actor_role: "BUILDER:TDD_RED".to_string(),
+            evidence_kind: EvidenceKind::CmdExec,
+            executed_command: format!("cargo test --test task_{i}"),
+            exit_code: 1,
+            duration_ms: 500,
+            sanitized_stdout_tail: "test failed".to_string(),
+            sanitized_stderr_tail: String::new(),
+            output_blake3_digest: format!("{:x}", i).repeat(16),
+            verdict: GateVerdict::Fail,
+            recorded_at: format!("2026-10-28T10:15:{:02}Z", i),
+        };
+        repo.append_evidence(&ev_cmd).unwrap();
+    }
+
+    // 4. Falha de caminho / navegacao (Severidade LOW -> Ponteiros de Navegacao)
+    let ev_nav_fail = ExecutionEvidence {
+        evidence_id: 0,
+        cycle_id: cycle_id.to_string(),
+        gate_stage: GateStage::Gate4TasksImplemented,
+        gauntlet_attempt: 0,
+        actor_role: "BUILDER".to_string(),
+        evidence_kind: EvidenceKind::CmdExec,
+        executed_command: "cat crates/nonexistent/file.rs".to_string(),
+        exit_code: 1,
+        duration_ms: 50,
+        sanitized_stdout_tail: "No such file or directory".to_string(),
+        sanitized_stderr_tail: "No such file or directory".to_string(),
+        output_blake3_digest: "c".repeat(64),
+        verdict: GateVerdict::Fail,
+        recorded_at: "2026-10-28T10:20:00Z".to_string(),
+    };
+
+    repo.append_evidence(&ev_gauntlet_fail).unwrap();
+    repo.append_evidence(&ev_review_fail).unwrap();
+    repo.append_evidence(&ev_nav_fail).unwrap();
+
+    let evidences = repo
+        .list_evidences_for_cycle(cycle_id)
+        .expect("list evidences");
+    let report = HarnessRetroEngine::analyze_events(cycle_id, &evidences);
+
+    assert_eq!(report.cycle_id, cycle_id);
+    assert!(
+        !report.items.is_empty(),
+        "HarnessRetroReport must contain items"
+    );
+
+    // Verificar se as categorias exigidas por RF-004 / RN-004 estao presentes
+    let categories: Vec<&str> = report.items.iter().map(|it| it.category.as_str()).collect();
+    assert!(categories.contains(&"Novas Checagens Automatizadas"));
+    assert!(categories.contains(&"Regras de Revisao"));
+    assert!(categories.contains(&"Economia de Ferramentas"));
+    assert!(categories.contains(&"Ponteiros de Navegacao"));
+
+    // Verificar se os itens estao estritamente ordenados por severidade (HIGH > MEDIUM > LOW)
+    let severities: Vec<&str> = report.items.iter().map(|it| it.severity.as_str()).collect();
+    assert_eq!(severities[0], "HIGH");
+
+    // Verificar se a secao markdown em ASCII e gerada corretamente
+    let md = report.to_markdown_section();
+    assert!(md.contains("## Retrospectiva de Harness"));
+    assert!(md.contains("[HIGH] Novas Checagens Automatizadas:"));
 }

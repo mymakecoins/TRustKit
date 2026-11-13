@@ -10,6 +10,10 @@ pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
 pub use crate::glossary_entities::*;
 pub use crate::graph_entities::*;
+pub mod harness_retro_engine {
+    pub use crate::harness_retro_engine::*;
+}
+pub use crate::harness_retro_engine::HarnessRetroEngine;
 pub use crate::knowledge_entities::*;
 pub use crate::milestone_entities::*;
 pub use crate::next_step_guidance::*;

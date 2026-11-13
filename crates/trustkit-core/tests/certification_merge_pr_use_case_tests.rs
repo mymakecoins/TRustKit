@@ -2,9 +2,11 @@
 // Constitutional Principle III: Test-First & Anti-Cheat.
 
 use std::sync::Mutex;
+use trustkit_core::certification_merge_pr_use_case::MergeDangerCalculator;
 use trustkit_core::entities::{
-    ArtifactSeal, CertificationSummary, CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence,
-    GateStage, GateVerdict, MethodologyProfile, SddCycle, SpecificationV2, TaskNode, WaveSchedule,
+    ArtifactSeal, BlastRadiusLevel, CertificationSummary, CriticKind, CycleStatus, EvidenceKind,
+    ExecutionEvidence, GateStage, GateVerdict, MergeDangerClassification, MethodologyProfile,
+    SddCycle, SpecificationV2, TaskNode, WaveSchedule,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
@@ -439,4 +441,94 @@ fn test_open_pull_request_requires_human_authorization() {
         res,
         Err(DomainViolation::InfrastructureBoundaryFault { .. })
     ));
+}
+
+#[test]
+fn test_merge_danger_calculator_classifies_migrations_as_one_way_door_system_wide() {
+    let files = vec![
+        "crates/trustkit-db/src/migrations.rs",
+        "crates/trustkit-db/src/lib.rs",
+    ];
+    let assessment = MergeDangerCalculator::evaluate(&files);
+
+    assert_eq!(
+        assessment.classification,
+        MergeDangerClassification::OneWayDoor
+    );
+    assert_eq!(assessment.blast_radius, BlastRadiusLevel::SystemWide);
+    assert!(assessment.reason.contains("Database migration"));
+    assert!(assessment.to_markdown_section().contains("## Merge Danger"));
+}
+
+#[test]
+fn test_merge_danger_calculator_classifies_public_ports_as_one_way_door() {
+    let files = vec!["crates/trustkit-core/src/ports.rs"];
+    let assessment = MergeDangerCalculator::evaluate(&files);
+
+    assert_eq!(
+        assessment.classification,
+        MergeDangerClassification::OneWayDoor
+    );
+    assert_eq!(assessment.blast_radius, BlastRadiusLevel::SystemWide);
+    assert!(assessment.reason.contains("Public port contract"));
+}
+
+#[test]
+fn test_merge_danger_calculator_classifies_internal_adapters_and_tests_as_two_way_door() {
+    let test_only_files = vec!["crates/trustkit-ast/tests/lexical_scanner_tests.rs"];
+    let assessment_isolated = MergeDangerCalculator::evaluate(&test_only_files);
+
+    assert_eq!(
+        assessment_isolated.classification,
+        MergeDangerClassification::TwoWayDoor
+    );
+    assert_eq!(assessment_isolated.blast_radius, BlastRadiusLevel::Isolated);
+
+    let module_files = vec!["crates/trustkit-cli/src/gate_presenter.rs"];
+    let assessment_local = MergeDangerCalculator::evaluate(&module_files);
+
+    assert_eq!(
+        assessment_local.classification,
+        MergeDangerClassification::TwoWayDoor
+    );
+    assert_eq!(assessment_local.blast_radius, BlastRadiusLevel::ModuleLocal);
+
+    let cross_crate_files = vec![
+        "crates/trustkit-ast/src/lexical_scanner.rs",
+        "crates/trustkit-orch/src/task_synthesizer.rs",
+    ];
+    let assessment_cross = MergeDangerCalculator::evaluate(&cross_crate_files);
+    assert_eq!(
+        assessment_cross.classification,
+        MergeDangerClassification::TwoWayDoor
+    );
+    assert_eq!(assessment_cross.blast_radius, BlastRadiusLevel::CrossCrate);
+}
+
+#[test]
+fn test_open_pull_request_mandates_merge_danger_section_in_body() {
+    let repo = InMemoryCertRepo {
+        cycle: Mutex::new(Some(build_cycle(CycleStatus::Certified))),
+        evidences: Mutex::new(vec![]),
+    };
+    let board = MockBoardGateway {
+        last_pr: Mutex::new(None),
+        last_transition: Mutex::new(None),
+    };
+
+    let req = OpenPullRequestRequest {
+        cycle_id: "cycle-cert-1".to_string(),
+        human_authorized: true,
+        base_branch: "develop".to_string(),
+        head_branch: "feat/45".to_string(),
+        title: "feat: #45".to_string(),
+        custom_body: Some("Custom implementation notes\n\nRef #45".to_string()),
+        now_iso: "2026-10-28T12:00:00Z".to_string(),
+    };
+
+    let res = open_pull_request::execute(req, &repo, &board);
+    assert!(res.is_ok());
+
+    let pr_details = board.last_pr.lock().unwrap().clone().unwrap();
+    assert!(pr_details.body.contains("## Merge Danger"));
 }
