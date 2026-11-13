@@ -3,6 +3,7 @@
 pub mod ast_adapter;
 pub mod ast_graph_extractor;
 pub mod context_slicer;
+pub mod fowler_smells_lexical;
 pub mod graph_context_slicer;
 pub mod graph_health_auditor;
 pub mod knowledge_link_extractor;
@@ -28,6 +29,9 @@ pub mod wave_planner;
 pub use ast_adapter::TreeSitterAstAuditorAdapter;
 pub use ast_graph_extractor::{AstGraphExtractor, detect_layer};
 pub use context_slicer::AstContextSlicer;
+pub use fowler_smells_lexical::{
+    CodeSmellCandidate, FowlerSmellsLexicalEvaluator, RepositoryStandardRule,
+};
 pub use graph_context_slicer::GraphContextSlicer;
 pub use graph_health_auditor::GraphHealthAuditor;
 pub use lexical_scanner::InvariantLexicalScanner;

@@ -116,13 +116,21 @@ pub fn execute_with_db(
                 let _ = fs::write(&target_spec, content);
             }
             if let Some(parent) = source_path.parent() {
-                let source_tasks = parent.join("tasks");
-                let target_tasks = spec_dir.join("tasks");
-                if source_tasks.exists() && !target_tasks.exists() {
-                    let _ = fs::create_dir_all(&target_tasks);
-                    if let Ok(entries) = fs::read_dir(source_tasks) {
-                        for entry in entries.flatten() {
-                            let _ = fs::copy(entry.path(), target_tasks.join(entry.file_name()));
+                let is_dedicated_spec_file = source_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n == "spec.md")
+                    .unwrap_or(false);
+                if is_dedicated_spec_file {
+                    let source_tasks = parent.join("tasks");
+                    let target_tasks = spec_dir.join("tasks");
+                    if source_tasks.exists() && !target_tasks.exists() {
+                        let _ = fs::create_dir_all(&target_tasks);
+                        if let Ok(entries) = fs::read_dir(source_tasks) {
+                            for entry in entries.flatten() {
+                                let _ =
+                                    fs::copy(entry.path(), target_tasks.join(entry.file_name()));
+                            }
                         }
                     }
                 }
@@ -177,11 +185,18 @@ pub fn execute_with_db(
                     if let Some(ref source_spec) = resolved_spec {
                         let source_path = Path::new(source_spec);
                         if let Some(parent) = source_path.parent() {
-                            let source_tasks = parent.join("tasks");
-                            let _ = trustkit_orch::TaskSynthesizer::materialize_tasks_dir(
-                                &source_tasks,
-                                &drafts,
-                            );
+                            let is_dedicated_spec_file = source_path
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .map(|n| n == "spec.md")
+                                .unwrap_or(false);
+                            if is_dedicated_spec_file {
+                                let source_tasks = parent.join("tasks");
+                                let _ = trustkit_orch::TaskSynthesizer::materialize_tasks_dir(
+                                    &source_tasks,
+                                    &drafts,
+                                );
+                            }
                         }
                     }
                 }

@@ -84,11 +84,37 @@ impl AutonomousWaveOrchestrator {
     fn resolve_test_args(target_test_file: &str, task_id: &str) -> Vec<String> {
         if !target_test_file.is_empty() {
             let path = Path::new(target_test_file);
+            let pkg = if target_test_file.starts_with("crates/") {
+                path.iter().nth(1).and_then(|s| s.to_str())
+            } else {
+                None
+            };
             if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
-                if target_test_file.contains("/tests/") || target_test_file.starts_with("tests/") {
-                    return vec!["test".to_string(), "--test".to_string(), stem.to_string()];
+                let mut args = vec!["test".to_string()];
+                if let Some(p) = pkg {
+                    args.push("-p".to_string());
+                    args.push(p.to_string());
                 }
-                return vec!["test".to_string(), "--".to_string(), stem.replace('-', "_")];
+                if target_test_file.contains("/tests/") || target_test_file.starts_with("tests/") {
+                    args.push("--test".to_string());
+                    args.push(stem.to_string());
+                } else if target_test_file.contains("/src/") || target_test_file.starts_with("src/")
+                {
+                    args.push("--lib".to_string());
+                    let filter = stem
+                        .trim_end_matches("_tests")
+                        .trim_end_matches("_test")
+                        .replace('-', "_");
+                    args.push(if filter.is_empty() {
+                        stem.replace('-', "_")
+                    } else {
+                        filter
+                    });
+                } else {
+                    args.push("--".to_string());
+                    args.push(stem.replace('-', "_"));
+                }
+                return args;
             }
         }
         vec![

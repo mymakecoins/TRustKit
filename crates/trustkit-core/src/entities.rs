@@ -3,6 +3,8 @@
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
 pub use crate::ast_entities::*;
+pub use crate::dual_axis_entities::*;
+pub use crate::dual_axis_scope_creep::*;
 use crate::errors::DomainViolation;
 pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
