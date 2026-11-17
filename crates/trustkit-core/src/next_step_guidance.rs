@@ -210,7 +210,7 @@ impl NextStepResolver {
                     NextStepPriority::Primary,
                     "GATE-4",
                     format!("trustkit task test {task_id} --phase red"),
-                    "Record failing RED test evidence for the active task.",
+                    "Author failing test assertion in target_test_file before running task test --phase red.",
                 ),
                 NextStepRecommendation::new(
                     NextStepPriority::Secondary,
