@@ -67,6 +67,16 @@ impl SqliteWalRepositoryAdapter {
         task_ops::find_atomic_task(&conn, cycle_id, task_id)
     }
 
+    pub fn find_worktree_evidence(
+        &self,
+        cycle_id: &str,
+        task_id: &str,
+    ) -> Result<Option<ExecutionEvidence>, DomainViolation> {
+        let evidences = self.list_evidences_for_cycle(cycle_id)?;
+        let actor = format!("ORCH:WORKTREE_{task_id}");
+        Ok(evidences.into_iter().find(|e| e.actor_role == actor))
+    }
+
     pub fn upsert_knowledge_index(
         &self,
         doc: &KnowledgeDocument,

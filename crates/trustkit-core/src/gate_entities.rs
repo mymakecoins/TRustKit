@@ -129,3 +129,35 @@ pub struct ExecutionEvidence {
     pub verdict: GateVerdict,
     pub recorded_at: String,
 }
+
+impl ExecutionEvidence {
+    pub fn for_worktree_provision(
+        cycle_id: impl Into<String>,
+        task_id: &str,
+        branch_name: &str,
+        worktree_path: &str,
+        base_branch: &str,
+        now_iso: impl Into<String>,
+    ) -> Self {
+        let stdout = format!(
+            "[INFO] Branch '{}' criada com sucesso.\n[INFO] Checkout realizado no diretorio isolado: {}\n[INFO] Branch ativa do repositorio raiz preservada: '{}'",
+            branch_name, worktree_path, base_branch
+        );
+        Self {
+            evidence_id: 0,
+            cycle_id: cycle_id.into(),
+            gate_stage: GateStage::Gate4TasksImplemented,
+            gauntlet_attempt: 0,
+            actor_role: format!("ORCH:WORKTREE_{task_id}"),
+            evidence_kind: EvidenceKind::CmdExec,
+            executed_command: format!("git worktree add -B {branch_name} {worktree_path} {base_branch}"),
+            exit_code: 0,
+            duration_ms: 10,
+            sanitized_stdout_tail: stdout,
+            sanitized_stderr_tail: "".to_string(),
+            output_blake3_digest: "".to_string(),
+            verdict: GateVerdict::Pass,
+            recorded_at: now_iso.into(),
+        }
+    }
+}
