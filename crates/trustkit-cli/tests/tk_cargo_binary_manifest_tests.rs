@@ -8,8 +8,5 @@ use assert_cmd::Command;
 #[test]
 fn test_task_001_tk_binary_exists_and_runs() {
     let mut cmd = Command::cargo_bin("tk").expect("find tk binary");
-    cmd.arg("--version")
-        .assert()
-        .success()
-        .code(0);
+    cmd.arg("--version").assert().success().code(0);
 }
