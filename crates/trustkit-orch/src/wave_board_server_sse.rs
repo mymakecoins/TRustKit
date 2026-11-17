@@ -96,7 +96,8 @@ impl WaveBoardServerSse {
                 }
             }
         } else {
-            let not_found = "HTTP/1.1 404 Not Found\r\nContent-Length: 9\r\nConnection: close\r\n\r\nNot Found";
+            let not_found =
+                "HTTP/1.1 404 Not Found\r\nContent-Length: 9\r\nConnection: close\r\n\r\nNot Found";
             stream.write_all(not_found.as_bytes()).await?;
             stream.flush().await?;
         }

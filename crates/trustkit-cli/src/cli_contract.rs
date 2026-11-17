@@ -288,26 +288,16 @@ pub struct WaveBoardArgs {
 
 #[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
 pub enum BoardSubcommand {
-    #[command(
-        name = "up",
-        about = "Start the real-time wave kanban board daemon"
-    )]
+    #[command(name = "up", about = "Start the real-time wave kanban board daemon")]
     Up(BoardUpArgs),
-    #[command(
-        name = "down",
-        about = "Stop the real-time wave kanban board daemon"
-    )]
+    #[command(name = "down", about = "Stop the real-time wave kanban board daemon")]
     Down(BoardDownArgs),
     #[command(
         name = "status",
         about = "Inspect status of the wave kanban board daemon"
     )]
     Status(BoardStatusArgs),
-    #[command(
-        name = "serve",
-        about = "Run local HTTP/SSE board server",
-        hide = true
-    )]
+    #[command(name = "serve", about = "Run local HTTP/SSE board server", hide = true)]
     Serve(BoardServeArgs),
 }
 

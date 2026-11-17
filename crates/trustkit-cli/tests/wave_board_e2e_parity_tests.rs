@@ -49,18 +49,30 @@ fn test_task_005_e2e_parity_wave_board_help() {
 #[test]
 fn test_task_005_e2e_parity_board_status_json_null_free() {
     let mut cmd_tk = Command::cargo_bin("tk").expect("find tk");
-    let assert_tk = cmd_tk.args(["board", "status", "--json"]).assert().success();
+    let assert_tk = cmd_tk
+        .args(["board", "status", "--json"])
+        .assert()
+        .success();
     let stdout_tk = String::from_utf8(assert_tk.get_output().stdout.clone()).unwrap();
 
-    assert!(!stdout_tk.contains("null"), "tk board status contained null");
+    assert!(
+        !stdout_tk.contains("null"),
+        "tk board status contained null"
+    );
     assert!(stdout_tk.contains("\"status\": \"PASS\""));
     assert!(stdout_tk.contains("\"action\": \"status\""));
 
     let mut cmd_trustkit = Command::cargo_bin("trustkit").expect("find trustkit");
-    let assert_trustkit = cmd_trustkit.args(["board", "status", "--json"]).assert().success();
+    let assert_trustkit = cmd_trustkit
+        .args(["board", "status", "--json"])
+        .assert()
+        .success();
     let stdout_trustkit = String::from_utf8(assert_trustkit.get_output().stdout.clone()).unwrap();
 
-    assert!(!stdout_trustkit.contains("null"), "trustkit board status contained null");
+    assert!(
+        !stdout_trustkit.contains("null"),
+        "trustkit board status contained null"
+    );
     assert!(stdout_trustkit.contains("\"status\": \"PASS\""));
     assert!(stdout_trustkit.contains("\"action\": \"status\""));
 }
@@ -75,9 +87,15 @@ fn test_task_005_e2e_parity_board_down_json_null_free() {
     assert!(stdout_tk.contains("\"action\": \"down\""));
 
     let mut cmd_trustkit = Command::cargo_bin("trustkit").expect("find trustkit");
-    let assert_trustkit = cmd_trustkit.args(["board", "down", "--json"]).assert().success();
+    let assert_trustkit = cmd_trustkit
+        .args(["board", "down", "--json"])
+        .assert()
+        .success();
     let stdout_trustkit = String::from_utf8(assert_trustkit.get_output().stdout.clone()).unwrap();
 
-    assert!(!stdout_trustkit.contains("null"), "trustkit board down contained null");
+    assert!(
+        !stdout_trustkit.contains("null"),
+        "trustkit board down contained null"
+    );
     assert!(stdout_trustkit.contains("\"action\": \"down\""));
 }

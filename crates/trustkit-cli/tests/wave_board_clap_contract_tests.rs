@@ -2,9 +2,7 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use clap::Parser;
-use trustkit_cli::cli_contract::{
-    BoardSubcommand, Cli, Command, WaveSubcommand,
-};
+use trustkit_cli::cli_contract::{BoardSubcommand, Cli, Command, WaveSubcommand};
 
 #[test]
 fn test_task_001_clap_contract_root_board_up() {
@@ -43,8 +41,7 @@ fn test_task_001_clap_contract_root_board_down() {
 
 #[test]
 fn test_task_001_clap_contract_root_board_status() {
-    let cli = Cli::try_parse_from(["tk", "board", "status"])
-        .expect("Should parse tk board status");
+    let cli = Cli::try_parse_from(["tk", "board", "status"]).expect("Should parse tk board status");
 
     assert!(!cli.is_json_mode());
     match cli.command {
@@ -60,8 +57,8 @@ fn test_task_001_clap_contract_root_board_status() {
 
 #[test]
 fn test_task_001_clap_contract_wave_board_subcommands() {
-    let cli = Cli::try_parse_from(["tk", "wave", "board", "up"])
-        .expect("Should parse tk wave board up");
+    let cli =
+        Cli::try_parse_from(["tk", "wave", "board", "up"]).expect("Should parse tk wave board up");
 
     match cli.command {
         Command::Wave(wave_args) => match wave_args.action {

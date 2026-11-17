@@ -19,17 +19,21 @@ fn test_task_004_wave_board_lifecycle_daemon_full_cycle() {
 
     // 2. Metadata recorded: active
     let meta = WaveBoardMetadata::new(7777, 8888, "2026-11-17T12:00:00Z".to_string());
-    meta.save_to_file(&meta_file).expect("Failed to save metadata");
+    meta.save_to_file(&meta_file)
+        .expect("Failed to save metadata");
 
     let status_running = WaveBoardLifecycleManager::inspect_status(&meta_file);
     assert!(status_running.is_running);
     assert_eq!(status_running.pid, Some(7777));
     assert_eq!(status_running.port, Some(8888));
-    assert_eq!(status_running.url, Some("http://127.0.0.1:8888".to_string()));
+    assert_eq!(
+        status_running.url,
+        Some("http://127.0.0.1:8888".to_string())
+    );
 
     // 3. Graceful shutdown: returns true and removes metadata file
-    let shutdown_success = WaveBoardLifecycleManager::graceful_shutdown(&meta_file)
-        .expect("Shutdown failed");
+    let shutdown_success =
+        WaveBoardLifecycleManager::graceful_shutdown(&meta_file).expect("Shutdown failed");
     assert!(shutdown_success);
     assert!(!meta_file.exists());
 
@@ -39,7 +43,7 @@ fn test_task_004_wave_board_lifecycle_daemon_full_cycle() {
     assert_eq!(status_after.pid, None);
 
     // 5. Subsequent shutdown returns false gracefully
-    let shutdown_repeat = WaveBoardLifecycleManager::graceful_shutdown(&meta_file)
-        .expect("Repeat shutdown failed");
+    let shutdown_repeat =
+        WaveBoardLifecycleManager::graceful_shutdown(&meta_file).expect("Repeat shutdown failed");
     assert!(!shutdown_repeat);
 }

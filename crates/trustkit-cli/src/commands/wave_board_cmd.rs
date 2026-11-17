@@ -18,7 +18,10 @@ use trustkit_orch::wave_board_lifecycle_shutdown::WaveBoardLifecycleManager;
 use trustkit_orch::wave_board_port_allocator::{WaveBoardMetadata, WaveBoardPortAllocator};
 use trustkit_orch::wave_board_server_sse::WaveBoardServerSse;
 
-pub fn execute(subcommand: &BoardSubcommand, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
+pub fn execute(
+    subcommand: &BoardSubcommand,
+    json_mode: bool,
+) -> Result<DomainOutcome, DomainViolation> {
     match subcommand {
         BoardSubcommand::Up(args) => execute_up(args, json_mode),
         BoardSubcommand::Down(args) => execute_down(args, json_mode),
@@ -38,10 +41,11 @@ pub fn execute_up(args: &BoardUpArgs, json_mode: bool) -> Result<DomainOutcome, 
         }
     })?;
 
-    let exe = std::env::current_exe().map_err(|e| DomainViolation::InfrastructureBoundaryFault {
-        subsystem: "wave_board".to_string(),
-        details: format!("Failed determining current binary path: {e}"),
-    })?;
+    let exe =
+        std::env::current_exe().map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "wave_board".to_string(),
+            details: format!("Failed determining current binary path: {e}"),
+        })?;
 
     let child = std::process::Command::new(exe)
         .args(["board", "serve", "--port", &port.to_string()])
@@ -92,7 +96,10 @@ pub fn execute_up(args: &BoardUpArgs, json_mode: bool) -> Result<DomainOutcome, 
     Ok(DomainOutcome::Success)
 }
 
-pub fn execute_down(args: &BoardDownArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
+pub fn execute_down(
+    args: &BoardDownArgs,
+    json_mode: bool,
+) -> Result<DomainOutcome, DomainViolation> {
     let meta_path = Path::new(".trustkit").join("wave-board.json");
 
     if !meta_path.exists() {
@@ -112,9 +119,8 @@ pub fn execute_down(args: &BoardDownArgs, json_mode: bool) -> Result<DomainOutco
         return Ok(DomainOutcome::Success);
     }
 
-    let meta = WaveBoardMetadata::load_from_file(&meta_path).unwrap_or_else(|_| {
-        WaveBoardMetadata::new(0, 0, String::new())
-    });
+    let meta = WaveBoardMetadata::load_from_file(&meta_path)
+        .unwrap_or_else(|_| WaveBoardMetadata::new(0, 0, String::new()));
 
     WaveBoardLifecycleManager::graceful_shutdown(&meta_path).map_err(|e| {
         DomainViolation::InfrastructureBoundaryFault {
@@ -141,7 +147,10 @@ pub fn execute_down(args: &BoardDownArgs, json_mode: bool) -> Result<DomainOutco
     Ok(DomainOutcome::Success)
 }
 
-pub fn execute_status(args: &BoardStatusArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
+pub fn execute_status(
+    args: &BoardStatusArgs,
+    json_mode: bool,
+) -> Result<DomainOutcome, DomainViolation> {
     let meta_path = Path::new(".trustkit").join("wave-board.json");
     let report = WaveBoardLifecycleManager::inspect_status(&meta_path);
 
@@ -150,7 +159,10 @@ pub fn execute_status(args: &BoardStatusArgs, json_mode: bool) -> Result<DomainO
             report.pid.unwrap_or(0),
             report.port.unwrap_or(0),
             report.url.unwrap_or_default(),
-            format!("Wave board daemon is active (uptime: {}s)", report.uptime_seconds),
+            format!(
+                "Wave board daemon is active (uptime: {}s)",
+                report.uptime_seconds
+            ),
             vec![
                 "Open the dashboard URL in your browser".to_string(),
                 "Run 'tk board down' to terminate the session".to_string(),
@@ -166,14 +178,8 @@ pub fn execute_status(args: &BoardStatusArgs, json_mode: bool) -> Result<DomainO
         )
     };
 
-    let response = WaveBoardCliResponse::new(
-        WaveBoardAction::Status,
-        pid,
-        port,
-        url,
-        message,
-        next_steps,
-    );
+    let response =
+        WaveBoardCliResponse::new(WaveBoardAction::Status, pid, port, url, message, next_steps);
 
     if json_mode || args.json {
         println!("{}", response.to_json_output());
@@ -210,12 +216,13 @@ pub fn execute_serve(args: &BoardServeArgs) -> Result<DomainOutcome, DomainViola
             })?;
 
         let server = std::sync::Arc::new(WaveBoardServerSse::new(html));
-        server.serve(listener).await.map_err(|e| {
-            DomainViolation::InfrastructureBoundaryFault {
+        server
+            .serve(listener)
+            .await
+            .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "wave_board".to_string(),
                 details: format!("Wave board server loop error: {e}"),
-            }
-        })
+            })
     })?;
 
     Ok(DomainOutcome::Success)

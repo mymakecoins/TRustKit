@@ -8,7 +8,8 @@ use trustkit_orch::wave_board_http_server::{SseEvent, WaveBoardServerSse};
 
 #[tokio::test]
 async fn test_task_002_wave_board_http_root_serves_html() {
-    let html = "<html><head><title>TRustKit Dashboard</title></head><body><h1>Kanban</h1></body></html>";
+    let html =
+        "<html><head><title>TRustKit Dashboard</title></head><body><h1>Kanban</h1></body></html>";
     let server = Arc::new(WaveBoardServerSse::new(html));
 
     let listener = TcpListener::bind("127.0.0.1:0")
@@ -27,7 +28,10 @@ async fn test_task_002_wave_board_http_root_serves_html() {
         .expect("Failed to connect client");
 
     let req = "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n";
-    client.write_all(req.as_bytes()).await.expect("Write failed");
+    client
+        .write_all(req.as_bytes())
+        .await
+        .expect("Write failed");
 
     let mut buf = vec![0u8; 4096];
     let n = client.read(&mut buf).await.expect("Read failed");
@@ -59,7 +63,10 @@ async fn test_task_002_wave_board_http_events_stream_sse() {
         .expect("Failed to connect client");
 
     let req = "GET /events HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n";
-    client.write_all(req.as_bytes()).await.expect("Write failed");
+    client
+        .write_all(req.as_bytes())
+        .await
+        .expect("Write failed");
 
     let mut buf = [0u8; 1024];
     let n = client.read(&mut buf).await.expect("Read failed");
@@ -100,7 +107,10 @@ async fn test_task_002_wave_board_http_not_found() {
         .expect("Failed to connect client");
 
     let req = "GET /unknown-path HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n";
-    client.write_all(req.as_bytes()).await.expect("Write failed");
+    client
+        .write_all(req.as_bytes())
+        .await
+        .expect("Write failed");
 
     let mut buf = [0u8; 512];
     let n = client.read(&mut buf).await.expect("Read failed");
