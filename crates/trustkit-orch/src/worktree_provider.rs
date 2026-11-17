@@ -155,7 +155,16 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         }
 
         let status_out = self.run_git_cmd(wt_path, &["status", "--porcelain"])?;
-        let is_clean = status_out.trim().is_empty();
+        let is_clean = status_out
+            .lines()
+            .map(|l| l.trim())
+            .filter(|l| !l.is_empty())
+            .filter(|l| {
+                let p = l.split_whitespace().last().unwrap_or("");
+                p != "target" && p != "node_modules"
+            })
+            .count()
+            == 0;
 
         let branch_name = self.run_git_cmd(wt_path, &["rev-parse", "--abbrev-ref", "HEAD"])?;
         let head_commit_sha = self.run_git_cmd(wt_path, &["rev-parse", "HEAD"])?;
