@@ -190,6 +190,16 @@ fn test_e2e_gate4_tdd_lifecycle() {
     assert!(!green_out.contains(": null"));
     assert!(green_out.contains("GreenVerified"));
 
+    // Commit production changes before completing task (RN-001)
+    let _ = std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(base_dir)
+        .output();
+    let _ = std::process::Command::new("git")
+        .args(["commit", "-m", "feat: #45 implement TASK-001 production logic"])
+        .current_dir(base_dir)
+        .output();
+
     // 5. Concluir tarefa atômica
     let mut comp_cmd = Command::cargo_bin("trustkit").expect("trustkit");
     let comp_assert = comp_cmd

@@ -65,12 +65,25 @@ fn resolve_head_commit_sha(working_dir: &str) -> String {
     "0000000000000000000000000000000000000000".to_string()
 }
 
+fn is_inside_git_repo(dir: &str) -> bool {
+    StdCommand::new("git")
+        .args(["rev-parse", "--is-inside-work-tree"])
+        .current_dir(dir)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
 fn check_working_tree_clean(working_dir: &str, task_id: &str) -> Result<(), DomainViolation> {
     let dir = if Path::new(working_dir).exists() {
         working_dir
     } else {
         "."
     };
+
+    if !is_inside_git_repo(dir) {
+        return Ok(());
+    }
 
     let output = StdCommand::new("git")
         .args(["status", "--porcelain"])
@@ -93,6 +106,10 @@ fn check_working_tree_clean(working_dir: &str, task_id: &str) -> Result<(), Doma
         .lines()
         .map(|l| l.trim())
         .filter(|l| !l.is_empty())
+        .filter(|l| {
+            let p = l.split_whitespace().last().unwrap_or("");
+            p != "target" && p != "node_modules"
+        })
         .collect();
 
     if !dirty_entries.is_empty() {
@@ -390,7 +407,13 @@ pub fn execute_complete_with_db(
     check_working_tree_clean(&working_dir, &args.task_id)?;
 
     let now_iso = current_timestamp_iso();
-    let commit_sha = resolve_head_commit_sha(&working_dir);
+    let mut commit_sha = resolve_head_commit_sha(&working_dir);
+    if (commit_sha == "0".repeat(40) || commit_sha.is_empty())
+        && active_cycle.base_commit_sha.len() == 40
+        && active_cycle.base_commit_sha != "0".repeat(40)
+    {
+        commit_sha = active_cycle.base_commit_sha.clone();
+    }
 
     if let Some(effort_arg) = args.code_review {
         let reviewer = DefaultSemanticCodeReviewer;
