@@ -130,37 +130,56 @@ pub fn execute(
             continue;
         }
 
-        let allocation =
-            worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
-        let (worktree_path, branch_name) = match &allocation {
-            WorktreeAllocation::Provisioned {
-                worktree_path,
-                branch_name,
-                base_branch,
-            } => {
-                task.allocate_worktree(worktree_path, branch_name, base_branch)?;
-                (worktree_path.clone(), branch_name.clone())
-            }
+        let worktree_path = match &task.worktree_allocation {
+            WorktreeAllocation::Provisioned { worktree_path, .. } => worktree_path.clone(),
             _ => {
-                return Err(DomainViolation::InfrastructureBoundaryFault {
-                    subsystem: "worktree_allocation".to_string(),
-                    details: format!("Expected provisioned worktree for task {}", task.task_id),
-                });
+                let allocation = worktree_port.provision_worktree(
+                    &cycle.cycle_id,
+                    &task.task_id,
+                    &cycle.work_branch,
+                )?;
+                let (path, branch, base) = match &allocation {
+                    WorktreeAllocation::Provisioned {
+                        worktree_path,
+                        branch_name,
+                        base_branch,
+                    } => {
+                        task.allocate_worktree(worktree_path, branch_name, base_branch)?;
+                        (
+                            worktree_path.clone(),
+                            branch_name.clone(),
+                            base_branch.clone(),
+                        )
+                    }
+                    _ => {
+                        return Err(DomainViolation::InfrastructureBoundaryFault {
+                            subsystem: "worktree_allocation".to_string(),
+                            details: format!(
+                                "Expected provisioned worktree for task {}",
+                                task.task_id
+                            ),
+                        });
+                    }
+                };
+
+                repo.update_task_worktree(
+                    &cycle.cycle_id,
+                    &task.task_id,
+                    &task.worktree_allocation,
+                )?;
+
+                let prov_evidence = ExecutionEvidence::for_worktree_provision(
+                    &cycle.cycle_id,
+                    &task.task_id,
+                    &branch,
+                    &path,
+                    &base,
+                    &req.now_iso,
+                );
+                repo.append_evidence(&prov_evidence)?;
+                path
             }
         };
-
-        repo.update_task_worktree(&cycle.cycle_id, &task.task_id, &task.worktree_allocation)?;
-
-        let prov_evidence = ExecutionEvidence::for_worktree_provision(
-            &cycle.cycle_id,
-            &task.task_id,
-            &branch_name,
-            &worktree_path,
-            &cycle.work_branch,
-            &req.now_iso,
-        );
-        repo.append_evidence(&prov_evidence)?;
-
         let merged_sha = worktree_port.merge_and_prune_worktree(
             &task.task_id,
             &worktree_path,
