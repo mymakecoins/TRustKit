@@ -47,11 +47,36 @@ pub fn execute_up(args: &BoardUpArgs, json_mode: bool) -> Result<DomainOutcome, 
             details: format!("Failed determining current binary path: {e}"),
         })?;
 
-    let child = std::process::Command::new(exe)
-        .args(["board", "serve", "--port", &port.to_string()])
+    let log_file = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open(".trustkit/wave-board.log")
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "wave_board".to_string(),
+            details: format!("Failed opening log file: {e}"),
+        })?;
+    let err_file =
+        log_file
+            .try_clone()
+            .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "wave_board".to_string(),
+                details: format!("Failed cloning log file handle: {e}"),
+            })?;
+
+    let mut cmd = std::process::Command::new(exe);
+    cmd.args(["board", "serve", "--port", &port.to_string()])
         .stdin(std::process::Stdio::null())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
+        .stdout(std::process::Stdio::from(log_file))
+        .stderr(std::process::Stdio::from(err_file));
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.process_group(0);
+    }
+
+    let child = cmd
         .spawn()
         .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
             subsystem: "wave_board".to_string(),
