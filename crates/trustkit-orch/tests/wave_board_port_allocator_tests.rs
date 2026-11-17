@@ -8,20 +8,26 @@ use trustkit_orch::wave_board_port_allocator::{WaveBoardMetadata, WaveBoardPortA
 #[test]
 fn test_task_001_red_phase_contract() {
     // Criterios: "Alocacao Automatica de Porta Livre e Gestao de Metadados"
-    let port = WaveBoardPortAllocator::allocate_free_port().expect("Must allocate free ephemeral port");
+    let port =
+        WaveBoardPortAllocator::allocate_free_port().expect("Must allocate free ephemeral port");
     assert!(port > 0, "Port must be positive non-zero");
 
     let dir = tempdir().expect("Failed to create tempdir");
     let meta_file = dir.path().join("wave-board.json");
-    let metadata = WaveBoardPortAllocator::allocate_and_record_metadata(12345, &meta_file, "2026-11-17T00:00:00Z".to_string())
-        .expect("Must allocate and record metadata");
+    let metadata = WaveBoardPortAllocator::allocate_and_record_metadata(
+        12345,
+        &meta_file,
+        "2026-11-17T00:00:00Z".to_string(),
+    )
+    .expect("Must allocate and record metadata");
 
     assert_eq!(metadata.pid, 12345);
     assert!(metadata.port > 0);
     assert_eq!(metadata.url, format!("http://127.0.0.1:{}", metadata.port));
     assert!(meta_file.exists());
 
-    let loaded = WaveBoardMetadata::load_from_file(&meta_file).expect("Must load metadata from file");
+    let loaded =
+        WaveBoardMetadata::load_from_file(&meta_file).expect("Must load metadata from file");
     assert_eq!(loaded, metadata);
-    assert!(true, "GREEN verified");
+    assert!(meta_file.is_file(), "GREEN verified");
 }

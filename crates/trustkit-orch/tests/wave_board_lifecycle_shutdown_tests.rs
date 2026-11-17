@@ -17,13 +17,17 @@ fn test_task_004_red_phase_contract() {
     assert_eq!(status_before.pid, None);
 
     let meta = WaveBoardMetadata::new(4321, 9090, "2026-11-17T12:00:00Z".to_string());
-    meta.save_to_file(&meta_file).expect("Failed to save metadata");
+    meta.save_to_file(&meta_file)
+        .expect("Failed to save metadata");
 
     let status_running = WaveBoardLifecycleManager::inspect_status(&meta_file);
     assert!(status_running.is_running);
     assert_eq!(status_running.pid, Some(4321));
     assert_eq!(status_running.port, Some(9090));
-    assert_eq!(status_running.url, Some("http://127.0.0.1:9090".to_string()));
+    assert_eq!(
+        status_running.url,
+        Some("http://127.0.0.1:9090".to_string())
+    );
 
     let shutdown_res = WaveBoardLifecycleManager::graceful_shutdown(&meta_file)
         .expect("Failed to shutdown gracefully");
@@ -32,6 +36,5 @@ fn test_task_004_red_phase_contract() {
 
     let status_after = WaveBoardLifecycleManager::inspect_status(&meta_file);
     assert!(!status_after.is_running);
-
-    assert!(true, "GREEN verified");
+    assert!(!meta_file.exists(), "GREEN verified");
 }

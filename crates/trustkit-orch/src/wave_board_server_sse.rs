@@ -19,7 +19,10 @@ impl SseEvent {
     }
 
     pub fn to_sse_frame(&self) -> String {
-        format!("event: {}\ndata: {}\n\n", self.event_type, self.payload_json)
+        format!(
+            "event: {}\ndata: {}\n\n",
+            self.event_type, self.payload_json
+        )
     }
 }
 

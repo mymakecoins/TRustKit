@@ -19,11 +19,13 @@ async fn test_task_002_red_phase_contract() {
     assert!(frame.contains("event: mutation"));
     assert!(frame.contains("data: {\"task_id\":\"TASK-002\",\"status\":\"DONE\"}"));
 
-    let count = server.broadcast(event.clone()).expect("Failed to broadcast SSE event");
+    let count = server
+        .broadcast(event.clone())
+        .expect("Failed to broadcast SSE event");
     assert_eq!(count, 1);
 
     let received = rx.recv().await.expect("Failed to receive SSE event");
     assert_eq!(received, event);
 
-    assert!(true, "GREEN verified");
+    assert!(!event.event_type.is_empty(), "GREEN verified");
 }

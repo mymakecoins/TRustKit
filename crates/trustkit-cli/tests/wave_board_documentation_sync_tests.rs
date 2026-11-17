@@ -11,15 +11,14 @@ fn test_task_006_red_phase_contract() {
     let skill_md = "# trustkit-sdd skill\nRun trustkit wave board down or tk wave board down";
     let invalid_doc = "# Other doc\nno board command here";
 
-    let sources = [
-        ("manual.md", manual_md),
-        ("skill.md", skill_md),
-    ];
+    let sources = [("manual.md", manual_md), ("skill.md", skill_md)];
 
     let missing = WaveBoardDocSyncValidator::audit_document_sources(&sources);
-    assert!(missing.is_empty(), "All documentation sources should be valid");
+    assert!(
+        missing.is_empty(),
+        "All documentation sources should be valid"
+    );
 
     assert!(!WaveBoardDocSyncValidator::verify_content_contains_wave_board_and_tk(invalid_doc));
-
-    assert!(true, "GREEN verified");
+    assert!(missing.is_empty(), "GREEN verified");
 }

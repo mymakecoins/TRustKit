@@ -26,7 +26,11 @@ impl WaveBoardDashboardClient {
     }
 
     pub fn apply_mutation(&mut self, mutation: KanbanCardMutation) {
-        if let Some(pos) = self.active_cards.iter().position(|c| c.task_id == mutation.task_id) {
+        if let Some(pos) = self
+            .active_cards
+            .iter()
+            .position(|c| c.task_id == mutation.task_id)
+        {
             self.active_cards[pos] = mutation;
         } else {
             self.active_cards.push(mutation);

@@ -28,6 +28,5 @@ fn test_task_003_red_phase_contract() {
     let tty = response.to_tty_output();
     assert!(tty.contains("[PASS] Wave Board UP: Daemon started successfully"));
     assert!(tty.contains("NEXT STEP:"));
-
-    assert!(true, "GREEN verified");
+    assert!(!response.url.is_empty(), "GREEN verified");
 }
