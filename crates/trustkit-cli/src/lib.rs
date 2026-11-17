@@ -14,3 +14,4 @@ pub mod milestones_presenter;
 pub mod next_step_presenter;
 pub mod presenter;
 pub mod wave_board_cli_commands;
+pub mod wave_board_documentation_sync;
