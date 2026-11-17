@@ -29,7 +29,7 @@ pub fn execute(
     repo: &dyn CycleEvidenceRepositoryPort,
 ) -> Result<CompleteTaskOutcome, DomainViolation> {
     let trimmed_sha = req.commit_sha.trim();
-    if trimmed_sha.is_empty() || trimmed_sha.len() != 40 || trimmed_sha == "0".repeat(40) {
+    if trimmed_sha.is_empty() || trimmed_sha.chars().all(|c| c == '0') {
         return Err(DomainViolation::TddLifecycleViolation {
             task_id: req.task_id.clone(),
             reason: format!(
