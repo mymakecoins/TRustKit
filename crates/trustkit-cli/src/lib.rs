@@ -13,3 +13,4 @@ pub mod gate_presenter;
 pub mod milestones_presenter;
 pub mod next_step_presenter;
 pub mod presenter;
+pub mod wave_board_cli_commands;
