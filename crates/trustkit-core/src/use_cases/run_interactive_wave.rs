@@ -102,13 +102,14 @@ pub fn execute(
 
         let allocation =
             worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
-        let worktree_path = match &allocation {
+        let (worktree_path, _branch_name) = match &allocation {
             WorktreeAllocation::Provisioned {
                 worktree_path,
                 branch_name,
+                base_branch,
             } => {
-                task.allocate_worktree(worktree_path, branch_name)?;
-                worktree_path.clone()
+                task.allocate_worktree(worktree_path, branch_name, base_branch)?;
+                (worktree_path.clone(), branch_name.clone())
             }
             _ => {
                 return Err(DomainViolation::InfrastructureBoundaryFault {

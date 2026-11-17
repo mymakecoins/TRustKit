@@ -130,6 +130,7 @@ impl WorktreeIsolationPort for MockWorktreeProvider {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: format!(".trustkit/worktrees/{task_id}"),
             branch_name: format!("worktree/{task_id}"),
+            base_branch: "main".to_string(),
         })
     }
 

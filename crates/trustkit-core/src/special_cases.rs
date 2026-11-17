@@ -196,6 +196,7 @@ pub enum WorktreeAllocation {
     Provisioned {
         worktree_path: String,
         branch_name: String,
+        base_branch: String,
     },
     MergedAndPruned {
         commit_sha: String,
@@ -215,15 +216,38 @@ impl WorktreeAllocation {
         matches!(self, Self::MergedAndPruned { .. })
     }
 
+    pub fn worktree_path(&self) -> Option<&str> {
+        match self {
+            Self::Provisioned { worktree_path, .. } => Some(worktree_path.as_str()),
+            _ => None,
+        }
+    }
+
+    pub fn branch_name(&self) -> Option<&str> {
+        match self {
+            Self::Provisioned { branch_name, .. } => Some(branch_name.as_str()),
+            _ => None,
+        }
+    }
+
+    pub fn base_branch(&self) -> Option<&str> {
+        match self {
+            Self::Provisioned { base_branch, .. } => Some(base_branch.as_str()),
+            _ => None,
+        }
+    }
+
     pub fn provision(
         self,
         worktree_path: impl Into<String>,
         branch_name: impl Into<String>,
+        base_branch: impl Into<String>,
     ) -> Result<Self, DomainViolation> {
         match self {
             Self::NotProvisioned => Ok(Self::Provisioned {
                 worktree_path: worktree_path.into(),
                 branch_name: branch_name.into(),
+                base_branch: base_branch.into(),
             }),
             Self::Provisioned { .. } => Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "worktree_allocation".to_string(),

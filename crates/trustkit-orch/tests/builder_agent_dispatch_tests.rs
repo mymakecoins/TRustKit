@@ -152,11 +152,12 @@ impl WorktreeIsolationPort for MockWorktreeProvider {
         &self,
         _cycle_id: &str,
         task_id: &str,
-        _target_branch: &str,
+        target_branch: &str,
     ) -> Result<WorktreeAllocation, DomainViolation> {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: format!("/tmp/worktree-{}", task_id),
             branch_name: format!("worktree/{}", task_id),
+            base_branch: target_branch.to_string(),
         })
     }
     fn check_worktree_status(

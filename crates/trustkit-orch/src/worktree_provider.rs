@@ -139,6 +139,7 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: path_str,
             branch_name,
+            base_branch: base_branch.to_string(),
         })
     }
 
@@ -322,9 +323,11 @@ mod tests {
             WorktreeAllocation::Provisioned {
                 worktree_path,
                 branch_name,
+                base_branch,
             } => {
                 assert!(worktree_path.contains("TASK-001"));
                 assert_eq!(branch_name, "worktree/TASK-001");
+                assert_eq!(base_branch, "main");
                 worktree_path
             }
             _ => panic!("Expected Provisioned allocation"),

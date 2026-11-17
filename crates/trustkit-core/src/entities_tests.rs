@@ -105,7 +105,7 @@ fn test_atomic_task_worktree_allocation_lifecycle() {
 
     assert!(task.worktree_allocation.is_not_provisioned());
     assert!(
-        task.allocate_worktree(".trustkit/worktrees/wt-1", "branch-wt-1")
+        task.allocate_worktree(".trustkit/worktrees/wt-1", "branch-wt-1", "main")
             .is_ok()
     );
     assert!(task.worktree_allocation.is_provisioned());

@@ -49,7 +49,7 @@ fn test_worktree_allocation_lifecycle_transitions() {
     assert!(!initial.is_merged_and_pruned());
 
     let provisioned = initial
-        .provision("/path/to/worktree", "task/TASK-001")
+        .provision("/path/to/worktree", "task/TASK-001", "main")
         .expect("Provisioning should succeed from NotProvisioned");
     assert!(provisioned.is_provisioned());
     assert_eq!(
@@ -57,8 +57,12 @@ fn test_worktree_allocation_lifecycle_transitions() {
         WorktreeAllocation::Provisioned {
             worktree_path: "/path/to/worktree".to_string(),
             branch_name: "task/TASK-001".to_string(),
+            base_branch: "main".to_string(),
         }
     );
+    assert_eq!(provisioned.worktree_path(), Some("/path/to/worktree"));
+    assert_eq!(provisioned.branch_name(), Some("task/TASK-001"));
+    assert_eq!(provisioned.base_branch(), Some("main"));
 
     let merged = provisioned
         .merge_and_prune("abcdef1234567890")
@@ -80,13 +84,14 @@ fn test_worktree_allocation_invalid_transitions() {
     let prov = WorktreeAllocation::Provisioned {
         worktree_path: "/wt".to_string(),
         branch_name: "branch".to_string(),
+        base_branch: "main".to_string(),
     };
-    assert!(prov.clone().provision("/wt2", "branch2").is_err());
+    assert!(prov.clone().provision("/wt2", "branch2", "main").is_err());
 
     let merged = WorktreeAllocation::MergedAndPruned {
         commit_sha: "sha".to_string(),
     };
-    assert!(merged.clone().provision("/wt", "branch").is_err());
+    assert!(merged.clone().provision("/wt", "branch", "main").is_err());
     assert!(merged.clone().merge_and_prune("sha2").is_err());
 }
 
