@@ -157,3 +157,37 @@ fn test_certification_summary_fails_on_critic_failure() {
 
     assert!(!summary.is_fully_certified());
 }
+
+#[test]
+fn test_diagnostic_bug_loop_plan_six_phases_and_validation() {
+    let valid_plan = DiagnosticBugLoopPlan {
+        red_loop_command: "cargo test -p trustkit-core test_fail".to_string(),
+        minimized_repro: "Isolated unit test reproducing state mismatch".to_string(),
+        hypotheses: vec![
+            "Hypothesis 1: WAL lock contention".to_string(),
+            "Hypothesis 2: Stale BLAKE3 digest".to_string(),
+            "Hypothesis 3: Unsorted task DAG".to_string(),
+        ],
+        debug_tag_prefix: "[DEBUG-a4f2]".to_string(),
+        seam_fix_strategy: "Fix state transition in domain entity seam".to_string(),
+        cleanup_steps: vec![
+            "Remove [DEBUG-a4f2] instrumentation logs".to_string(),
+            "Re-run full workspace test suite".to_string(),
+        ],
+    };
+
+    assert_eq!(valid_plan.phase_count(), 6);
+    assert!(valid_plan.validate().is_ok());
+
+    let invalid_hypotheses_plan = DiagnosticBugLoopPlan {
+        hypotheses: vec!["Only one".to_string()],
+        ..valid_plan.clone()
+    };
+    assert!(invalid_hypotheses_plan.validate().is_err());
+
+    let invalid_tag_plan = DiagnosticBugLoopPlan {
+        debug_tag_prefix: "LOG-1234".to_string(),
+        ..valid_plan
+    };
+    assert!(invalid_tag_plan.validate().is_err());
+}

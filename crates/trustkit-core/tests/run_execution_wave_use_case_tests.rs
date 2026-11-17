@@ -107,6 +107,7 @@ impl WorktreeIsolationPort for MockWorktreePort {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: path,
             branch_name: format!("worktree/{}", task_id),
+            base_branch: "main".to_string(),
         })
     }
 
@@ -252,4 +253,41 @@ fn test_commit_message_validation_nominal_and_violations() {
     assert!(validate_commit_message("wip commit").is_err());
     assert!(validate_commit_message("feat: sem numero de issue").is_err());
     assert!(validate_commit_message("foo: #45 tipo invalido").is_err());
+}
+
+#[test]
+fn test_wave_execution_is_idempotent_when_task_already_merged() {
+    let frozen = SpecLockState::Frozen {
+        spec_path: "specs/004/spec.md".to_string(),
+        blake3_digest: "hash".to_string(),
+    };
+    let mut task1 = build_task("TASK-001", 1);
+    task1.worktree_allocation = WorktreeAllocation::MergedAndPruned {
+        commit_sha: "commit_abc123".to_string(),
+    };
+    let task2 = build_task("TASK-002", 1);
+
+    let repo = InMemoryWaveRepo {
+        cycle: Mutex::new(Some(build_cycle(frozen))),
+        tasks: Mutex::new(vec![task1, task2]),
+        evidences: Mutex::new(vec![]),
+    };
+    let worktree_port = MockWorktreePort {
+        provisioned_paths: Mutex::new(vec![]),
+        merged_paths: Mutex::new(vec![]),
+    };
+
+    let req = RunExecutionWaveRequest {
+        cycle_id: "cycle-wave-1".to_string(),
+        wave_index: 1,
+        now_iso: "2026-10-28T12:00:00Z".to_string(),
+    };
+
+    let outcome = run_execution_wave::execute(req, &repo, &worktree_port)
+        .expect("wave execution should succeed even if one task is already merged");
+
+    assert_eq!(outcome.tasks_executed.len(), 2);
+    // Only task2 should have been provisioned and merged
+    assert_eq!(worktree_port.provisioned_paths.lock().unwrap().len(), 1);
+    assert_eq!(worktree_port.merged_paths.lock().unwrap().len(), 1);
 }

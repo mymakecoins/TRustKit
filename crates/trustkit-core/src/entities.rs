@@ -3,16 +3,24 @@
 // Constitutional Principle VI: Ubiquitous Language & Focused Modular Clean Code (< 250 LOC).
 
 pub use crate::ast_entities::*;
+pub use crate::dual_axis_entities::*;
+pub use crate::dual_axis_scope_creep::*;
 use crate::errors::DomainViolation;
 pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
+pub use crate::glossary_entities::*;
 pub use crate::graph_entities::*;
+pub mod harness_retro_engine {
+    pub use crate::harness_retro_engine::*;
+}
+pub use crate::harness_retro_engine::HarnessRetroEngine;
 pub use crate::knowledge_entities::*;
 pub use crate::milestone_entities::*;
 pub use crate::next_step_guidance::*;
 pub use crate::osc7501_encoder::*;
 pub use crate::semantic_review_entities::*;
 pub use crate::spec_entities::*;
+pub use crate::spec_prompt_builder::*;
 pub use crate::spec_scaffold_entities::*;
 pub use crate::special_cases::{CircuitBreakerState, SpecLockState, WorktreeAllocation};
 use crate::special_cases::{IssueLinkage, TddLifecycleState};
@@ -165,11 +173,12 @@ impl AtomicTask {
         &mut self,
         worktree_path: impl Into<String>,
         branch_name: impl Into<String>,
+        base_branch: impl Into<String>,
     ) -> Result<(), DomainViolation> {
-        self.worktree_allocation = self
-            .worktree_allocation
-            .clone()
-            .provision(worktree_path, branch_name)?;
+        self.worktree_allocation =
+            self.worktree_allocation
+                .clone()
+                .provision(worktree_path, branch_name, base_branch)?;
         Ok(())
     }
 

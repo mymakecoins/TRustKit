@@ -7,10 +7,10 @@ use crate::cli_contract::{
     HookSubcommand, SpecArgs, SpecSubcommand, WaveArgs, WaveSubcommand,
 };
 use crate::commands::{
-    audit_security_cmd, auto_cmd, context_slice_cmd, doctor_cmd, done_cmd, gauntlet_ast_audit_cmd,
-    gauntlet_run_cmd, graph_cmd, hook_cmd, init_cmd, mcp_cmd, memory_cmd, merge_cmd,
-    milestones_cmd, pr_cmd, spec_init_cmd, spec_lint_cmd, spec_lock_cmd, spec_prompt_cmd,
-    status_cmd, task_cmd, wave_plan_cmd, wave_run_cmd,
+    audit_security_cmd, auto_cmd, close_cmd, context_slice_cmd, doctor_cmd, done_cmd,
+    gauntlet_ast_audit_cmd, gauntlet_run_cmd, graph_cmd, hook_cmd, init_cmd, mcp_cmd, memory_cmd,
+    merge_cmd, milestones_cmd, pr_cmd, spec_init_cmd, spec_lint_cmd, spec_lock_cmd,
+    spec_prompt_cmd, status_cmd, task_cmd, wave_plan_cmd, wave_run_cmd,
 };
 use crate::error_handler::DomainOutcome;
 use std::path::Path;
@@ -52,6 +52,7 @@ impl FastSyncBootstrap {
             Command::Task(args) => task_cmd::execute(args, json_mode),
             Command::Doctor(args) => doctor_cmd::execute(args, json_mode),
             Command::Done(args) => done_cmd::execute(args, json_mode),
+            Command::Close(args) => close_cmd::execute(args, json_mode),
             Command::Merge(args) => merge_cmd::execute(args, json_mode),
             Command::Pr(args) => pr_cmd::execute(args, json_mode),
             Command::Mcp(args) => mcp_cmd::execute(args, json_mode),
@@ -128,6 +129,7 @@ impl FullConcurrentBootstrap {
             }) => gauntlet_run_cmd::execute(args, json_mode),
             Command::Doctor(args) => doctor_cmd::execute(args, json_mode),
             Command::Done(args) => done_cmd::execute(args, json_mode),
+            Command::Close(args) => close_cmd::execute(args, json_mode),
             Command::Merge(args) => merge_cmd::execute(args, json_mode),
             Command::Pr(args) => pr_cmd::execute(args, json_mode),
             Command::Mcp(args) => mcp_cmd::execute(args, json_mode),
@@ -164,6 +166,7 @@ pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
         })
         | Command::Doctor(_)
         | Command::Done(_)
+        | Command::Close(_)
         | Command::Merge(_)
         | Command::Pr(_)
         | Command::Mcp(_) => FullConcurrentBootstrap::dispatch(cli),

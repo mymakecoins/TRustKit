@@ -76,6 +76,28 @@ impl NextStepResolver {
         ]
     }
 
+    pub fn for_close(target_branch: &str) -> Vec<NextStepRecommendation> {
+        let branch = if target_branch.trim().is_empty() {
+            "develop"
+        } else {
+            target_branch
+        };
+        vec![
+            NextStepRecommendation::new(
+                NextStepPriority::Primary,
+                "GATE-6",
+                format!("trustkit pr --target {branch}"),
+                "Open Pull Request on demand if required by repository governance.",
+            ),
+            NextStepRecommendation::new(
+                NextStepPriority::Secondary,
+                "GATE-0",
+                "trustkit init --issue <ISSUE_ID>",
+                "Start the next SDD cycle when ready.",
+            ),
+        ]
+    }
+
     pub fn for_merge(target_branch: &str) -> Vec<NextStepRecommendation> {
         let branch = if target_branch.trim().is_empty() {
             "develop"
@@ -213,12 +235,21 @@ impl NextStepResolver {
             .iter()
             .find(|t| t.tdd_lifecycle_state.is_awaiting_red())
         {
-            if pending_task.worktree_allocation.is_provisioned() {
+            let target_desc = if pending_task.target_test_file.trim().is_empty() {
+                "target_test_file".to_string()
+            } else {
+                pending_task.target_test_file.clone()
+            };
+            if pending_task.worktree_allocation.is_provisioned()
+                || pending_task.worktree_allocation.is_merged_and_pruned()
+            {
                 return vec![NextStepRecommendation::new(
                     NextStepPriority::Primary,
                     "GATE-4",
                     format!("trustkit task test {} --phase red", pending_task.task_id),
-                    "Record failing RED test evidence for the provisioned atomic task.",
+                    format!(
+                        "Author failing test assertion in {target_desc} before running task test --phase red."
+                    ),
                 )];
             }
             return vec![
@@ -235,7 +266,9 @@ impl NextStepResolver {
                     NextStepPriority::Secondary,
                     "GATE-4",
                     format!("trustkit task test {} --phase red", pending_task.task_id),
-                    "Record failing RED test evidence for the pending atomic task.",
+                    format!(
+                        "Author failing test assertion in {target_desc} before running task test --phase red."
+                    ),
                 ),
             ];
         }
@@ -243,3 +276,7 @@ impl NextStepResolver {
         Self::for_all_waves_completed()
     }
 }
+
+#[cfg(test)]
+#[path = "next_step_status_policy_tests.rs"]
+mod tests;

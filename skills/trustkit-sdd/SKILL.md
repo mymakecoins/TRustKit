@@ -1,7 +1,7 @@
 ---
 name: trustkit-sdd
 description: Governanca deterministica de Spec-Driven Development (SDD), isolamento de Git Worktrees e Gauntlet V2 em Rust nativo.
-compatibility: Requer o binario estatico trustkit disponivel no PATH ou workspace.
+compatibility: Requer o binario estatico trustkit (ou seu alias `tk`) disponivel no PATH ou workspace.
 metadata:
   version: 4.2.0
   architecture: Hybrid Rust Core + Thin Skill
@@ -9,7 +9,7 @@ metadata:
 
 # Thin Skill Declarativa: TRustKit SDD (v4.2)
 
-Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD, resolucao contextual de proximos passos e transicoes de Gates ao binario nativo `trustkit`.
+Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD, resolucao contextual de proximos passos e transicoes de Gates ao binario nativo `trustkit` (ou pelo alias `tk` oficial e equivalente). Todos os comandos documentados abaixo podem ser invocados indistintamente via `trustkit` ou `tk` (ex: `tk status`, `tk wave run`, `tk task test`, `tk doctor`).
 
 ## Invariantes Obrigatorios
 
@@ -45,8 +45,8 @@ Caso o usuario retome uma sessao sem saber o estado atual, execute `trustkit sta
 
 ## Jornada dos Gates
 
-### Modo Autonomo Unificado (Gates 0 ao 6)
-Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais:
+### Modo Autonomo Unificado (Gates 0 ao 6 - v2.2)
+Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais. O motor v2.2 atomiza tarefas a partir da especificacao ou issue se `tasks/` nao existir, dispara disjuntor `EmptyTaskBacklogFault` para especificacoes vazias, sintetiza scaffolds RED compilaveis e realiza merge seguro:
 ```bash
 # Execucao autonoma a partir de issue remota
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] --json
@@ -85,10 +85,11 @@ trustkit spec lock [--spec <CAMINHO_SPEC>] --json
 ```
 
 ### Gate 3: Tarefas Atomicas e Planejamento de Ondas
-Elabore as tarefas atomicas em `tasks/TASK-NNN.md` e planeje o DAG de ondas paralelas:
+Elabore as tarefas atomicas em `tasks/TASK-NNN.md` (ou permita que `trustkit auto` atomize a partir da Matriz de Rastreabilidade ou da Issue) e planeje o DAG de ondas paralelas:
 ```bash
 trustkit wave plan --json
 ```
+Nota de Governanca: se o backlog de tarefas atomicas resultar vazio no Gate 3, o disjuntor `EmptyTaskBacklogFault` bloqueia imediatamente o ciclo com exit code 1.
 
 ### Gate 4: Execucao em Git Worktrees, Multiplexacao de Terminais e TDD Estrito
 Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (multiplexador PTY ou nativo) e garanta as fases TDD:
@@ -96,11 +97,18 @@ Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (mul
 # Executa a onda com isolamento de worktree e runtime de terminais (auto, pty, native)
 trustkit wave run --wave <WAVE_INDEX> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] --json
 
-# Registra a fase RED (falha obrigatoria comprovada)
+# Autoria RED: redigir e adicionar a assercao do teste falhando em target_test_file antes de validar a fase RED
+
+# Registra a fase RED (falha obrigatoria comprovada por assercao de dominio, rejeitando ZeroFilteredTests e CompilationFailure)
 trustkit task test <TASK_ID> --phase red --json
+
+# Implementa o codigo de producao minimo para satisfazer a especificacao
 
 # Registra a fase GREEN (sucesso obrigatorio comprovado)
 trustkit task test <TASK_ID> --phase green --json
+
+# Realiza revisao semantica estrita de codigo (Dual-Axis: Standards/Smells e Spec Compliance)
+trustkit task review <TASK_ID> [--effort high|medium|low] --json
 
 # Conclui a tarefa atomica
 trustkit task complete <TASK_ID> --json

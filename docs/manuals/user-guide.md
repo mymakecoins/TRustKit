@@ -113,9 +113,15 @@ trustkit status --json
 
 ---
 
-## 4. Modo Autonomo de Ponta a Ponta (`trustkit auto`)
+## 4. Modo Autonomo de Ponta a Ponta (`trustkit auto` v2.2)
 
-Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando `trustkit auto`, capaz de conduzir todo o fluxo do Gate 0 ao Gate 6:
+Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando unificado `trustkit auto`. A versao 2.2 incorpora motor de atomizacao deterministica, protecao por Circuit Breaker contra backlogs vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
+
+- **Atomizacao Automatica (Gate 3):** Se o diretorio `tasks/` nao existir, o motor extrai da Matriz de Rastreabilidade (`spec.md`) ou da issue remota (`IssueBodyAtomizer`) as tarefas `tasks/TASK-NNN.md` no disco e no SQLite WAL.
+- **Circuit Breaker contra Ciclo Vazio (`EmptyTaskBacklogFault`):** Aborta a transicao para o Gate 4 com exit code 1 caso a especificacao resulte em zero tarefas executaveis.
+- **Scaffolding de Teste RED (`RedTestScaffolder`):** Sintetiza esqueletos de teste compilaveis na worktree, rejeitando filtros vazios (`ZeroFilteredTestsFault`) e mascaramento de erros de compilacao (`CompilationFailureInRedPhaseFault`).
+- **Builder Agent Dispatcher:** Despacha agentes construtores entre as fases RED e GREEN com isolamento de `CARGO_TARGET_DIR`.
+- **Merge Acumulativo Seguro (`SafeWorktreeMerge`):** Integra tarefas concorrentes da mesma onda sem executar `git branch -f` destrutivo, preservando todo o historico de commits.
 
 ```bash
 # Execucao autonoma a partir de issue remota
@@ -261,14 +267,17 @@ trustkit memory reindex
 
 ## 8. Inteligencia de Grafo Estrutural (`trustkit graph`)
 
-Analisa as dependencias de codigo e wiki via Tree-Sitter, calculando acoplamento aferente/eferente e detectando God Nodes:
+Analisa as dependencias de codigo e wiki via Tree-Sitter, calculando acoplamento aferente/eferente, detectando God Nodes, avaliando a profundidade de modulos (Deep Modules vs ShallowPassThrough pelo Deletion Test) e classificando costuras (`RealSeam` vs `HypotheticalSeam`):
 
 ```bash
 # Constroi ou atualiza o grafo com protecao Shrink-Guard
 trustkit graph build
 
-# Diagnostica a saude arquitetural e localiza God Nodes
+# Diagnostica a saude arquitetural, God Nodes, shallow_modules (Deletion Test) e seam_classifications
 trustkit graph health --top-god-nodes 10
+
+# Gera 3 briefings arquiteturais contrastantes (Design It Twice) no Gate 1
+trustkit spec prompt --idea "Nova porta de dominio" --design-it-twice --json
 
 # Calcula o menor caminho de acoplamento entre dois simbolos (BFS)
 trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db::SqliteWalRepositoryAdapter"
@@ -280,7 +289,7 @@ trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db
 
 | Comando | Descricao |
 | :--- | :--- |
-| `trustkit auto` | Executa o ciclo SDD completo de forma autonoma (Gates 0 a 6). |
+| `trustkit auto` | Executa o ciclo SDD de forma autonoma (Gates 0 a 6) com atomizacao, disjuntor e merge seguro. |
 | `trustkit milestones plan` | Decompoe PRD e ADR em marcos aciclicos com citacoes exatas de linhas. |
 | `trustkit milestones list` | Lista todos os marcos planejados e persistidos no banco WAL. |
 | `trustkit milestones inspect` | Inspeciona capacidades, restricoes e citacoes de um marco. |

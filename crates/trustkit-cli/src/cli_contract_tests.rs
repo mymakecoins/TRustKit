@@ -112,7 +112,7 @@ fn test_parse_merge_and_pr() {
     assert_eq!(
         cli_merge.command,
         Command::Merge(MergeArgs {
-            target: "develop".to_string(),
+            target: Some("develop".to_string()),
             json: false
         })
     );

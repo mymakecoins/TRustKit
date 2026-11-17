@@ -225,3 +225,51 @@ fn test_all_docs_and_manuals_document_contextual_next_step_guidance() {
         assert_zero_ai_trailers(rel_path, &content);
     }
 }
+
+#[test]
+fn test_all_docs_and_manuals_document_auto_v2_capabilities() {
+    let root = workspace_root();
+
+    let auto_docs = [
+        "README.md",
+        "README.en.md",
+        "docs/manual/MANUAL_DO_USUARIO.md",
+        "docs/manual/manual.html",
+        "docs/manuals/user-guide.md",
+        "docs/manuals/user-guide.html",
+        "skills/trustkit-sdd/SKILL.md",
+        ".agents/skills/trustkit-sdd/SKILL.md",
+    ];
+
+    for rel_path in auto_docs {
+        let full_path = root.join(rel_path);
+        assert!(full_path.exists(), "{rel_path} must exist");
+        let content = fs::read_to_string(&full_path).expect("Failed to read doc file");
+        assert!(
+            content.contains("EmptyTaskBacklogFault"),
+            "{rel_path} must document EmptyTaskBacklogFault circuit breaker"
+        );
+        assert_zero_emojis(rel_path, &content);
+        assert_zero_ai_trailers(rel_path, &content);
+    }
+
+    let tdd_fault_docs = [
+        "README.md",
+        "README.en.md",
+        "docs/manual/MANUAL_DO_USUARIO.md",
+        "docs/manual/manual.html",
+    ];
+
+    for rel_path in tdd_fault_docs {
+        let full_path = root.join(rel_path);
+        let content = fs::read_to_string(&full_path).expect("Failed to read doc file");
+        assert!(
+            content.contains("ZeroFilteredTestsFault"),
+            "{rel_path} must document ZeroFilteredTestsFault"
+        );
+        assert!(
+            content.contains("CompilationFailureInRedPhaseFault"),
+            "{rel_path} must document CompilationFailureInRedPhaseFault"
+        );
+    }
+}

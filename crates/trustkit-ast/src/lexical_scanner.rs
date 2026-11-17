@@ -56,6 +56,16 @@ impl InvariantLexicalScanner {
                     });
                 }
             }
+
+            // 4. Residual debug probe scan (RN-002, RF-002)
+            const DEBUG_PROBE_PREFIX: &str = concat!("[", "DEBUG", "-");
+            if line.contains(DEBUG_PROBE_PREFIX) {
+                violations.push(AstViolation::ResidualDebugProbe {
+                    file_path: file_path.to_string(),
+                    line: line_num,
+                    probe: line.trim().to_string(),
+                });
+            }
         }
 
         violations

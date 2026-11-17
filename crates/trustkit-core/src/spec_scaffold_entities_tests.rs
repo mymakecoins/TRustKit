@@ -65,3 +65,37 @@ fn test_spec_scaffold_system_instructions_and_token_estimation() {
     let est = SpecScaffoldTemplate::estimate_tokens("12345678");
     assert_eq!(est, 2);
 }
+
+#[test]
+fn test_design_it_twice_briefs_generates_three_contrasting_architectures_without_null() {
+    let req = SpecPromptRequest::new("Motor de indexacao incremental de grafos", 2, 4000)
+        .expect("valid request")
+        .with_design_it_twice(true);
+    assert!(req.design_it_twice);
+
+    let briefs = SpecScaffoldTemplate::generate_design_it_twice_briefs(&req.idea);
+    assert_eq!(briefs.len(), 3);
+
+    let strategies: Vec<&str> = briefs.iter().map(|b| b.strategy.as_str()).collect();
+    assert_eq!(
+        strategies,
+        vec![
+            "Minimizacao de Interface",
+            "Maxima Flexibilidade",
+            "Otimizacao para o Chamador Comum",
+        ]
+    );
+
+    for brief in &briefs {
+        assert!(!brief.brief_id.is_empty());
+        assert!(!brief.strategy_name.is_empty());
+        assert!(!brief.design_constraint.is_empty());
+        assert!(!brief.target_seam_focus.is_empty());
+        assert!(brief.subagent_prompt.contains(&req.idea));
+        assert!(!brief.expected_tradeoffs.is_empty());
+        let json = brief.to_json();
+        assert!(!json.contains("null"));
+        assert!(json.contains(&brief.brief_id));
+        assert!(json.contains(brief.strategy.as_str()));
+    }
+}

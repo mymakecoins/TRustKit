@@ -41,7 +41,7 @@ flowchart LR
 
 | Regra Negocio | Requisito Funcional | Tarefa | No Mermaid | Teste Unitario / Integracao | Evidencia / Verificacao |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| RN-001 | RF-001 | TASK-001 | Gate0 | crates/trustkit-cli/tests/e2e_auto_lifecycle.rs | EV-004-lifecycle.json |
+| RN-001 | RF-001 | TASK-001 | Gate0 | tests/e2e_auto_lifecycle.rs | EV-004-lifecycle.json |
 "#;
 
 fn init_git_repo(path: &Path) {
@@ -56,8 +56,22 @@ fn init_git_repo(path: &Path) {
     run(&["init", "-b", "main"]);
     run(&["config", "user.email", "dev@example.com"]);
     run(&["config", "user.name", "Dev Tester"]);
+    fs::create_dir_all(path.join("src")).expect("create src");
+    fs::write(
+        path.join("Cargo.toml"),
+        r#"[package]
+name = "dummy-app"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+"#,
+    )
+    .expect("write Cargo.toml");
+    fs::write(path.join("src").join("lib.rs"), "pub fn ok() {}\n").expect("write lib.rs");
     fs::write(path.join("README.md"), "# Repo Autonomo\n").expect("write readme");
-    run(&["add", "README.md"]);
+    run(&["add", "."]);
     run(&["commit", "-m", "chore: #10 initial commit"]);
     run(&["branch", "develop"]);
 }

@@ -139,6 +139,7 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: path_str,
             branch_name,
+            base_branch: base_branch.to_string(),
         })
     }
 
@@ -155,7 +156,16 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         }
 
         let status_out = self.run_git_cmd(wt_path, &["status", "--porcelain"])?;
-        let is_clean = status_out.trim().is_empty();
+        let is_clean = status_out
+            .lines()
+            .map(|l| l.trim())
+            .filter(|l| !l.is_empty())
+            .filter(|l| {
+                let p = l.split_whitespace().last().unwrap_or("");
+                p != "target" && p != "node_modules"
+            })
+            .count()
+            == 0;
 
         let branch_name = self.run_git_cmd(wt_path, &["rev-parse", "--abbrev-ref", "HEAD"])?;
         let head_commit_sha = self.run_git_cmd(wt_path, &["rev-parse", "HEAD"])?;
@@ -170,12 +180,22 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
 
     fn merge_and_prune_worktree(
         &self,
-        _task_id: &str,
+        task_id: &str,
         worktree_path: &str,
         target_branch: &str,
     ) -> Result<String, DomainViolation> {
         let wt_path = Path::new(worktree_path);
-        let worktree_head = if wt_path.exists() {
+        let mut worktree_head = if wt_path.exists() {
+            let status = self.check_worktree_status(worktree_path)?;
+            if !status.is_clean {
+                return Err(DomainViolation::InfrastructureBoundaryFault {
+                    subsystem: "worktree_provider".to_string(),
+                    details: format!(
+                        "Cannot merge worktree for task '{}': worktree has uncommitted changes (RN-002)",
+                        task_id
+                    ),
+                });
+            }
             self.run_git_cmd(wt_path, &["rev-parse", "HEAD"])?
         } else {
             return Err(DomainViolation::InfrastructureBoundaryFault {
@@ -184,17 +204,73 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
             });
         };
 
-        // Determine current checked out branch on repo_root
-        let current_branch =
-            self.run_git_cmd(&self.repo_root, &["rev-parse", "--abbrev-ref", "HEAD"])?;
-        if current_branch == target_branch {
-            let _ = self.run_git_cmd(&self.repo_root, &["merge", "--no-edit", &worktree_head]);
-        } else {
-            // Update the target branch reference directly if not currently checked out
-            let _ = self.run_git_cmd(
-                &self.repo_root,
-                &["branch", "-f", target_branch, &worktree_head],
-            );
+        let target_sha = self.run_git_cmd(&self.repo_root, &["rev-parse", target_branch])?;
+
+        let is_wt_ancestor = self
+            .run_git_cmd(
+                wt_path,
+                &["merge-base", "--is-ancestor", &worktree_head, &target_sha],
+            )
+            .is_ok();
+
+        if !is_wt_ancestor {
+            let is_target_ancestor = self
+                .run_git_cmd(
+                    wt_path,
+                    &["merge-base", "--is-ancestor", &target_sha, &worktree_head],
+                )
+                .is_ok();
+
+            if !is_target_ancestor {
+                // Divergence: accumulate changes by merging target_branch into worktree
+                let merge_res = self.run_git_cmd(wt_path, &["merge", "--no-edit", &target_sha]);
+                if let Err(e) = merge_res {
+                    let _ = self.run_git_cmd(wt_path, &["merge", "--abort"]);
+                    return Err(DomainViolation::InfrastructureBoundaryFault {
+                        subsystem: "worktree_provider".to_string(),
+                        details: format!(
+                            "Merge conflict or failure integrating target branch '{}' into worktree for task {}: {}",
+                            target_branch, task_id, e
+                        ),
+                    });
+                }
+                worktree_head = self.run_git_cmd(wt_path, &["rev-parse", "HEAD"])?;
+            }
+
+            let current_branch =
+                self.run_git_cmd(&self.repo_root, &["rev-parse", "--abbrev-ref", "HEAD"])?;
+            if current_branch == target_branch {
+                let merge_res =
+                    self.run_git_cmd(&self.repo_root, &["merge", "--ff-only", &worktree_head]);
+                if let Err(e) = merge_res {
+                    return Err(DomainViolation::InfrastructureBoundaryFault {
+                        subsystem: "worktree_provider".to_string(),
+                        details: format!(
+                            "Fast-forward merge of task {} into checked-out target branch '{}' failed: {}",
+                            task_id, target_branch, e
+                        ),
+                    });
+                }
+            } else {
+                let update_res = self.run_git_cmd(
+                    &self.repo_root,
+                    &[
+                        "update-ref",
+                        &format!("refs/heads/{}", target_branch),
+                        &worktree_head,
+                        &target_sha,
+                    ],
+                );
+                if let Err(e) = update_res {
+                    return Err(DomainViolation::InfrastructureBoundaryFault {
+                        subsystem: "worktree_provider".to_string(),
+                        details: format!(
+                            "Accumulative ref update for target branch '{}' failed for task {}: {}",
+                            target_branch, task_id, e
+                        ),
+                    });
+                }
+            }
         }
 
         let merged_sha = self.run_git_cmd(&self.repo_root, &["rev-parse", target_branch])?;
@@ -266,9 +342,11 @@ mod tests {
             WorktreeAllocation::Provisioned {
                 worktree_path,
                 branch_name,
+                base_branch,
             } => {
                 assert!(worktree_path.contains("TASK-001"));
                 assert_eq!(branch_name, "worktree/TASK-001");
+                assert_eq!(base_branch, "main");
                 worktree_path
             }
             _ => panic!("Expected Provisioned allocation"),

@@ -26,11 +26,23 @@ pub enum DomainViolation {
         subsystem: String,
         details: String,
     },
+    EmptyTaskBacklogFault {
+        cycle_id: String,
+        reason: String,
+    },
     SpecOrTraceabilityIncomplete {
         reason: String,
         missing_artefact: String,
     },
     TddLifecycleViolation {
+        task_id: String,
+        reason: String,
+    },
+    ZeroFilteredTestsFault {
+        task_id: String,
+        reason: String,
+    },
+    CompilationFailureInRedPhaseFault {
         task_id: String,
         reason: String,
     },
@@ -67,15 +79,16 @@ pub enum DomainViolation {
 impl DomainViolation {
     pub const fn exit_category(&self) -> ExitCodeCategory {
         match self {
-            Self::InfrastructureBoundaryFault { .. } => {
+            Self::InfrastructureBoundaryFault { .. } | Self::EmptyTaskBacklogFault { .. } => {
                 ExitCodeCategory::InfrastructureBoundaryFault
             }
             Self::SpecOrTraceabilityIncomplete { .. } | Self::MissingBusinessRules { .. } => {
                 ExitCodeCategory::SpecOrTraceabilityIncomplete
             }
-            Self::TddLifecycleViolation { .. } | Self::TraceabilityGap { .. } => {
-                ExitCodeCategory::TddLifecycleViolation
-            }
+            Self::TddLifecycleViolation { .. }
+            | Self::ZeroFilteredTestsFault { .. }
+            | Self::CompilationFailureInRedPhaseFault { .. }
+            | Self::TraceabilityGap { .. } => ExitCodeCategory::TddLifecycleViolation,
             Self::AstIntegrityOrInvariantViolation { .. } | Self::CycleDetected { .. } => {
                 ExitCodeCategory::AstIntegrityOrInvariantViolation
             }
@@ -97,6 +110,9 @@ impl fmt::Display for DomainViolation {
             Self::InfrastructureBoundaryFault { subsystem, details } => {
                 write!(f, "[FAULT:{subsystem}] {details}")
             }
+            Self::EmptyTaskBacklogFault { cycle_id, reason } => {
+                write!(f, "[EMPTY_TASK_BACKLOG:{cycle_id}] {reason}")
+            }
             Self::SpecOrTraceabilityIncomplete {
                 reason,
                 missing_artefact,
@@ -108,6 +124,12 @@ impl fmt::Display for DomainViolation {
             }
             Self::TddLifecycleViolation { task_id, reason } => {
                 write!(f, "[TDD_VIOLATION:{task_id}] {reason}")
+            }
+            Self::ZeroFilteredTestsFault { task_id, reason } => {
+                write!(f, "[ZERO_FILTERED_TESTS:{task_id}] {reason}")
+            }
+            Self::CompilationFailureInRedPhaseFault { task_id, reason } => {
+                write!(f, "[COMPILATION_FAILURE_IN_RED:{task_id}] {reason}")
             }
             Self::AstIntegrityOrInvariantViolation {
                 invariant_id,
@@ -165,76 +187,5 @@ impl fmt::Display for DomainViolation {
 impl std::error::Error for DomainViolation {}
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_posix_exit_code_mapping() {
-        let fault = DomainViolation::InfrastructureBoundaryFault {
-            subsystem: "sqlite".to_string(),
-            details: "busy".to_string(),
-        };
-        assert_eq!(fault.posix_exit_code(), 1);
-
-        let spec_inc = DomainViolation::SpecOrTraceabilityIncomplete {
-            reason: "Missing Gherkin".to_string(),
-            missing_artefact: "spec.md".to_string(),
-        };
-        assert_eq!(spec_inc.posix_exit_code(), 2);
-
-        let missing_rules = DomainViolation::MissingBusinessRules {
-            file_path: "prd.md".to_string(),
-            details: "No RN found".to_string(),
-        };
-        assert_eq!(missing_rules.posix_exit_code(), 2);
-
-        let tdd = DomainViolation::TddLifecycleViolation {
-            task_id: "TASK-001".to_string(),
-            reason: "No red evidence".to_string(),
-        };
-        assert_eq!(tdd.posix_exit_code(), 3);
-
-        let gap = DomainViolation::TraceabilityGap {
-            orphan_rule: "RN-002".to_string(),
-            message: "Orphan rule without task".to_string(),
-        };
-        assert_eq!(gap.posix_exit_code(), 3);
-
-        let invariant = DomainViolation::AstIntegrityOrInvariantViolation {
-            invariant_id: "RN-006".to_string(),
-            intercepted_command: "git add .".to_string(),
-            reason: "Sweeping add forbidden".to_string(),
-            remediation: "Add explicit files".to_string(),
-        };
-        assert_eq!(invariant.posix_exit_code(), 4);
-
-        let cycle = DomainViolation::CycleDetected {
-            cycle_path: vec!["T1".into(), "T2".into(), "T1".into()],
-            message: "Cycle".to_string(),
-        };
-        assert_eq!(cycle.posix_exit_code(), 4);
-
-        let critic = DomainViolation::CriticSwarmOrPlaywrightFailed {
-            layer: "E2E".to_string(),
-            attempt: 2,
-            failure_summary: "Timeout".to_string(),
-        };
-        assert_eq!(critic.posix_exit_code(), 5);
-
-        let cb = DomainViolation::CircuitBreakerTripped {
-            cycle_id: "cycle-1".to_string(),
-            consecutive_failures: 5,
-            remediation: "Human review".to_string(),
-        };
-        assert_eq!(cb.posix_exit_code(), 6);
-    }
-
-    #[test]
-    fn test_error_display() {
-        let err = DomainViolation::TddLifecycleViolation {
-            task_id: "TASK-005".to_string(),
-            reason: "Green before Red".to_string(),
-        };
-        assert!(format!("{err}").contains("TASK-005"));
-    }
-}
+#[path = "errors_tests.rs"]
+mod tests;

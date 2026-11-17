@@ -173,6 +173,9 @@ fn test_mcp_tools_list_exposes_all_knowledge_tools_with_schemas() {
         "trustkit_knowledge_read",
         "trustkit_knowledge_write",
         "trustkit_knowledge_rebuild",
+        "trustkit_knowledge_glossary_add",
+        "trustkit_knowledge_glossary_list",
+        "trustkit_knowledge_adr_check",
     ] {
         let found = tools
             .iter()
@@ -289,4 +292,194 @@ fn test_mcp_knowledge_write_read_search_and_rebuild_roundtrip() {
     assert_eq!(rebuild_payload["outcome"], "REBUILT");
     assert_eq!(rebuild_payload["notes_restored"], 1);
     assert_eq!(rebuild_payload["links_restored"], 1);
+}
+
+#[test]
+fn test_cli_memory_glossary_add_and_list() {
+    let tmp = TempDir::new().expect("create tempdir");
+
+    let add_out = Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args([
+            "memory",
+            "glossary",
+            "add",
+            "--term",
+            "Ciclo SDD",
+            "--definition",
+            "Processo estruturado de especificacao e testes",
+            "--reject",
+            "sessao avulsa,sprint ia",
+            "--json",
+        ])
+        .output()
+        .expect("run memory glossary add");
+
+    assert!(
+        add_out.status.success(),
+        "memory glossary add should exit 0"
+    );
+    let add_stdout = String::from_utf8(add_out.stdout).expect("utf8 stdout");
+    assert!(!add_stdout.contains("null"), "JSON must be null-free");
+    let add_json: Value = serde_json::from_str(&add_stdout).expect("valid json");
+    assert_eq!(add_json["verdict"], "PASS");
+    assert_eq!(add_json["outcome"], "SUCCESS");
+    assert_eq!(add_json["entry"]["term"], "Ciclo SDD");
+    assert!(tmp.path().join(".trustkit/wiki/glossary.md").exists());
+
+    let list_out = Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args(["memory", "glossary", "list", "--json"])
+        .output()
+        .expect("run memory glossary list");
+
+    assert!(
+        list_out.status.success(),
+        "memory glossary list should exit 0"
+    );
+    let list_stdout = String::from_utf8(list_out.stdout).expect("utf8 stdout");
+    assert!(!list_stdout.contains("null"), "JSON must be null-free");
+    let list_json: Value = serde_json::from_str(&list_stdout).expect("valid json");
+    assert_eq!(list_json["verdict"], "PASS");
+    assert_eq!(list_json["total"], 1);
+}
+
+#[test]
+fn test_cli_memory_adr_check_evaluation() {
+    let tmp = TempDir::new().expect("create tempdir");
+
+    let approve_out = Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args([
+            "memory",
+            "adr-check",
+            "--title",
+            "Estrategia WAL",
+            "--context",
+            "Persistencia segura SQLite",
+            "--hard-to-reverse",
+            "--surprising",
+            "--tradeoff",
+            "--json",
+        ])
+        .output()
+        .expect("run memory adr-check");
+
+    assert!(
+        approve_out.status.success(),
+        "adr-check approve should exit 0"
+    );
+    let approve_stdout = String::from_utf8(approve_out.stdout).expect("utf8 stdout");
+    assert!(!approve_stdout.contains("null"), "JSON must be null-free");
+    let approve_json: Value = serde_json::from_str(&approve_stdout).expect("valid json");
+    assert_eq!(approve_json["verdict"], "PASS");
+    assert_eq!(approve_json["assessment"]["verdict"], "ApproveAdr");
+
+    let skip_out = Command::cargo_bin("trustkit")
+        .expect("trustkit binary")
+        .current_dir(tmp.path())
+        .args([
+            "memory",
+            "adr-check",
+            "--title",
+            "Formatacao de Codigo",
+            "--context",
+            "Estilo de tabulacao",
+            "--json",
+        ])
+        .output()
+        .expect("run memory adr-check skip");
+
+    assert!(skip_out.status.success(), "adr-check skip should exit 0");
+    let skip_stdout = String::from_utf8(skip_out.stdout).expect("utf8 stdout");
+    assert!(!skip_stdout.contains("null"), "JSON must be null-free");
+    let skip_json: Value = serde_json::from_str(&skip_stdout).expect("valid json");
+    assert_eq!(skip_json["verdict"], "PASS");
+    assert_eq!(skip_json["assessment"]["verdict"], "SkipAdr");
+}
+
+#[test]
+fn test_mcp_knowledge_glossary_and_adr_triage_tools() {
+    let tmp = TempDir::new().expect("create tempdir");
+    let repo = KnowledgeWikiFsRepository::open_from_root(tmp.path()).expect("open knowledge repo");
+    let server = McpServer::with_knowledge_repo(Arc::new(repo));
+
+    // 1. trustkit_knowledge_glossary_add
+    let add_req = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        id: Some(json!(10)),
+        method: "tools/call".to_string(),
+        params: Some(json!({
+            "name": "trustkit_knowledge_glossary_add",
+            "arguments": {
+                "term": "Linguagem Ubiqua",
+                "definition": "Vocabulario canonico compartilhado entre especialistas e desenvolvedores",
+                "rejected_synonyms": ["jargao", "sinonimo vago"]
+            }
+        })),
+    };
+    let add_res = server
+        .handle_request(&add_req)
+        .expect("glossary add")
+        .result
+        .expect("result");
+    assert_eq!(add_res["isError"], false);
+    let add_text = add_res["content"][0]["text"].as_str().expect("text");
+    assert!(!add_text.contains("null"));
+    let add_payload: Value = serde_json::from_str(add_text).expect("payload");
+    assert_eq!(add_payload["outcome"], "SUCCESS");
+    assert_eq!(add_payload["entry"]["term"], "Linguagem Ubiqua");
+
+    // 2. trustkit_knowledge_glossary_list
+    let list_req = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        id: Some(json!(11)),
+        method: "tools/call".to_string(),
+        params: Some(json!({
+            "name": "trustkit_knowledge_glossary_list",
+            "arguments": {}
+        })),
+    };
+    let list_res = server
+        .handle_request(&list_req)
+        .expect("glossary list")
+        .result
+        .expect("result");
+    assert_eq!(list_res["isError"], false);
+    let list_text = list_res["content"][0]["text"].as_str().expect("text");
+    assert!(!list_text.contains("null"));
+    let list_payload: Value = serde_json::from_str(list_text).expect("payload");
+    assert_eq!(list_payload["outcome"], "RESULTS");
+    assert_eq!(list_payload["total"], 1);
+
+    // 3. trustkit_knowledge_adr_check
+    let adr_req = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        id: Some(json!(12)),
+        method: "tools/call".to_string(),
+        params: Some(json!({
+            "name": "trustkit_knowledge_adr_check",
+            "arguments": {
+                "title": "Decisao de Arquitetura",
+                "context": "Contexto critico",
+                "is_hard_to_reverse": true,
+                "is_surprising_without_context": true,
+                "has_genuine_alternatives_tradeoff": true
+            }
+        })),
+    };
+    let adr_res = server
+        .handle_request(&adr_req)
+        .expect("adr check")
+        .result
+        .expect("result");
+    assert_eq!(adr_res["isError"], false);
+    let adr_text = adr_res["content"][0]["text"].as_str().expect("text");
+    assert!(!adr_text.contains("null"));
+    let adr_payload: Value = serde_json::from_str(adr_text).expect("payload");
+    assert_eq!(adr_payload["outcome"], "ApproveAdr");
+    assert_eq!(adr_payload["assessment"]["verdict"], "ApproveAdr");
 }

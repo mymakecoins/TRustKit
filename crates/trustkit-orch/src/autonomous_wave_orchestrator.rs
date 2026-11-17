@@ -11,8 +11,8 @@ use trustkit_core::entities::{
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{
-    AsyncExecutionSupervisorPort, CycleEvidenceRepositoryPort, SemanticCodeReviewerPort,
-    WorktreeIsolationPort,
+    AsyncExecutionSupervisorPort, BuilderAgentDispatcherPort, CycleEvidenceRepositoryPort,
+    SemanticCodeReviewerPort, WorktreeIsolationPort,
 };
 use trustkit_core::special_cases::WorktreeAllocation;
 use trustkit_core::use_cases::complete_task::{self, CompleteTaskRequest};
@@ -52,6 +52,7 @@ pub struct MultiWaveDependencies<'a> {
     pub worktree_port: &'a dyn WorktreeIsolationPort,
     pub supervisor: &'a dyn AsyncExecutionSupervisorPort,
     pub reviewer: &'a dyn SemanticCodeReviewerPort,
+    pub builder_dispatcher: Option<&'a dyn BuilderAgentDispatcherPort>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -83,11 +84,37 @@ impl AutonomousWaveOrchestrator {
     fn resolve_test_args(target_test_file: &str, task_id: &str) -> Vec<String> {
         if !target_test_file.is_empty() {
             let path = Path::new(target_test_file);
+            let pkg = if target_test_file.starts_with("crates/") {
+                path.iter().nth(1).and_then(|s| s.to_str())
+            } else {
+                None
+            };
             if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
-                if target_test_file.contains("/tests/") || target_test_file.starts_with("tests/") {
-                    return vec!["test".to_string(), "--test".to_string(), stem.to_string()];
+                let mut args = vec!["test".to_string()];
+                if let Some(p) = pkg {
+                    args.push("-p".to_string());
+                    args.push(p.to_string());
                 }
-                return vec!["test".to_string(), "--".to_string(), stem.replace('-', "_")];
+                if target_test_file.contains("/tests/") || target_test_file.starts_with("tests/") {
+                    args.push("--test".to_string());
+                    args.push(stem.to_string());
+                } else if target_test_file.contains("/src/") || target_test_file.starts_with("src/")
+                {
+                    args.push("--lib".to_string());
+                    let filter = stem
+                        .trim_end_matches("_tests")
+                        .trim_end_matches("_test")
+                        .replace('-', "_");
+                    args.push(if filter.is_empty() {
+                        stem.replace('-', "_")
+                    } else {
+                        filter
+                    });
+                } else {
+                    args.push("--".to_string());
+                    args.push(stem.replace('-', "_"));
+                }
+                return args;
             }
         }
         vec![
@@ -149,6 +176,16 @@ impl AutonomousWaveOrchestrator {
                     .unwrap_or(task.clone());
 
                 if !current_task.tdd_lifecycle_state.is_red_verified() {
+                    let target = trustkit_ast::ScaffoldingTarget {
+                        task_id: task.task_id.clone(),
+                        target_test_file: task.target_test_file.clone(),
+                        criteria_summary: task.title.clone(),
+                    };
+                    let _ = trustkit_ast::RedTestScaffolder::scaffold(
+                        Path::new(&worktree_path),
+                        &target,
+                    );
+
                     let red_req = RecordTddPhaseRequest {
                         cycle_id: req.cycle_id.to_string(),
                         task_id: task.task_id.clone(),
@@ -160,6 +197,17 @@ impl AutonomousWaveOrchestrator {
                         now_iso: req.now_iso.to_string(),
                     };
                     record_tdd_phase::execute(red_req, deps.repo, deps.supervisor)?;
+                }
+
+                // Step 1.5: Dispatch Builder Agent between RED and GREEN (TASK-007 / RF-007)
+                if let Some(dispatcher) = deps.builder_dispatcher {
+                    dispatcher.dispatch_builder_in_worktree(
+                        req.cycle_id,
+                        &task.task_id,
+                        &worktree_path,
+                        &task.target_test_file,
+                        &task.expected_files,
+                    )?;
                 }
 
                 // Step 2: GREEN phase
@@ -184,6 +232,35 @@ impl AutonomousWaveOrchestrator {
                     now_iso: req.now_iso.to_string(),
                 };
                 review_task_code::execute(review_req, deps.repo, deps.reviewer)?;
+
+                // Step 3.5: Commit verified task changes in worktree before merge (RN-001/RN-002)
+                let status_out = std::process::Command::new("git")
+                    .args(["status", "--porcelain"])
+                    .current_dir(&worktree_path)
+                    .output();
+                if let Ok(out) = status_out {
+                    let s = String::from_utf8_lossy(&out.stdout);
+                    let has_changes =
+                        s.lines()
+                            .map(|l| l.trim())
+                            .filter(|l| !l.is_empty())
+                            .any(|l| {
+                                let p = l.split_whitespace().last().unwrap_or("");
+                                p != "target" && p != "node_modules"
+                            });
+                    if has_changes {
+                        let _ = std::process::Command::new("git")
+                            .args(["add", "."])
+                            .current_dir(&worktree_path)
+                            .output();
+                        let issue_num = req.cycle_id.split('-').nth(1).unwrap_or("0");
+                        let msg = format!("feat: #{issue_num} implement {}", task.task_id);
+                        let _ = std::process::Command::new("git")
+                            .args(["commit", "-m", &msg])
+                            .current_dir(&worktree_path)
+                            .output();
+                    }
+                }
 
                 // Step 4: Merge and Complete
                 let merged_sha = deps.worktree_port.merge_and_prune_worktree(

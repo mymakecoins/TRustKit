@@ -197,22 +197,22 @@ fn test_save_atomic_tasks_advances_gate_3() {
         .save_cycle(&mock_cycle("wave-test-cycle", GateStage::Gate2SpecSealed))
         .unwrap();
 
-    let t1 = TaskNode {
-        task_id: "TASK-001".to_string(),
-        title: "Domain entity".to_string(),
-        architectural_layer: "CORE".to_string(),
-        depends_on: vec![],
-        expected_files: vec!["crates/trustkit-core/src/entities.rs".to_string()],
-        target_test_file: "tests/entity.rs".to_string(),
-    };
-    let t2 = TaskNode {
-        task_id: "TASK-002".to_string(),
-        title: "Database adapter".to_string(),
-        architectural_layer: "DB".to_string(),
-        depends_on: vec!["TASK-001".to_string()],
-        expected_files: vec!["crates/trustkit-db/src/sqlite_adapter.rs".to_string()],
-        target_test_file: "tests/db.rs".to_string(),
-    };
+    let t1 = TaskNode::new(
+        "TASK-001".to_string(),
+        "Domain entity".to_string(),
+        "CORE".to_string(),
+        vec![],
+        vec!["crates/trustkit-core/src/entities.rs".to_string()],
+        "tests/entity.rs".to_string(),
+    );
+    let t2 = TaskNode::new(
+        "TASK-002".to_string(),
+        "Database adapter".to_string(),
+        "DB".to_string(),
+        vec!["TASK-001".to_string()],
+        vec!["crates/trustkit-db/src/sqlite_adapter.rs".to_string()],
+        "tests/db.rs".to_string(),
+    );
     let schedule = WaveSchedule {
         cycle_id: "wave-test-cycle".to_string(),
         total_tasks: 2,
@@ -243,5 +243,27 @@ fn test_save_atomic_tasks_advances_gate_3() {
             assert_eq!(active.current_gate, GateStage::Gate3WavePlanned)
         }
         _ => panic!("Expected active cycle at gate 3"),
+    }
+}
+
+#[test]
+fn test_find_active_cycle_prioritizes_active_over_merged() {
+    let adapter = create_test_adapter("priority_test");
+    let mut c_merged = mock_cycle("cycle-merged", GateStage::Gate6Certified);
+    c_merged.lifecycle_status = CycleStatus::Merged;
+    c_merged.created_at = "2026-11-12T10:00:00Z".to_string();
+
+    let mut c_active = mock_cycle("cycle-active", GateStage::Gate1SpecDrafting);
+    c_active.lifecycle_status = CycleStatus::Active;
+    c_active.created_at = "2026-11-12T09:00:00Z".to_string();
+
+    adapter.save_cycle(&c_active).unwrap();
+    adapter.save_cycle(&c_merged).unwrap();
+
+    match adapter.find_active_cycle().unwrap() {
+        ActiveCycleLookup::Found(found) => {
+            assert_eq!(found.cycle_id, "cycle-active");
+        }
+        _ => panic!("Expected active cycle to be found over merged cycle"),
     }
 }

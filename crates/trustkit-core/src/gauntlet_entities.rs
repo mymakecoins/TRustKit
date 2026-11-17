@@ -169,6 +169,139 @@ impl CertificationSummary {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DiagnosticBugLoopPlan {
+    pub red_loop_command: String,
+    pub minimized_repro: String,
+    pub hypotheses: Vec<String>,
+    pub debug_tag_prefix: String,
+    pub seam_fix_strategy: String,
+    pub cleanup_steps: Vec<String>,
+}
+
+impl DiagnosticBugLoopPlan {
+    pub const fn phase_count(&self) -> usize {
+        6
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        if self.red_loop_command.trim().is_empty() {
+            return Err("red_loop_command cannot be empty".to_string());
+        }
+        if self.minimized_repro.trim().is_empty() {
+            return Err("minimized_repro cannot be empty".to_string());
+        }
+        if self.hypotheses.len() < 3 || self.hypotheses.len() > 5 {
+            return Err("hypotheses count must be between 3 and 5".to_string());
+        }
+        if !self.debug_tag_prefix.starts_with("[DEBUG-") || !self.debug_tag_prefix.ends_with(']') {
+            return Err("debug_tag_prefix must match [DEBUG-xxxx]".to_string());
+        }
+        if self.seam_fix_strategy.trim().is_empty() {
+            return Err("seam_fix_strategy cannot be empty".to_string());
+        }
+        if self.cleanup_steps.is_empty() {
+            return Err("cleanup_steps cannot be empty".to_string());
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MergeDangerClassification {
+    OneWayDoor,
+    TwoWayDoor,
+}
+
+impl MergeDangerClassification {
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::OneWayDoor => "OneWayDoor",
+            Self::TwoWayDoor => "TwoWayDoor",
+        }
+    }
+
+    pub const fn is_one_way(&self) -> bool {
+        matches!(self, Self::OneWayDoor)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum BlastRadiusLevel {
+    Isolated,
+    ModuleLocal,
+    CrossCrate,
+    SystemWide,
+}
+
+impl BlastRadiusLevel {
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Isolated => "Isolated",
+            Self::ModuleLocal => "ModuleLocal",
+            Self::CrossCrate => "CrossCrate",
+            Self::SystemWide => "SystemWide",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MergeDangerAssessment {
+    pub classification: MergeDangerClassification,
+    pub blast_radius: BlastRadiusLevel,
+    pub reason: String,
+    pub affected_files: Vec<String>,
+}
+
+impl MergeDangerAssessment {
+    pub fn to_markdown_section(&self) -> String {
+        format!(
+            "## Merge Danger\n\n- Classification: {}\n- Blast Radius: {}\n- Details: {}\n- Files Evaluated: {}",
+            self.classification.as_str(),
+            self.blast_radius.as_str(),
+            self.reason,
+            self.affected_files.len()
+        )
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HarnessRetroItem {
+    pub category: String,
+    pub severity: String,
+    pub recommendation: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HarnessRetroReport {
+    pub cycle_id: String,
+    pub items: Vec<HarnessRetroItem>,
+}
+
+impl HarnessRetroReport {
+    pub fn new(cycle_id: impl Into<String>, items: Vec<HarnessRetroItem>) -> Self {
+        Self {
+            cycle_id: cycle_id.into(),
+            items,
+        }
+    }
+
+    pub fn to_markdown_section(&self) -> String {
+        let mut section = String::from("## Retrospectiva de Harness\n\n");
+        if self.items.is_empty() {
+            section.push_str("- Nenhuma oportunidade de melhoria identificada no ciclo.\n");
+        } else {
+            for item in &self.items {
+                section.push_str(&format!(
+                    "- [{}] {}: {}\n",
+                    item.severity, item.category, item.recommendation
+                ));
+            }
+        }
+        section
+    }
+}
+
 #[cfg(test)]
 #[path = "gauntlet_entities_tests.rs"]
 mod tests;

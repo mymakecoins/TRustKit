@@ -5,9 +5,12 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
-use crate::entities::{ContextSliceRequest, KnowledgeSearchOutcome, KnowledgeSearchQuery};
+use crate::entities::{
+    ContextSliceRequest, GlossaryEntry, KnowledgeSearchOutcome, KnowledgeSearchQuery,
+};
 use crate::errors::DomainViolation;
 use crate::ports::{ContextSlicerPort, KnowledgeRepositoryPort};
+use crate::spec_prompt_builder::SpecPromptBuilder;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WikiSnippet {
@@ -60,6 +63,7 @@ impl ComposeSpecContextRequest {
 pub struct ComposeSpecContextOutcome {
     pub wiki_articles: Vec<WikiSnippet>,
     pub ast_slices: Vec<AstSliceSnippet>,
+    pub ubiquitous_glossary: Vec<GlossaryEntry>,
     pub aggregated_context: String,
 }
 
@@ -129,9 +133,20 @@ pub fn execute(
         }
     }
 
+    let glossary = knowledge_repo.load_glossary()?;
+    let mut ubiquitous_glossary = Vec::new();
+    if !glossary.entries.is_empty() {
+        if !summary.ends_with("\n\n") {
+            summary.push('\n');
+        }
+        summary.push_str(&SpecPromptBuilder::format_glossary_guidance(&glossary));
+        ubiquitous_glossary = glossary.entries;
+    }
+
     Ok(ComposeSpecContextOutcome {
         wiki_articles,
         ast_slices,
+        ubiquitous_glossary,
         aggregated_context: summary,
     })
 }

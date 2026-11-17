@@ -28,6 +28,11 @@ pub enum AstViolation {
         file_path: String,
         line: usize,
     },
+    ResidualDebugProbe {
+        file_path: String,
+        line: usize,
+        probe: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -61,6 +66,71 @@ pub struct ContextSliceResult {
     pub sliced_content: String,
     pub preserved_symbols: Vec<String>,
     pub total_lines: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TaskSliceKind {
+    VerticalTracerBullet,
+    WideRefactorExpand,
+    WideRefactorMigrateBatch,
+    WideRefactorContract,
+}
+
+impl TaskSliceKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::VerticalTracerBullet => "VERTICAL_TRACER_BULLET",
+            Self::WideRefactorExpand => "WIDE_REFACTOR_EXPAND",
+            Self::WideRefactorMigrateBatch => "WIDE_REFACTOR_MIGRATE_BATCH",
+            Self::WideRefactorContract => "WIDE_REFACTOR_CONTRACT",
+        }
+    }
+
+    pub fn from_str_loose(s: &str) -> Self {
+        match s.trim().to_uppercase().as_str() {
+            "WIDE_REFACTOR_EXPAND" | "EXPAND" => Self::WideRefactorExpand,
+            "WIDE_REFACTOR_MIGRATE_BATCH" | "MIGRATE" | "MIGRATE_BATCH" => {
+                Self::WideRefactorMigrateBatch
+            }
+            "WIDE_REFACTOR_CONTRACT" | "CONTRACT" => Self::WideRefactorContract,
+            _ => Self::VerticalTracerBullet,
+        }
+    }
+
+    pub fn is_wide_refactor(&self) -> bool {
+        !matches!(self, Self::VerticalTracerBullet)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskBlastRadiusReport {
+    pub task_id: String,
+    pub slice_kind: TaskSliceKind,
+    pub blast_radius_score: u32,
+    pub in_degree: usize,
+    pub touched_high_degree_nodes: Vec<String>,
+}
+
+impl TaskBlastRadiusReport {
+    pub fn new(
+        task_id: String,
+        slice_kind: TaskSliceKind,
+        blast_radius_score: u32,
+        in_degree: usize,
+        touched_high_degree_nodes: Vec<String>,
+    ) -> Self {
+        Self {
+            task_id,
+            slice_kind,
+            blast_radius_score,
+            in_degree,
+            touched_high_degree_nodes,
+        }
+    }
+
+    pub fn is_high_risk(&self) -> bool {
+        self.blast_radius_score >= 8 || self.in_degree >= 8
+    }
 }
 
 #[cfg(test)]

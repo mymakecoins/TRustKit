@@ -45,6 +45,7 @@ fn test_spec_prompt_execution_dual_mode_without_null() {
         idea: "Motor de busca deterministico".to_string(),
         context_hops: 2,
         budget: 4000,
+        design_it_twice: false,
         json: true,
     };
 

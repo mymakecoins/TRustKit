@@ -12,6 +12,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command as StdCommand;
 use tempfile::tempdir;
+use trustkit_cli::e2e_gates_4_to_6::Gate6ReportConsolidator;
 use trustkit_core::entities::{
     CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
 };
@@ -188,6 +189,20 @@ fn test_e2e_gate4_tdd_lifecycle() {
     let green_out = String::from_utf8(green_assert.get_output().stdout.clone()).unwrap();
     assert!(!green_out.contains(": null"));
     assert!(green_out.contains("GreenVerified"));
+
+    // Commit production changes before completing task (RN-001)
+    let _ = std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(base_dir)
+        .output();
+    let _ = std::process::Command::new("git")
+        .args([
+            "commit",
+            "-m",
+            "feat: #45 implement TASK-001 production logic",
+        ])
+        .current_dir(base_dir)
+        .output();
 
     // 5. Concluir tarefa atômica
     let mut comp_cmd = Command::cargo_bin("trustkit").expect("trustkit");
@@ -416,4 +431,114 @@ fn test_e2e_semantic_failure_exit_codes() {
         .assert()
         .failure()
         .code(4);
+}
+
+#[test]
+fn test_e2e_gate6_gauntlet_report_and_pr_contain_merge_danger_and_retro() {
+    let dir = tempdir().expect("tempdir");
+    let base_dir = dir.path();
+    let (cycle_id, spec_dir) = bootstrap_cycle_and_spec(base_dir);
+
+    let db_path = base_dir.join(".trustkit/state.db");
+    let repo = SqliteWalRepositoryAdapter::open(&db_path).expect("open db");
+
+    let ev_fail = ExecutionEvidence {
+        evidence_id: 0,
+        cycle_id: cycle_id.clone(),
+        gate_stage: GateStage::Gate5GauntletCleared,
+        gauntlet_attempt: 1,
+        actor_role: "CRITIC:AST_AUDIT".to_string(),
+        evidence_kind: EvidenceKind::AstAudit,
+        executed_command: "trustkit gauntlet ast-audit".to_string(),
+        exit_code: 1,
+        duration_ms: 15,
+        sanitized_stdout_tail: "Violation".to_string(),
+        sanitized_stderr_tail: "".to_string(),
+        output_blake3_digest: "0".repeat(64),
+        verdict: GateVerdict::Fail,
+        recorded_at: "2026-10-28T00:00:00Z".to_string(),
+    };
+    repo.append_evidence(&ev_fail).expect("append fail");
+
+    let ast_ev = ExecutionEvidence {
+        evidence_id: 0,
+        cycle_id: cycle_id.clone(),
+        gate_stage: GateStage::Gate5GauntletCleared,
+        gauntlet_attempt: 0,
+        actor_role: "AUDITOR:AST_LAYER0".to_string(),
+        evidence_kind: EvidenceKind::AstAudit,
+        executed_command: "trustkit gauntlet ast-audit".to_string(),
+        exit_code: 0,
+        duration_ms: 10,
+        sanitized_stdout_tail: "PASS".to_string(),
+        sanitized_stderr_tail: "".to_string(),
+        output_blake3_digest: "a".repeat(64),
+        verdict: GateVerdict::Pass,
+        recorded_at: "2026-10-28T00:00:01Z".to_string(),
+    };
+    repo.append_evidence(&ast_ev).expect("append ast evidence");
+
+    for kind in [
+        CriticKind::DomainAdversarial,
+        CriticKind::ContractCompliance,
+        CriticKind::StaticSecurity,
+        CriticKind::PlaywrightVisual,
+    ] {
+        let ev = ExecutionEvidence {
+            evidence_id: 0,
+            cycle_id: cycle_id.clone(),
+            gate_stage: GateStage::Gate5GauntletCleared,
+            gauntlet_attempt: 0,
+            actor_role: format!("CRITIC:{}", kind.as_str()),
+            evidence_kind: EvidenceKind::CriticVerdict,
+            executed_command: format!("critic {}", kind.as_str()),
+            exit_code: 0,
+            duration_ms: 12,
+            sanitized_stdout_tail: "PASS".to_string(),
+            sanitized_stderr_tail: "".to_string(),
+            output_blake3_digest: "b".repeat(64),
+            verdict: GateVerdict::Pass,
+            recorded_at: "2026-10-28T00:01:00Z".to_string(),
+        };
+        repo.append_evidence(&ev).expect("append critic");
+    }
+
+    let mut done_cmd = Command::cargo_bin("trustkit").expect("trustkit");
+    let done_assert = done_cmd
+        .current_dir(base_dir)
+        .args(["done", "--json"])
+        .assert()
+        .success()
+        .code(0);
+    let done_out = String::from_utf8(done_assert.get_output().stdout.clone()).unwrap();
+    assert!(!done_out.contains(": null"));
+
+    let report_file = spec_dir.join("gauntlet-report.md");
+    assert!(report_file.exists());
+    let report_content = fs::read_to_string(&report_file).unwrap();
+
+    Gate6ReportConsolidator::verify_report_integrity(&report_content)
+        .expect("report integrity verified");
+
+    assert!(
+        report_content.contains("## Merge Danger"),
+        "gauntlet-report.md deve conter a secao ## Merge Danger"
+    );
+    assert!(
+        report_content.contains("## Retrospectiva de Harness"),
+        "gauntlet-report.md deve conter a secao ## Retrospectiva de Harness"
+    );
+
+    assert!(
+        !report_content.contains("Co-Authored-By"),
+        "gauntlet-report.md nao pode conter trailers de IA"
+    );
+    assert!(
+        !report_content.contains("Generated-by"),
+        "gauntlet-report.md nao pode conter trailers de IA"
+    );
+    assert!(
+        report_content.is_ascii(),
+        "gauntlet-report.md deve estar em ASCII puro"
+    );
 }

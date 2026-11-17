@@ -4,8 +4,27 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use crate::next_step_presenter::{JsonNextStep, NextStepPresenter};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use trustkit_core::entities::{NextStepResolver, TddPhase};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct WorktreeProvisionInfo {
+    pub task_id: String,
+    pub branch_name: String,
+    pub worktree_path: String,
+    pub base_branch: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct JsonDesignItTwiceBrief {
+    pub brief_id: String,
+    pub strategy_code: String,
+    pub strategy_name: String,
+    pub design_constraint: String,
+    pub target_seam_focus: String,
+    pub subagent_prompt: String,
+    pub expected_tradeoffs: String,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct JsonSpecPromptResponse {
@@ -15,6 +34,10 @@ pub struct JsonSpecPromptResponse {
     pub system_instructions: String,
     pub scaffold_markdown: String,
     pub context_summary: String,
+    #[serde(default)]
+    pub design_it_twice: bool,
+    #[serde(default)]
+    pub design_it_twice_briefs: Vec<JsonDesignItTwiceBrief>,
     #[serde(default)]
     pub next_steps: Vec<JsonNextStep>,
 }
@@ -60,7 +83,7 @@ pub struct JsonTaskCompleteResponse {
     pub next_steps: Vec<JsonNextStep>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonWaveRunResponse {
     pub verdict: String,
     pub wave_index: u32,
@@ -70,6 +93,8 @@ pub struct JsonWaveRunResponse {
     pub duration_ms: u64,
     #[serde(default)]
     pub runtime_used: String,
+    #[serde(default)]
+    pub provisioned_worktrees: Vec<WorktreeProvisionInfo>,
     #[serde(default)]
     pub next_steps: Vec<JsonNextStep>,
 }
@@ -107,6 +132,15 @@ pub struct JsonDoneResponse {
     pub gate: String,
     pub report_file: String,
     pub issue_comment: String,
+    #[serde(default)]
+    pub next_steps: Vec<JsonNextStep>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct JsonCloseResponse {
+    pub verdict: String,
+    pub cycle_id: String,
+    pub board_column: String,
     #[serde(default)]
     pub next_steps: Vec<JsonNextStep>,
 }
@@ -204,6 +238,16 @@ impl GatePresenter {
         }
     }
 
+    pub fn render_worktree_provision_notification(
+        branch_name: &str,
+        worktree_path: &str,
+        base_branch: &str,
+    ) -> String {
+        format!(
+            "[INFO] Branch '{branch_name}' criada com sucesso.\n[INFO] Checkout realizado no diretorio isolado: {worktree_path}\n[INFO] Branch ativa do repositorio raiz preservada: '{base_branch}'"
+        )
+    }
+
     pub fn render_wave_run(res: &JsonWaveRunResponse, json_mode: bool) -> String {
         let first_pending = res.successful_tasks.first().map(String::as_str);
         let steps = Self::ensure_steps(
@@ -213,16 +257,50 @@ impl GatePresenter {
         if json_mode {
             let mut payload = res.clone();
             payload.next_steps = steps;
+            if payload.provisioned_worktrees.is_empty() && !payload.successful_tasks.is_empty() {
+                payload.provisioned_worktrees = payload
+                    .successful_tasks
+                    .iter()
+                    .map(|id| WorktreeProvisionInfo {
+                        task_id: id.clone(),
+                        branch_name: format!("worktree/{id}"),
+                        worktree_path: format!(".trustkit/worktrees/{id}"),
+                        base_branch: "develop".to_string(),
+                    })
+                    .collect();
+            }
             serde_json::to_string(&payload).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
-            let mut out = format!(
+            let mut out = String::new();
+            let wts = if res.provisioned_worktrees.is_empty() {
+                res.successful_tasks
+                    .iter()
+                    .map(|id| WorktreeProvisionInfo {
+                        task_id: id.clone(),
+                        branch_name: format!("worktree/{id}"),
+                        worktree_path: format!(".trustkit/worktrees/{id}"),
+                        base_branch: "develop".to_string(),
+                    })
+                    .collect()
+            } else {
+                res.provisioned_worktrees.clone()
+            };
+            for wt in &wts {
+                out.push_str(&Self::render_worktree_provision_notification(
+                    &wt.branch_name,
+                    &wt.worktree_path,
+                    &wt.base_branch,
+                ));
+                out.push('\n');
+            }
+            out.push_str(&format!(
                 "[{}] Wave {} executed: {}/{} tasks passed in {}ms",
                 res.verdict,
                 res.wave_index,
                 res.successful_tasks.len(),
                 res.total_tasks,
                 res.duration_ms
-            );
+            ));
             out.push_str(&NextStepPresenter::render_json_steps_ascii_block(&steps));
             out
         }
@@ -283,6 +361,22 @@ impl GatePresenter {
             let mut out = format!(
                 "[{}] Gate 6 Cycle Certified: {}\nReport: {}\nComment:\n{}",
                 res.verdict, res.cycle_id, res.report_file, res.issue_comment
+            );
+            out.push_str(&NextStepPresenter::render_json_steps_ascii_block(&steps));
+            out
+        }
+    }
+
+    pub fn render_close(res: &JsonCloseResponse, json_mode: bool) -> String {
+        let steps = Self::ensure_steps(&res.next_steps, NextStepResolver::for_close("develop"));
+        if json_mode {
+            let mut payload = res.clone();
+            payload.next_steps = steps;
+            serde_json::to_string(&payload).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
+        } else {
+            let mut out = format!(
+                "[{}] SDD cycle governance closed for cycle {}\nBoard column: {}",
+                res.verdict, res.cycle_id, res.board_column
             );
             out.push_str(&NextStepPresenter::render_json_steps_ascii_block(&steps));
             out

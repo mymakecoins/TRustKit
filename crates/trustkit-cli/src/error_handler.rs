@@ -81,6 +81,13 @@ impl CliBoundaryErrorHandler {
                 format!("{subsystem}: {details}"),
                 "Verify system permissions and filesystem state.".to_string(),
             ),
+            DomainViolation::EmptyTaskBacklogFault { cycle_id, reason } => (
+                "EMPTY_TASK_BACKLOG_FAULT".to_string(),
+                String::new(),
+                String::new(),
+                format!("Cycle {cycle_id}: {reason}"),
+                "Ensure specification or issue contains actionable requirements and traceability matrix rows.".to_string(),
+            ),
             DomainViolation::SpecOrTraceabilityIncomplete {
                 reason,
                 missing_artefact,
@@ -97,6 +104,20 @@ impl CliBoundaryErrorHandler {
                 String::new(),
                 format!("Task {task_id}: {reason}"),
                 "Capture RED failure evidence prior to implementing production code.".to_string(),
+            ),
+            DomainViolation::ZeroFilteredTestsFault { task_id, reason } => (
+                "ZERO_FILTERED_TESTS_FAULT".to_string(),
+                String::new(),
+                String::new(),
+                format!("Task {task_id}: {reason}"),
+                "Ensure target test file exists and contains at least one executable #[test] function.".to_string(),
+            ),
+            DomainViolation::CompilationFailureInRedPhaseFault { task_id, reason } => (
+                "COMPILATION_FAILURE_IN_RED_PHASE_FAULT".to_string(),
+                String::new(),
+                String::new(),
+                format!("Task {task_id}: {reason}"),
+                "Fix Rust syntax and type compilation errors so the RED test fails purely by assertion.".to_string(),
             ),
             DomainViolation::AstIntegrityOrInvariantViolation {
                 invariant_id,

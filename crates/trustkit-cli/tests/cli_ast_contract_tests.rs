@@ -24,6 +24,23 @@ fn test_parse_gauntlet_ast_audit_command_default() {
 }
 
 #[test]
+fn test_parse_gauntlet_audit_alias() {
+    let args = Cli::try_parse_from(["trustkit", "gauntlet", "audit", "--json"])
+        .expect("Failed to parse gauntlet audit alias");
+
+    assert!(args.is_json_mode());
+    assert_eq!(
+        args.command,
+        Command::Gauntlet(GauntletArgs {
+            action: GauntletSubcommand::AstAudit(GauntletAstAuditArgs {
+                files: Vec::new(),
+                json: true,
+            })
+        })
+    );
+}
+
+#[test]
 fn test_parse_gauntlet_ast_audit_command_with_files() {
     let args = Cli::try_parse_from([
         "trustkit",

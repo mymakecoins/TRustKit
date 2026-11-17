@@ -130,6 +130,7 @@ impl WorktreeIsolationPort for MockWorktreeProvider {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: format!(".trustkit/worktrees/{task_id}"),
             branch_name: format!("worktree/{task_id}"),
+            base_branch: "main".to_string(),
         })
     }
 
@@ -265,6 +266,7 @@ fn test_task_003_multi_wave_orchestrator_executes_sequential_waves() {
         worktree_port: &worktree_port,
         supervisor: &supervisor,
         reviewer: &reviewer,
+        builder_dispatcher: None,
     };
     let outcome = orchestrator
         .execute_wave_loop(&req, &deps)
@@ -299,6 +301,7 @@ fn test_task_003_orchestrator_rejects_empty_waves() {
         worktree_port: &worktree_port,
         supervisor: &supervisor,
         reviewer: &reviewer,
+        builder_dispatcher: None,
     };
     let result = orchestrator.execute_wave_loop(&req, &deps);
 
@@ -331,6 +334,7 @@ fn test_task_003_orchestrator_fails_when_wave_tasks_missing() {
         worktree_port: &worktree_port,
         supervisor: &supervisor,
         reviewer: &reviewer,
+        builder_dispatcher: None,
     };
     let result = orchestrator.execute_wave_loop(&req, &deps);
 
@@ -364,6 +368,7 @@ fn test_task_003_orchestrator_enforces_red_failure() {
         worktree_port: &worktree_port,
         supervisor: &supervisor,
         reviewer: &reviewer,
+        builder_dispatcher: None,
     };
     let result = orchestrator.execute_wave_loop(&req, &deps);
 

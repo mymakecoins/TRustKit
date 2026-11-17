@@ -52,11 +52,12 @@ impl WorktreeIsolationPort for MockWorktreeIsolation {
         &self,
         _cycle_id: &str,
         task_id: &str,
-        _base_branch: &str,
+        base_branch: &str,
     ) -> Result<WorktreeAllocation, DomainViolation> {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: format!(".trustkit/worktrees/{task_id}"),
             branch_name: format!("task/{task_id}"),
+            base_branch: base_branch.to_string(),
         })
     }
 
@@ -259,9 +260,11 @@ fn test_mock_worktree_isolation_port() {
         WorktreeAllocation::Provisioned {
             worktree_path,
             branch_name,
+            base_branch,
         } => {
             assert_eq!(worktree_path, ".trustkit/worktrees/TASK-001");
             assert_eq!(branch_name, "task/TASK-001");
+            assert_eq!(base_branch, "develop");
         }
         _ => panic!("Expected provisioned worktree"),
     }

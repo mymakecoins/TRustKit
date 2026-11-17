@@ -17,6 +17,11 @@ pub struct SpecPromptArgs {
     pub context_hops: usize,
     #[arg(long, default_value = "4000", help = "Token budget for prompt output")]
     pub budget: usize,
+    #[arg(
+        long,
+        help = "Generate 3 contrasting Design It Twice architectural briefings for parallel subagents"
+    )]
+    pub design_it_twice: bool,
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }
@@ -230,6 +235,16 @@ pub enum MemorySubcommand {
         about = "Deterministically rebuild the SQLite FTS5 index and wikilink graph from .trustkit/wiki/"
     )]
     Rebuild(MemoryRebuildArgs),
+    #[command(
+        name = "glossary",
+        about = "Manage ubiquitous domain glossary terms in .trustkit/wiki/glossary.md"
+    )]
+    Glossary(MemoryGlossaryArgs),
+    #[command(
+        name = "adr-check",
+        about = "Evaluate architectural decision proposal against 3-criteria filter"
+    )]
+    AdrCheck(MemoryAdrCheckArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
@@ -306,6 +321,72 @@ pub struct MemoryListArgs {
 
 #[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
 pub struct MemoryRebuildArgs {
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct MemoryGlossaryArgs {
+    #[command(subcommand)]
+    pub action: MemoryGlossarySubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
+pub enum MemoryGlossarySubcommand {
+    #[command(
+        name = "add",
+        about = "Add or update a canonical term in the ubiquitous glossary"
+    )]
+    Add(MemoryGlossaryAddArgs),
+    #[command(name = "list", about = "List all canonical glossary terms")]
+    List(MemoryGlossaryListArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct MemoryGlossaryAddArgs {
+    #[arg(long, help = "Canonical domain term")]
+    pub term: String,
+
+    #[arg(long, help = "Ubiquitous domain definition")]
+    pub definition: String,
+
+    #[arg(
+        long,
+        value_delimiter = ',',
+        help = "Comma-separated rejected/ambiguous synonyms"
+    )]
+    pub reject: Vec<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct MemoryGlossaryListArgs {
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone, Default)]
+pub struct MemoryAdrCheckArgs {
+    #[arg(long, help = "Proposed ADR title")]
+    pub title: String,
+
+    #[arg(long, help = "Context summary")]
+    pub context: String,
+
+    #[arg(long, help = "Is this decision hard to reverse?")]
+    pub hard_to_reverse: bool,
+
+    #[arg(
+        long,
+        help = "Is this decision surprising to a newcomer without context?"
+    )]
+    pub surprising: bool,
+
+    #[arg(long, help = "Are there genuine alternatives with real tradeoffs?")]
+    pub tradeoff: bool,
+
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,
 }

@@ -127,6 +127,48 @@ fn handle_health(
             "source_id": s.source_id, "target_id": s.target_id, "source_layer": s.source_layer,
             "target_layer": s.target_layer, "reason": s.reason,
         })).collect();
+        let depths: Vec<serde_json::Value> = report
+            .module_depth_metrics
+            .iter()
+            .map(|m| {
+                json!({
+                    "file_path": m.file_path,
+                    "public_surface_units": m.public_surface_units,
+                    "internal_implementation_units": m.internal_implementation_units,
+                    "depth_ratio_bps": m.depth_ratio_bps,
+                    "classification": m.classification.as_str(),
+                    "passes_deletion_test": m.passes_deletion_test,
+                })
+            })
+            .collect();
+        let shallows: Vec<serde_json::Value> = report
+            .shallow_modules
+            .iter()
+            .map(|c| {
+                json!({
+                    "file_path": c.file_path,
+                    "affected_seam": c.affected_seam,
+                    "public_surface_units": c.public_surface_units,
+                    "internal_implementation_units": c.internal_implementation_units,
+                    "deletion_test_justification": c.deletion_test_justification,
+                    "deepening_recommendation": c.deepening_recommendation,
+                })
+            })
+            .collect();
+        let seams: Vec<serde_json::Value> = report
+            .seam_classifications
+            .iter()
+            .map(|s| {
+                json!({
+                    "seam_id": s.seam_id,
+                    "source_file": s.source_file,
+                    "classification": s.classification_label(),
+                    "adapter_count": s.adapter_count,
+                    "connected_adapters": s.connected_adapters,
+                    "rationale": s.rationale,
+                })
+            })
+            .collect();
         let payload = json!({
             "verdict": "PASS", "outcome": report.verdict.as_str(),
             "total_nodes": report.total_nodes, "total_edges": report.total_edges,
@@ -135,6 +177,9 @@ fn handle_health(
             "collapsed_edges_count": report.collapsed_edges_count,
             "shrink_guard_triggered": report.shrink_guard_triggered,
             "god_nodes": gods, "surprising_connections": surp,
+            "module_depth_metrics": depths,
+            "shallow_modules": shallows,
+            "seam_classifications": seams,
         });
         println!(
             "{}",
@@ -142,13 +187,15 @@ fn handle_health(
         );
     } else {
         println!(
-            "[PASS] [{}] Graph health: {} nodes, {} edges (dangling: {}, loops: {}, collapsed: {})",
+            "[PASS] [{}] Graph health: {} nodes, {} edges (dangling: {}, loops: {}, collapsed: {}, shallow_modules: {}, seams: {})",
             report.verdict.as_str(),
             report.total_nodes,
             report.total_edges,
             report.dangling_edges.len(),
             report.self_loop_edges.len(),
-            report.collapsed_edges_count
+            report.collapsed_edges_count,
+            report.shallow_modules.len(),
+            report.seam_classifications.len()
         );
     }
     Ok(DomainOutcome::Success)

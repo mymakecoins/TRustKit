@@ -101,6 +101,9 @@ impl StructuralGraphAnalyzerPort for MockGraphAnalyzer {
             shrink_guard_triggered: false,
             god_nodes: Vec::new(),
             surprising_connections: Vec::new(),
+            module_depth_metrics: Vec::new(),
+            shallow_modules: Vec::new(),
+            seam_classifications: Vec::new(),
             verdict,
         })
     }
@@ -250,6 +253,9 @@ fn test_graph_traversal_outcome_and_health_report_zero_null_invariants() {
         shrink_guard_triggered: false,
         god_nodes: vec![god_node],
         surprising_connections: vec![surprising],
+        module_depth_metrics: vec![],
+        shallow_modules: vec![],
+        seam_classifications: vec![],
         verdict: GraphHealthVerdict::DegradedWarning,
     };
     let report_json = report.to_json();
@@ -315,4 +321,71 @@ fn test_structural_graph_repository_and_analyzer_ports_contract() {
         )
         .expect("path query should succeed");
     assert!(path_res.is_connected());
+}
+
+#[test]
+fn test_module_depth_metric_classifies_deep_balanced_and_shallow_pass_through_without_null() {
+    let deep =
+        ModuleDepthMetric::evaluate("crates/trustkit-db/src/sqlite_adapter.rs", 2, 18, false);
+    assert_eq!(deep.classification, ModuleDepthClassification::Deep);
+    assert_eq!(deep.classification.as_str(), "Deep");
+    assert!(deep.passes_deletion_test);
+    assert!(!deep.to_json().contains("null"));
+
+    let balanced = ModuleDepthMetric::evaluate("crates/trustkit-core/src/entities.rs", 4, 8, false);
+    assert_eq!(balanced.classification, ModuleDepthClassification::Balanced);
+    assert_eq!(balanced.classification.as_str(), "Balanced");
+    assert!(balanced.passes_deletion_test);
+    assert!(!balanced.to_json().contains("null"));
+
+    let shallow =
+        ModuleDepthMetric::evaluate("crates/trustkit-cli/src/pass_through.rs", 5, 3, true);
+    assert_eq!(
+        shallow.classification,
+        ModuleDepthClassification::ShallowPassThrough
+    );
+    assert_eq!(shallow.classification.as_str(), "ShallowPassThrough");
+    assert!(!shallow.passes_deletion_test);
+    let shallow_json = shallow.to_json();
+    assert!(!shallow_json.contains("null"));
+    assert!(shallow_json.contains("\"classification\":\"ShallowPassThrough\""));
+}
+
+#[test]
+fn test_shallow_module_candidate_and_seam_classification_null_free_serialization() {
+    let candidate = ShallowModuleCandidate::new(
+        "crates/trustkit-cli/src/thin_wrapper.rs",
+        "ThinWrapperPort",
+        4,
+        2,
+        "Interface complexity equals implementation; pure pass-through delegation",
+        "Inline wrapper into caller or merge into concrete adapter to deepen module",
+    );
+    let cand_json = candidate.to_json();
+    assert!(!cand_json.contains("null"));
+    assert!(cand_json.contains("thin_wrapper.rs"));
+    assert!(cand_json.contains("ThinWrapperPort"));
+
+    let real_seam = SeamClassification::evaluate(
+        "CycleEvidenceRepositoryPort",
+        "crates/trustkit-core/src/ports.rs",
+        vec![
+            "SqliteWalRepositoryAdapter".to_string(),
+            "InMemoryCycleRepo".to_string(),
+        ],
+    );
+    assert_eq!(real_seam.kind, SeamKind::RealSeam);
+    assert_eq!(real_seam.classification_label(), "RealSeam");
+    assert_eq!(real_seam.adapter_count, 2);
+    assert!(!real_seam.to_json().contains("null"));
+
+    let hypothetical_seam = SeamClassification::evaluate(
+        "SingleUseSpeculativePort",
+        "crates/trustkit-core/src/ports.rs",
+        vec!["OnlyConcreteAdapter".to_string()],
+    );
+    assert_eq!(hypothetical_seam.kind, SeamKind::HypotheticalSeam);
+    assert_eq!(hypothetical_seam.classification_label(), "HypotheticalSeam");
+    assert_eq!(hypothetical_seam.adapter_count, 1);
+    assert!(!hypothetical_seam.to_json().contains("null"));
 }

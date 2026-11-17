@@ -128,7 +128,11 @@ impl TsGraphExtractor {
                 if let Some(name_node) = decl.child_by_field_name("name")
                     && let Ok(name) = name_node.utf8_text(bytes)
                 {
-                    Self::register_symbol(name.trim(), file_path, layer, nodes, edges);
+                    let clean_name = name.trim();
+                    Self::register_symbol(clean_name, file_path, layer, nodes, edges);
+                    if decl.kind() == "class_declaration" {
+                        Self::extract_ts_implements(decl, bytes, file_path, clean_name, edges);
+                    }
                 }
             }
             "lexical_declaration" => {
@@ -172,6 +176,33 @@ impl TsGraphExtractor {
                 EdgeConfidence::Extracted,
                 file_path,
             ));
+        }
+    }
+
+    fn extract_ts_implements(
+        class_node: &Node,
+        bytes: &[u8],
+        file_path: &str,
+        class_name: &str,
+        edges: &mut Vec<StructuralEdge>,
+    ) {
+        let Ok(raw) = class_node.utf8_text(bytes) else {
+            return;
+        };
+        let header = raw.split('{').next().unwrap_or("");
+        if let Some((_, after_impl)) = header.split_once("implements ") {
+            for iface in after_impl.split(',') {
+                let clean = iface.split('<').next().unwrap_or(iface).trim();
+                if !clean.is_empty() {
+                    edges.push(StructuralEdge::new(
+                        format!("{file_path}::{class_name}"),
+                        clean,
+                        EdgeRelationKind::ReferencesSymbol,
+                        EdgeConfidence::Extracted,
+                        file_path,
+                    ));
+                }
+            }
         }
     }
 

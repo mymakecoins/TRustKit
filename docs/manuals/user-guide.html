@@ -326,8 +326,8 @@ trustkit status --json</code></pre>
     </section>
 
     <section id="auto">
-      <h2>4. Modo Autonomo de Ponta a Ponta (trustkit auto)</h2>
-      <p>Executa de forma autonoma e desatendida todo o ciclo do Gate 0 ao Gate 6 com isolamento de worktree e auto-merge final:</p>
+      <h2>4. Modo Autonomo de Ponta a Ponta (trustkit auto v2.2)</h2>
+      <p>Executa de forma autonoma e desatendida todo o ciclo do Gate 0 ao Gate 6 com atomizacao de tarefas (Gate 3), protecao por Circuit Breaker (EmptyTaskBacklogFault), sintese de testes RED compilaveis e merge cumulativo seguro sem force reset:</p>
       <pre><code># Executa ciclo completo a partir de uma issue remota
 trustkit auto --issue 42 --target develop
 
@@ -449,7 +449,7 @@ trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db
         <tbody>
           <tr>
             <td><code>trustkit auto</code></td>
-            <td>Orquestra autonomamente o ciclo SDD de ponta a ponta (Gates 0 a 6).</td>
+            <td>Orquestra autonomamente o ciclo SDD (Gates 0 a 6) com atomizacao, disjuntor e merge seguro.</td>
           </tr>
           <tr>
             <td><code>trustkit milestones plan</code></td>
@@ -537,7 +537,7 @@ trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db
           </tr>
           <tr>
             <td><code>trustkit graph</code></td>
-            <td>Analise de acoplamento, busca de caminhos e deteccao de God Nodes.</td>
+            <td>Analise de acoplamento, Deep Modules (Deletion Test), Seams (RealSeam vs HypotheticalSeam), Design It Twice e deteccao de God Nodes.</td>
           </tr>
         </tbody>
       </table>

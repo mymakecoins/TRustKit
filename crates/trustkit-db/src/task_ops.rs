@@ -188,7 +188,11 @@ pub fn update_task_worktree(
         WorktreeAllocation::Provisioned {
             worktree_path,
             branch_name,
-        } => (format!("PROVISIONED:{worktree_path}:{branch_name}"), None),
+            base_branch,
+        } => (
+            format!("PROVISIONED:{worktree_path}:{branch_name}:{base_branch}"),
+            None,
+        ),
         WorktreeAllocation::MergedAndPruned { commit_sha } => {
             (format!("MERGED:{commit_sha}"), Some(commit_sha.as_str()))
         }

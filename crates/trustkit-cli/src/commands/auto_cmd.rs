@@ -6,11 +6,10 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 use crate::cli_contract::AutoArgs;
-use crate::commands::init_cmd;
+use crate::commands::init_cmd::{self, current_timestamps};
 use crate::error_handler::DomainOutcome;
 use std::fs;
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_ast::{SpecValidator, WaveExecutionPlanner};
 use trustkit_core::entities::{
     CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
@@ -34,14 +33,6 @@ use trustkit_orch::autonomous_wave_orchestrator::{
 };
 use trustkit_orch::worktree_provider::WorktreeIsolationProvider;
 use trustkit_orch::{AutonomousWaveOrchestrator, CycleCertificationReporter};
-
-fn current_timestamps() -> (String, String) {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    (format!("{now}"), format!("{now}"))
-}
 
 pub fn execute(args: &AutoArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     args.validate()?;
@@ -125,13 +116,21 @@ pub fn execute_with_db(
                 let _ = fs::write(&target_spec, content);
             }
             if let Some(parent) = source_path.parent() {
-                let source_tasks = parent.join("tasks");
-                let target_tasks = spec_dir.join("tasks");
-                if source_tasks.exists() && !target_tasks.exists() {
-                    let _ = fs::create_dir_all(&target_tasks);
-                    if let Ok(entries) = fs::read_dir(source_tasks) {
-                        for entry in entries.flatten() {
-                            let _ = fs::copy(entry.path(), target_tasks.join(entry.file_name()));
+                let is_dedicated_spec_file = source_path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n == "spec.md")
+                    .unwrap_or(false);
+                if is_dedicated_spec_file {
+                    let source_tasks = parent.join("tasks");
+                    let target_tasks = spec_dir.join("tasks");
+                    if source_tasks.exists() && !target_tasks.exists() {
+                        let _ = fs::create_dir_all(&target_tasks);
+                        if let Ok(entries) = fs::read_dir(source_tasks) {
+                            for entry in entries.flatten() {
+                                let _ =
+                                    fs::copy(entry.path(), target_tasks.join(entry.file_name()));
+                            }
                         }
                     }
                 }
@@ -177,19 +176,54 @@ pub fn execute_with_db(
         waves.dedup();
         total_waves = waves.len();
         gates_cleared.push(3);
-    } else if tasks_dir.exists() {
-        if let Ok(parsed_tasks) = WaveExecutionPlanner::parse_tasks_dir(&tasks_dir) {
-            if !parsed_tasks.is_empty() {
-                total_tasks = parsed_tasks.len();
-                let planner = WaveExecutionPlanner;
-                let plan_req = PlanExecutionWavesRequest {
-                    tasks: parsed_tasks,
-                };
-                if let Ok(outcome) = plan_execution_waves::execute(plan_req, &repo, &planner) {
-                    total_waves = outcome.wave_schedule.waves.len();
-                    gates_cleared.push(3);
+    } else {
+        if !tasks_dir.exists() && !_spec_raw.is_empty() {
+            if let Ok(drafts) = trustkit_ast::SpecMatrixAtomizer::atomize_markdown(&_spec_raw) {
+                if !drafts.is_empty() {
+                    let _ =
+                        trustkit_orch::TaskSynthesizer::materialize_tasks_dir(&tasks_dir, &drafts);
+                    if let Some(ref source_spec) = resolved_spec {
+                        let source_path = Path::new(source_spec);
+                        if let Some(parent) = source_path.parent() {
+                            let is_dedicated_spec_file = source_path
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .map(|n| n == "spec.md")
+                                .unwrap_or(false);
+                            if is_dedicated_spec_file {
+                                let source_tasks = parent.join("tasks");
+                                let _ = trustkit_orch::TaskSynthesizer::materialize_tasks_dir(
+                                    &source_tasks,
+                                    &drafts,
+                                );
+                            }
+                        }
+                    }
                 }
             }
+        }
+
+        if tasks_dir.exists() {
+            if let Ok(parsed_tasks) = WaveExecutionPlanner::parse_tasks_dir(&tasks_dir) {
+                if !parsed_tasks.is_empty() {
+                    total_tasks = parsed_tasks.len();
+                    let planner = WaveExecutionPlanner;
+                    let plan_req = PlanExecutionWavesRequest {
+                        tasks: parsed_tasks,
+                    };
+                    if let Ok(outcome) = plan_execution_waves::execute(plan_req, &repo, &planner) {
+                        total_waves = outcome.wave_schedule.waves.len();
+                        gates_cleared.push(3);
+                    }
+                }
+            }
+        }
+
+        if total_tasks == 0 {
+            trustkit_core::use_cases::plan_execution_waves::enforce_non_empty_backlog(
+                &active_cycle.cycle_id,
+                0,
+            )?;
         }
     }
 
@@ -206,11 +240,16 @@ pub fn execute_with_db(
             let worktree_port = WorktreeIsolationProvider::new(repo_dir);
             let supervisor = trustkit_orch::AsyncExecutionSupervisor::new();
             let reviewer = DefaultSemanticCodeReviewer::new();
+            let mut dispatcher = trustkit_orch::BuilderAgentDispatcher::new();
+            if !args.agent_cmd.is_empty() {
+                dispatcher = dispatcher.with_agent_command(&args.agent_cmd);
+            }
             let deps = MultiWaveDependencies {
                 repo: &repo,
                 worktree_port: &worktree_port,
                 supervisor: &supervisor,
                 reviewer: &reviewer,
+                builder_dispatcher: Some(&dispatcher),
             };
             let multi_req = MultiWaveExecutionRequest {
                 cycle_id: &active_cycle.cycle_id,
@@ -219,6 +258,29 @@ pub fn execute_with_db(
                 now_iso: &now_iso,
             };
             let _ = AutonomousWaveOrchestrator::new().execute_wave_loop(&multi_req, &deps)?;
+
+            if !json_mode && !args.json {
+                let latest_tasks = repo.list_atomic_tasks(&active_cycle.cycle_id)?;
+                for task in &latest_tasks {
+                    let branch_name = task.worktree_allocation.branch_name().unwrap_or("worktree");
+                    let worktree_path = task
+                        .worktree_allocation
+                        .worktree_path()
+                        .unwrap_or(".trustkit/worktrees");
+                    let base_branch = task
+                        .worktree_allocation
+                        .base_branch()
+                        .unwrap_or(&active_cycle.work_branch);
+                    println!(
+                        "{}",
+                        crate::gate_presenter::GatePresenter::render_worktree_provision_notification(
+                            branch_name,
+                            worktree_path,
+                            base_branch
+                        )
+                    );
+                }
+            }
         }
     }
     gates_cleared.push(4);

@@ -10,6 +10,7 @@ pub mod migrations;
 pub mod milestone_ops;
 pub mod row_mappers;
 pub mod sqlite_adapter;
+pub mod sqlite_tdd_and_cert;
 pub mod task_ops;
 
 pub use blake3_adapter::Blake3ParallelSealerAdapter;
@@ -17,3 +18,4 @@ pub use graph_sqlite_repository::GraphSqliteRepository;
 pub use knowledge_wiki_fs::KnowledgeWikiFsRepository;
 pub use sqlite_adapter::SqliteWalRepositoryAdapter;
 pub use sqlite_adapter::SqliteWalRepositoryAdapter as SqliteCycleRepository;
+pub use sqlite_tdd_and_cert::HarnessRetroEngine;

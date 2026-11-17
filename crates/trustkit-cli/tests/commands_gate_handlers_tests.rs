@@ -55,14 +55,14 @@ fn setup_cycle_with_task(
 
     repo.save_cycle(&cycle).expect("Failed to save cycle");
 
-    let task = TaskNode {
-        task_id: task_id.to_string(),
-        title: "Test Task".to_string(),
-        architectural_layer: "CORE".to_string(),
-        depends_on: Vec::new(),
-        expected_files: vec!["crates/test.rs".to_string()],
-        target_test_file: "tests/task_test.rs".to_string(),
-    };
+    let task = TaskNode::new(
+        task_id.to_string(),
+        "Test Task".to_string(),
+        "CORE".to_string(),
+        Vec::new(),
+        vec!["crates/test.rs".to_string()],
+        "tests/task_test.rs".to_string(),
+    );
 
     let schedule = WaveSchedule {
         cycle_id: cycle.cycle_id.clone(),
@@ -211,7 +211,7 @@ fn test_merge_cmd_rejects_uncertified_cycle_with_exit_code_1() {
     let (db_path, _) = setup_cycle_with_task(dir.path(), "TASK-001", CycleStatus::Active);
 
     let args = MergeArgs {
-        target: "develop".to_string(),
+        target: Some("develop".to_string()),
         json: true,
     };
 

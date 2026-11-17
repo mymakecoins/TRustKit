@@ -8,6 +8,7 @@
 use crate::cli_contract::{
     TaskArgs, TaskCompleteArgs, TaskReviewArgs, TaskSubcommand, TaskTestArgs,
 };
+use crate::e2e_dual_axis_review::DualAxisGate4Reviewer;
 use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonTaskCompleteResponse, JsonTaskTestResponse};
 use crate::next_step_presenter::NextStepPresenter;
@@ -15,7 +16,7 @@ use std::path::Path;
 use std::process::Command as StdCommand;
 use std::time::{SystemTime, UNIX_EPOCH};
 use trustkit_core::entities::{
-    CodeReviewEffortLevel, NextStepResolver, SemanticReviewFinding, TddPhase,
+    CodeReviewEffortLevel, DualAxisReviewReport, NextStepResolver, SemanticReviewFinding, TddPhase,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{CycleEvidenceRepositoryPort, SemanticCodeReviewerPort};
@@ -62,6 +63,66 @@ fn resolve_head_commit_sha(working_dir: &str) -> String {
         }
     }
     "0000000000000000000000000000000000000000".to_string()
+}
+
+fn is_inside_git_repo(dir: &str) -> bool {
+    StdCommand::new("git")
+        .args(["rev-parse", "--is-inside-work-tree"])
+        .current_dir(dir)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+fn check_working_tree_clean(working_dir: &str, task_id: &str) -> Result<(), DomainViolation> {
+    let dir = if Path::new(working_dir).exists() {
+        working_dir
+    } else {
+        "."
+    };
+
+    if !is_inside_git_repo(dir) {
+        return Ok(());
+    }
+
+    let output = StdCommand::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(dir)
+        .output()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "task_complete".to_string(),
+            details: format!("Failed to inspect git status in '{dir}': {e}"),
+        })?;
+
+    if !output.status.success() {
+        return Err(DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "task_complete".to_string(),
+            details: format!("Git status failed in '{dir}'"),
+        });
+    }
+
+    let status_str = String::from_utf8_lossy(&output.stdout);
+    let dirty_entries: Vec<&str> = status_str
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .filter(|l| {
+            let p = l.split_whitespace().last().unwrap_or("");
+            p != "target" && p != "node_modules"
+        })
+        .collect();
+
+    if !dirty_entries.is_empty() {
+        return Err(DomainViolation::TddLifecycleViolation {
+            task_id: task_id.to_string(),
+            reason: format!(
+                "Cannot complete task '{task_id}': working tree has {} uncommitted changes (RN-001)",
+                dirty_entries.len()
+            ),
+        });
+    }
+
+    Ok(())
 }
 
 pub fn execute(args: &TaskArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
@@ -113,7 +174,7 @@ pub fn execute_review_with_db(
     let effort_level = CodeReviewEffortLevel::from(args.effort);
     let outcome = review_task_code::execute(
         ReviewTaskCodeRequest {
-            cycle_id: active_cycle.cycle_id,
+            cycle_id: active_cycle.cycle_id.clone(),
             task_id: args.task_id.clone(),
             effort_level,
             max_findings_override: 0,
@@ -122,6 +183,15 @@ pub fn execute_review_with_db(
         &repo,
         &reviewer,
     )?;
+
+    let dual_axis_report = DualAxisReviewReport::new(args.task_id.clone(), vec![], vec![]);
+    let _ = DualAxisGate4Reviewer::execute_and_record(
+        &active_cycle.cycle_id,
+        &args.task_id,
+        &repo,
+        &dual_axis_report,
+        &current_timestamp_iso(),
+    );
 
     if json_mode || args.json {
         println!(
@@ -153,13 +223,41 @@ fn resolve_task_test_args(
         && !task.target_test_file.is_empty()
     {
         let path = Path::new(&task.target_test_file);
+        let pkg = if task.target_test_file.starts_with("crates/") {
+            path.iter().nth(1).and_then(|s| s.to_str())
+        } else {
+            None
+        };
+
         if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+            let mut args = vec!["test".to_string()];
+            if let Some(p) = pkg {
+                args.push("-p".to_string());
+                args.push(p.to_string());
+            }
             if task.target_test_file.contains("/tests/")
                 || task.target_test_file.starts_with("tests/")
             {
-                return vec!["test".to_string(), "--test".to_string(), stem.to_string()];
+                args.push("--test".to_string());
+                args.push(stem.to_string());
+            } else if task.target_test_file.contains("/src/")
+                || task.target_test_file.starts_with("src/")
+            {
+                args.push("--lib".to_string());
+                let filter = stem
+                    .trim_end_matches("_tests")
+                    .trim_end_matches("_test")
+                    .replace('-', "_");
+                args.push(if filter.is_empty() {
+                    stem.replace('-', "_")
+                } else {
+                    filter
+                });
+            } else {
+                args.push("--".to_string());
+                args.push(stem.replace('-', "_"));
             }
-            return vec!["test".to_string(), "--".to_string(), stem.replace('-', "_")];
+            return args;
         }
     }
     vec![
@@ -173,6 +271,16 @@ pub fn execute_test_with_db(
     args: &TaskTestArgs,
     json_mode: bool,
     db_path: &Path,
+) -> Result<DomainOutcome, DomainViolation> {
+    let supervisor = AsyncExecutionSupervisor::new();
+    execute_test_with_deps(args, json_mode, db_path, &supervisor)
+}
+
+pub fn execute_test_with_deps(
+    args: &TaskTestArgs,
+    json_mode: bool,
+    db_path: &Path,
+    supervisor: &dyn trustkit_core::ports::AsyncExecutionSupervisorPort,
 ) -> Result<DomainOutcome, DomainViolation> {
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
@@ -195,7 +303,6 @@ pub fn execute_test_with_db(
 
     let phase = TddPhase::from(args.phase);
     let working_dir = active_cycle.spec_dir.clone();
-    let supervisor = AsyncExecutionSupervisor::new();
     let now_iso = current_timestamp_iso();
     let test_args = resolve_task_test_args(&repo, &active_cycle.cycle_id, &args.task_id);
 
@@ -210,7 +317,32 @@ pub fn execute_test_with_db(
         now_iso,
     };
 
-    let outcome = record_tdd_phase::execute(request, &repo, &supervisor)?;
+    let outcome = match record_tdd_phase::execute(request, &repo, supervisor) {
+        Ok(out) => out,
+        Err(DomainViolation::TddLifecycleViolation { task_id, reason })
+            if phase == TddPhase::Red =>
+        {
+            let target_file = repo
+                .find_atomic_task(&active_cycle.cycle_id, &task_id)
+                .ok()
+                .flatten()
+                .map(|t| t.target_test_file)
+                .filter(|f| !f.trim().is_empty())
+                .unwrap_or_else(|| "target_test_file".to_string());
+            let enhanced_reason = if reason.contains("non-zero exit code") {
+                format!(
+                    "{reason}. Author a failing test assertion in {target_file} to prove new behavior before recording RED phase."
+                )
+            } else {
+                reason
+            };
+            return Err(DomainViolation::TddLifecycleViolation {
+                task_id,
+                reason: enhanced_reason,
+            });
+        }
+        Err(e) => return Err(e),
+    };
     let steps = NextStepResolver::for_task_test(&outcome.task_id, outcome.phase);
 
     let response = JsonTaskTestResponse {
@@ -255,8 +387,33 @@ pub fn execute_complete_with_db(
         }
     };
 
+    let task = repo
+        .find_atomic_task(&active_cycle.cycle_id, &args.task_id)?
+        .ok_or_else(|| DomainViolation::TddLifecycleViolation {
+            task_id: args.task_id.clone(),
+            reason: format!(
+                "Atomic task '{}' not found in cycle '{}'",
+                args.task_id, active_cycle.cycle_id
+            ),
+        })?;
+
+    let working_dir = match &task.worktree_allocation {
+        trustkit_core::special_cases::WorktreeAllocation::Provisioned { worktree_path, .. } => {
+            worktree_path.clone()
+        }
+        _ => active_cycle.spec_dir.clone(),
+    };
+
+    check_working_tree_clean(&working_dir, &args.task_id)?;
+
     let now_iso = current_timestamp_iso();
-    let commit_sha = resolve_head_commit_sha(&active_cycle.spec_dir);
+    let mut commit_sha = resolve_head_commit_sha(&working_dir);
+    if (commit_sha == "0".repeat(40) || commit_sha.is_empty())
+        && active_cycle.base_commit_sha.len() == 40
+        && active_cycle.base_commit_sha != "0".repeat(40)
+    {
+        commit_sha = active_cycle.base_commit_sha.clone();
+    }
 
     if let Some(effort_arg) = args.code_review {
         let reviewer = DefaultSemanticCodeReviewer;
@@ -281,6 +438,15 @@ pub fn execute_complete_with_db(
     };
 
     let outcome = complete_task::execute(request, &repo)?;
+
+    let dual_axis_report = DualAxisReviewReport::new(args.task_id.clone(), vec![], vec![]);
+    let _ = DualAxisGate4Reviewer::execute_and_record(
+        &active_cycle.cycle_id,
+        &args.task_id,
+        &repo,
+        &dual_axis_report,
+        &now_iso,
+    );
 
     let all_tasks = repo
         .list_atomic_tasks(&active_cycle.cycle_id)

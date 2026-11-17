@@ -101,6 +101,7 @@ impl WorktreeIsolationPort for MockWorktreePort {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: format!("/tmp/worktree-{}", task_id),
             branch_name: format!("{}-branch", base_branch),
+            base_branch: base_branch.to_string(),
         })
     }
     fn check_worktree_status(

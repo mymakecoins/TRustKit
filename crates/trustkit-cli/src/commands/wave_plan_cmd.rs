@@ -42,6 +42,8 @@ pub struct TaskPayload {
     pub architectural_layer: String,
     pub depends_on: Vec<String>,
     pub expected_files: Vec<String>,
+    pub slice_kind: String,
+    pub blast_radius_score: u32,
 }
 
 impl From<&WaveSchedule> for JsonWavePlanSuccessResponse {
@@ -62,6 +64,8 @@ impl From<&WaveSchedule> for JsonWavePlanSuccessResponse {
                         architectural_layer: t.architectural_layer.clone(),
                         depends_on: t.depends_on.clone(),
                         expected_files: t.expected_files.clone(),
+                        slice_kind: t.slice_kind.as_str().to_string(),
+                        blast_radius_score: t.blast_radius_score,
                     })
                     .collect(),
             })
@@ -179,8 +183,12 @@ fn render_output(outcome: &PlanExecutionWavesOutcome, json_mode: bool) -> String
             out.push_str(&format!("\nWave {}:\n", wave.wave_index));
             for task in &wave.tasks {
                 out.push_str(&format!(
-                    "  - {} [{}] ({})\n",
-                    task.task_id, task.architectural_layer, task.title
+                    "  - {} [{}] ({}) [slice: {} | blast_radius: {}]\n",
+                    task.task_id,
+                    task.architectural_layer,
+                    task.title,
+                    task.slice_kind.as_str(),
+                    task.blast_radius_score
                 ));
             }
         }

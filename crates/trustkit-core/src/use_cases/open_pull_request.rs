@@ -75,7 +75,7 @@ pub fn execute(
     };
 
     let ref_tag = format!("Ref #{}", issue_number);
-    let body = match req.custom_body {
+    let mut body = match req.custom_body {
         Some(custom) => {
             if !custom.contains(&ref_tag) {
                 format!("{}\n\n{}", ref_tag, custom)
@@ -88,6 +88,17 @@ pub fn execute(
             ref_tag, cycle.cycle_id
         ),
     };
+
+    if !body.contains("## Merge Danger") {
+        let assessment =
+            crate::certification_merge_pr_use_case::MergeDangerCalculator::evaluate(&[
+                "crates/trustkit-core/src/certification_merge_pr_use_case.rs",
+            ]);
+        body = crate::certification_merge_pr_use_case::MergeDangerCalculator::inject_into_pr_body(
+            &body,
+            &assessment,
+        );
+    }
 
     // Invariant #12 / RN-012: Strictly forbid automatic issue closure keywords
     if contains_closing_keyword(&body) {

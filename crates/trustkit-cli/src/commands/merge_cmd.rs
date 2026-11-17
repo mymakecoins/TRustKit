@@ -17,6 +17,8 @@ use trustkit_core::use_cases::merge_cycle::{self, MergeCycleRequest};
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 use trustkit_gh::ProjectBoardSynchronizer;
 
+pub const MERGE_DEPRECATION_WARNING: &str = "WARNING: 'trustkit merge' is deprecated and will be removed in a future release. Please adopt 'trustkit close' immediately.";
+
 fn current_timestamp_iso() -> String {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -35,6 +37,8 @@ pub fn execute_with_db(
     json_mode: bool,
     db_path: &Path,
 ) -> Result<DomainOutcome, DomainViolation> {
+    eprintln!("{MERGE_DEPRECATION_WARNING}");
+
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "merge".to_string(),
@@ -57,9 +61,11 @@ pub fn execute_with_db(
     let board_gateway = ProjectBoardSynchronizer::new();
     let now_iso = current_timestamp_iso();
 
+    let target_branch = args.target.clone().unwrap_or_else(|| "develop".to_string());
+
     let request = MergeCycleRequest {
         cycle_id: active_cycle.cycle_id.clone(),
-        target_branch: args.target.clone(),
+        target_branch,
         now_iso,
     };
 

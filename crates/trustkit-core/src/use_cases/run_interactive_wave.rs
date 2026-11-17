@@ -85,15 +85,31 @@ pub fn execute(
     let mut all_passed = true;
 
     for mut task in wave_tasks {
+        if task.worktree_allocation.is_merged_and_pruned() {
+            let sha = match &task.worktree_allocation {
+                WorktreeAllocation::MergedAndPruned { commit_sha } => commit_sha.clone(),
+                _ => String::new(),
+            };
+            reports.push(InteractiveTaskReport {
+                task_id: task.task_id,
+                worktree_path: String::new(),
+                terminal_id: "merged".to_string(),
+                state: AgentSemanticState::Done { exit_code: 0 },
+                merged_commit_sha: sha,
+            });
+            continue;
+        }
+
         let allocation =
             worktree_port.provision_worktree(&cycle.cycle_id, &task.task_id, &cycle.work_branch)?;
-        let worktree_path = match &allocation {
+        let (worktree_path, branch_name) = match &allocation {
             WorktreeAllocation::Provisioned {
                 worktree_path,
                 branch_name,
+                base_branch,
             } => {
-                task.allocate_worktree(worktree_path, branch_name)?;
-                worktree_path.clone()
+                task.allocate_worktree(worktree_path, branch_name, base_branch)?;
+                (worktree_path.clone(), branch_name.clone())
             }
             _ => {
                 return Err(DomainViolation::InfrastructureBoundaryFault {
@@ -105,22 +121,14 @@ pub fn execute(
 
         repo.update_task_worktree(&cycle.cycle_id, &task.task_id, &task.worktree_allocation)?;
 
-        let prov_evidence = ExecutionEvidence {
-            evidence_id: 0,
-            cycle_id: cycle.cycle_id.clone(),
-            gate_stage: GateStage::Gate4TasksImplemented,
-            gauntlet_attempt: 0,
-            actor_role: format!("ORCH:WORKTREE_{}", task.task_id),
-            evidence_kind: EvidenceKind::CmdExec,
-            executed_command: format!("git worktree add {} {}", worktree_path, task.task_id),
-            exit_code: 0,
-            duration_ms: 10,
-            sanitized_stdout_tail: format!("Provisioned worktree at {}", worktree_path),
-            sanitized_stderr_tail: "".to_string(),
-            output_blake3_digest: "".to_string(),
-            verdict: GateVerdict::Pass,
-            recorded_at: req.now_iso.clone(),
-        };
+        let prov_evidence = ExecutionEvidence::for_worktree_provision(
+            &cycle.cycle_id,
+            &task.task_id,
+            &branch_name,
+            &worktree_path,
+            &cycle.work_branch,
+            &req.now_iso,
+        );
         repo.append_evidence(&prov_evidence)?;
 
         let (terminal_id, state) = if let Some(mux) = multiplexer_port {
