@@ -173,11 +173,12 @@ impl AtomicTask {
         &mut self,
         worktree_path: impl Into<String>,
         branch_name: impl Into<String>,
+        base_branch: impl Into<String>,
     ) -> Result<(), DomainViolation> {
-        self.worktree_allocation = self
-            .worktree_allocation
-            .clone()
-            .provision(worktree_path, branch_name)?;
+        self.worktree_allocation =
+            self.worktree_allocation
+                .clone()
+                .provision(worktree_path, branch_name, base_branch)?;
         Ok(())
     }
 

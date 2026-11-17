@@ -138,13 +138,18 @@ pub fn execute(
                     &task.task_id,
                     &cycle.work_branch,
                 )?;
-                let path = match &allocation {
+                let (path, branch, base) = match &allocation {
                     WorktreeAllocation::Provisioned {
                         worktree_path,
                         branch_name,
+                        base_branch,
                     } => {
-                        task.allocate_worktree(worktree_path, branch_name)?;
-                        worktree_path.clone()
+                        task.allocate_worktree(worktree_path, branch_name, base_branch)?;
+                        (
+                            worktree_path.clone(),
+                            branch_name.clone(),
+                            base_branch.clone(),
+                        )
                     }
                     _ => {
                         return Err(DomainViolation::InfrastructureBoundaryFault {
@@ -163,27 +168,18 @@ pub fn execute(
                     &task.worktree_allocation,
                 )?;
 
-                let prov_evidence = ExecutionEvidence {
-                    evidence_id: 0,
-                    cycle_id: cycle.cycle_id.clone(),
-                    gate_stage: GateStage::Gate4TasksImplemented,
-                    gauntlet_attempt: 0,
-                    actor_role: format!("ORCH:WORKTREE_{}", task.task_id),
-                    evidence_kind: EvidenceKind::CmdExec,
-                    executed_command: format!("git worktree add {} {}", path, task.task_id),
-                    exit_code: 0,
-                    duration_ms: 10,
-                    sanitized_stdout_tail: format!("Provisioned worktree at {}", path),
-                    sanitized_stderr_tail: "".to_string(),
-                    output_blake3_digest: "".to_string(),
-                    verdict: GateVerdict::Pass,
-                    recorded_at: req.now_iso.clone(),
-                };
+                let prov_evidence = ExecutionEvidence::for_worktree_provision(
+                    &cycle.cycle_id,
+                    &task.task_id,
+                    &branch,
+                    &path,
+                    &base,
+                    &req.now_iso,
+                );
                 repo.append_evidence(&prov_evidence)?;
                 path
             }
         };
-
         let merged_sha = worktree_port.merge_and_prune_worktree(
             &task.task_id,
             &worktree_path,

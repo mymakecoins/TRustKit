@@ -63,6 +63,7 @@ fn test_for_cycle_status_awaiting_red_authoring_guidance() {
     task.worktree_allocation = WorktreeAllocation::Provisioned {
         worktree_path: ".trustkit/worktrees/TASK-002".to_string(),
         branch_name: "worktree/TASK-002".to_string(),
+        base_branch: "main".to_string(),
     };
 
     let steps = NextStepResolver::for_cycle_status(&cycle, &[task], true, true);

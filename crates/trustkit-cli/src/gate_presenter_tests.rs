@@ -95,6 +95,7 @@ fn test_render_wave_run_dual_mode() {
         failed_tasks: vec![],
         duration_ms: 450,
         runtime_used: "native".to_string(),
+        provisioned_worktrees: vec![],
         next_steps: vec![],
     };
 

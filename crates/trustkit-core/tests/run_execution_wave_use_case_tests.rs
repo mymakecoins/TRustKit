@@ -107,6 +107,7 @@ impl WorktreeIsolationPort for MockWorktreePort {
         Ok(WorktreeAllocation::Provisioned {
             worktree_path: path,
             branch_name: format!("worktree/{}", task_id),
+            base_branch: "main".to_string(),
         })
     }
 

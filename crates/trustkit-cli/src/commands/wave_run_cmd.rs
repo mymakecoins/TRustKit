@@ -7,7 +7,7 @@
 
 use crate::cli_contract::WaveRunArgs;
 use crate::error_handler::DomainOutcome;
-use crate::gate_presenter::{GatePresenter, JsonWaveRunResponse};
+use crate::gate_presenter::{GatePresenter, JsonWaveRunResponse, WorktreeProvisionInfo};
 use crate::next_step_presenter::NextStepPresenter;
 use std::path::Path;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -133,6 +133,42 @@ pub fn execute_with_db(
         first_pending_task,
     );
 
+    let mut provisioned_worktrees = Vec::new();
+    for task_id in &successful_tasks {
+        if let Ok(Some(task)) = repo.find_atomic_task(&active_cycle.cycle_id, task_id) {
+            let branch_name = task
+                .worktree_allocation
+                .branch_name()
+                .map(String::from)
+                .unwrap_or_else(|| format!("worktree/{task_id}"));
+            let worktree_path = task
+                .worktree_allocation
+                .worktree_path()
+                .map(String::from)
+                .unwrap_or_else(|| format!(".trustkit/worktrees/{task_id}"));
+            let base_branch = task
+                .worktree_allocation
+                .base_branch()
+                .filter(|s| !s.is_empty())
+                .map(String::from)
+                .unwrap_or_else(|| active_cycle.work_branch.clone());
+
+            provisioned_worktrees.push(WorktreeProvisionInfo {
+                task_id: task_id.clone(),
+                branch_name,
+                worktree_path,
+                base_branch,
+            });
+        } else {
+            provisioned_worktrees.push(WorktreeProvisionInfo {
+                task_id: task_id.clone(),
+                branch_name: format!("worktree/{task_id}"),
+                worktree_path: format!(".trustkit/worktrees/{task_id}"),
+                base_branch: active_cycle.work_branch.clone(),
+            });
+        }
+    }
+
     let response = JsonWaveRunResponse {
         verdict: verdict_str,
         wave_index: args.wave,
@@ -141,6 +177,7 @@ pub fn execute_with_db(
         failed_tasks,
         duration_ms,
         runtime_used: resolved.active_mode.as_str().to_string(),
+        provisioned_worktrees,
         next_steps: NextStepPresenter::to_json_vec(&steps),
     };
 

@@ -258,6 +258,29 @@ pub fn execute_with_db(
                 now_iso: &now_iso,
             };
             let _ = AutonomousWaveOrchestrator::new().execute_wave_loop(&multi_req, &deps)?;
+
+            if !json_mode && !args.json {
+                let latest_tasks = repo.list_atomic_tasks(&active_cycle.cycle_id)?;
+                for task in &latest_tasks {
+                    let branch_name = task.worktree_allocation.branch_name().unwrap_or("worktree");
+                    let worktree_path = task
+                        .worktree_allocation
+                        .worktree_path()
+                        .unwrap_or(".trustkit/worktrees");
+                    let base_branch = task
+                        .worktree_allocation
+                        .base_branch()
+                        .unwrap_or(&active_cycle.work_branch);
+                    println!(
+                        "{}",
+                        crate::gate_presenter::GatePresenter::render_worktree_provision_notification(
+                            branch_name,
+                            worktree_path,
+                            base_branch
+                        )
+                    );
+                }
+            }
         }
     }
     gates_cleared.push(4);

@@ -169,6 +169,7 @@ fn test_task_worktree_allocation_persistence() {
         &WorktreeAllocation::Provisioned {
             worktree_path: ".trustkit/worktrees/TASK-002".to_string(),
             branch_name: "task/TASK-002".to_string(),
+            base_branch: "main".to_string(),
         },
     )
     .expect("update worktree to provisioned");
@@ -182,6 +183,7 @@ fn test_task_worktree_allocation_persistence() {
         WorktreeAllocation::Provisioned {
             worktree_path: ".trustkit/worktrees/TASK-002".to_string(),
             branch_name: "task/TASK-002".to_string(),
+            base_branch: "main".to_string(),
         }
     );
 
