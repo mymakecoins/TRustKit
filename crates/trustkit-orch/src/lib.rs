@@ -14,6 +14,8 @@ pub mod task_synthesizer;
 pub mod terminal_output_sanitizer;
 pub mod visual_evidence_guard;
 pub mod wave_board_dashboard_sse_client;
+pub mod wave_board_http_server;
+pub mod wave_board_lifecycle_daemon;
 pub mod wave_board_lifecycle_shutdown;
 pub mod wave_board_port_allocator;
 pub mod wave_board_server_sse;
