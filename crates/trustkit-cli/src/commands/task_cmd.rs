@@ -212,6 +212,16 @@ pub fn execute_test_with_db(
     json_mode: bool,
     db_path: &Path,
 ) -> Result<DomainOutcome, DomainViolation> {
+    let supervisor = AsyncExecutionSupervisor::new();
+    execute_test_with_deps(args, json_mode, db_path, &supervisor)
+}
+
+pub fn execute_test_with_deps(
+    args: &TaskTestArgs,
+    json_mode: bool,
+    db_path: &Path,
+    supervisor: &dyn trustkit_core::ports::AsyncExecutionSupervisorPort,
+) -> Result<DomainOutcome, DomainViolation> {
     if !db_path.exists() {
         return Err(DomainViolation::InfrastructureBoundaryFault {
             subsystem: "task_test".to_string(),
@@ -233,7 +243,6 @@ pub fn execute_test_with_db(
 
     let phase = TddPhase::from(args.phase);
     let working_dir = active_cycle.spec_dir.clone();
-    let supervisor = AsyncExecutionSupervisor::new();
     let now_iso = current_timestamp_iso();
     let test_args = resolve_task_test_args(&repo, &active_cycle.cycle_id, &args.task_id);
 
@@ -248,7 +257,32 @@ pub fn execute_test_with_db(
         now_iso,
     };
 
-    let outcome = record_tdd_phase::execute(request, &repo, &supervisor)?;
+    let outcome = match record_tdd_phase::execute(request, &repo, supervisor) {
+        Ok(out) => out,
+        Err(DomainViolation::TddLifecycleViolation { task_id, reason })
+            if phase == TddPhase::Red =>
+        {
+            let target_file = repo
+                .find_atomic_task(&active_cycle.cycle_id, &task_id)
+                .ok()
+                .flatten()
+                .map(|t| t.target_test_file)
+                .filter(|f| !f.trim().is_empty())
+                .unwrap_or_else(|| "target_test_file".to_string());
+            let enhanced_reason = if reason.contains("non-zero exit code") {
+                format!(
+                    "{reason}. Author a failing test assertion in {target_file} to prove new behavior before recording RED phase."
+                )
+            } else {
+                reason
+            };
+            return Err(DomainViolation::TddLifecycleViolation {
+                task_id,
+                reason: enhanced_reason,
+            });
+        }
+        Err(e) => return Err(e),
+    };
     let steps = NextStepResolver::for_task_test(&outcome.task_id, outcome.phase);
 
     let response = JsonTaskTestResponse {

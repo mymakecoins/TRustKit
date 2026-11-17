@@ -185,3 +185,18 @@ fn test_for_cycle_status_full_lifecycle_transitions() {
     let steps = NextStepResolver::for_cycle_status(&certified_cycle, &committed_tasks, true, true);
     assert_eq!(steps[0].command, "trustkit merge --target develop");
 }
+
+#[test]
+fn test_for_wave_run_pending_tasks_guidance_explicit_red_authoring() {
+    let failed: Vec<String> = Vec::new();
+    let steps = NextStepResolver::for_wave_run(1, &failed, None, Some("TASK-001"));
+    assert_eq!(steps[0].priority, NextStepPriority::Primary);
+    assert_eq!(steps[0].target_gate, "GATE-4");
+    assert_eq!(steps[0].command, "trustkit task test TASK-001 --phase red");
+    assert!(
+        steps[0].description.contains("target_test_file")
+            && steps[0].description.contains("failing"),
+        "Primary recommendation must explicitly guide authoring failing test assertion in target_test_file before running task test --phase red: {}",
+        steps[0].description
+    );
+}

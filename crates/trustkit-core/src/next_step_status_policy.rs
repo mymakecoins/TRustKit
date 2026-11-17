@@ -235,6 +235,11 @@ impl NextStepResolver {
             .iter()
             .find(|t| t.tdd_lifecycle_state.is_awaiting_red())
         {
+            let target_desc = if pending_task.target_test_file.trim().is_empty() {
+                "target_test_file".to_string()
+            } else {
+                pending_task.target_test_file.clone()
+            };
             if pending_task.worktree_allocation.is_provisioned()
                 || pending_task.worktree_allocation.is_merged_and_pruned()
             {
@@ -242,7 +247,9 @@ impl NextStepResolver {
                     NextStepPriority::Primary,
                     "GATE-4",
                     format!("trustkit task test {} --phase red", pending_task.task_id),
-                    "Record failing RED test evidence for the provisioned atomic task.",
+                    format!(
+                        "Author failing test assertion in {target_desc} before running task test --phase red."
+                    ),
                 )];
             }
             return vec![
@@ -259,7 +266,9 @@ impl NextStepResolver {
                     NextStepPriority::Secondary,
                     "GATE-4",
                     format!("trustkit task test {} --phase red", pending_task.task_id),
-                    "Record failing RED test evidence for the pending atomic task.",
+                    format!(
+                        "Author failing test assertion in {target_desc} before running task test --phase red."
+                    ),
                 ),
             ];
         }
@@ -267,3 +276,7 @@ impl NextStepResolver {
         Self::for_all_waves_completed()
     }
 }
+
+#[cfg(test)]
+#[path = "next_step_status_policy_tests.rs"]
+mod tests;

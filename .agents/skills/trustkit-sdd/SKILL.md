@@ -97,11 +97,18 @@ Execute as tarefas da onda com isolamento de worktree, runtime multiplexado (mul
 # Executa a onda com isolamento de worktree e runtime de terminais (auto, pty, native)
 trustkit wave run --wave <WAVE_INDEX> [--runtime auto|pty|native] [--agent-cmd "<cmd>"] --json
 
+# Autoria RED: redigir e adicionar a assercao do teste falhando em target_test_file antes de validar a fase RED
+
 # Registra a fase RED (falha obrigatoria comprovada por assercao de dominio, rejeitando ZeroFilteredTests e CompilationFailure)
 trustkit task test <TASK_ID> --phase red --json
 
+# Implementa o codigo de producao minimo para satisfazer a especificacao
+
 # Registra a fase GREEN (sucesso obrigatorio comprovado)
 trustkit task test <TASK_ID> --phase green --json
+
+# Realiza revisao semantica estrita de codigo (Dual-Axis: Standards/Smells e Spec Compliance)
+trustkit task review <TASK_ID> [--effort high|medium|low] --json
 
 # Conclui a tarefa atomica
 trustkit task complete <TASK_ID> --json
