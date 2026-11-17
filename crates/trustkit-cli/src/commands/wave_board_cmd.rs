@@ -49,7 +49,6 @@ pub fn execute_up(args: &BoardUpArgs, json_mode: bool) -> Result<DomainOutcome, 
 
     let log_file = fs::OpenOptions::new()
         .create(true)
-        .write(true)
         .append(true)
         .open(".trustkit/wave-board.log")
         .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
