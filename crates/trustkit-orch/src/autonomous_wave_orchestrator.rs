@@ -233,6 +233,35 @@ impl AutonomousWaveOrchestrator {
                 };
                 review_task_code::execute(review_req, deps.repo, deps.reviewer)?;
 
+                // Step 3.5: Commit verified task changes in worktree before merge (RN-001/RN-002)
+                let status_out = std::process::Command::new("git")
+                    .args(["status", "--porcelain"])
+                    .current_dir(&worktree_path)
+                    .output();
+                if let Ok(out) = status_out {
+                    let s = String::from_utf8_lossy(&out.stdout);
+                    let has_changes = s
+                        .lines()
+                        .map(|l| l.trim())
+                        .filter(|l| !l.is_empty())
+                        .any(|l| {
+                            let p = l.split_whitespace().last().unwrap_or("");
+                            p != "target" && p != "node_modules"
+                        });
+                    if has_changes {
+                        let _ = std::process::Command::new("git")
+                            .args(["add", "."])
+                            .current_dir(&worktree_path)
+                            .output();
+                        let issue_num = req.cycle_id.split('-').nth(1).unwrap_or("0");
+                        let msg = format!("feat: #{issue_num} implement {}", task.task_id);
+                        let _ = std::process::Command::new("git")
+                            .args(["commit", "-m", &msg])
+                            .current_dir(&worktree_path)
+                            .output();
+                    }
+                }
+
                 // Step 4: Merge and Complete
                 let merged_sha = deps.worktree_port.merge_and_prune_worktree(
                     &task.task_id,
