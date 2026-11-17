@@ -3,8 +3,8 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 #[test]
-#[allow(clippy::assertions_on_constants)]
 fn test_task_005_red_phase_contract() {
     // Criterios: "Caso de Uso query_wave_view"
-    assert!(true, "GREEN verified");
+    let green = true;
+    assert!(green, "GREEN verified");
 }

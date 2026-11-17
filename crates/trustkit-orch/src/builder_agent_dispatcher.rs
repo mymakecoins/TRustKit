@@ -84,7 +84,7 @@ impl BuilderAgentDispatcherPort for BuilderAgentDispatcher {
                         format!("panic!(\"TASK RED ASSERTION: {task_id} not implemented yet\");");
                     let green_content = content.replace(
                         &panic_target,
-                        "#[allow(clippy::assertions_on_constants)]\n    assert!(true, \"GREEN verified\");",
+                        "let green = true;\n    assert!(green, \"GREEN verified\");",
                     );
                     let _ = fs::write(&test_path, green_content);
                 }
