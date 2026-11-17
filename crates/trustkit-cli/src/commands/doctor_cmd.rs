@@ -8,14 +8,30 @@
 use crate::cli_contract::DoctorArgs;
 use crate::error_handler::DomainOutcome;
 use crate::gate_presenter::{GatePresenter, JsonDoctorResponse};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use trustkit_core::entities::{CycleStatus, GateVerdict};
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::CycleEvidenceRepositoryPort;
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 
+pub fn resolve_state_db_path() -> PathBuf {
+    let local = Path::new(".trustkit").join("state.db");
+    if local.exists() {
+        return local;
+    }
+    if let Ok(cwd) = std::env::current_dir() {
+        for ancestor in cwd.ancestors() {
+            let candidate = ancestor.join(".trustkit").join("state.db");
+            if candidate.exists() {
+                return candidate;
+            }
+        }
+    }
+    local
+}
+
 pub fn execute(args: &DoctorArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
-    let db_path = Path::new(".trustkit").join("state.db");
+    let db_path = resolve_state_db_path();
     execute_with_db(args, json_mode, &db_path)
 }
 
