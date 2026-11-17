@@ -13,6 +13,7 @@ pub mod supervisor_runtime_selector;
 pub mod task_synthesizer;
 pub mod terminal_output_sanitizer;
 pub mod visual_evidence_guard;
+pub mod wave_board_port_allocator;
 pub mod worktree_provider;
 
 pub use async_supervisor::AsyncExecutionSupervisor;
