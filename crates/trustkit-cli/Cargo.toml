@@ -13,6 +13,10 @@ path = "src/lib.rs"
 name = "trustkit"
 path = "src/main.rs"
 
+[[bin]]
+name = "tk"
+path = "src/main.rs"
+
 [dependencies]
 trustkit-core = { path = "../trustkit-core" }
 trustkit-ast = { path = "../trustkit-ast" }
