@@ -28,6 +28,17 @@ pub fn execute(
     req: CompleteTaskRequest,
     repo: &dyn CycleEvidenceRepositoryPort,
 ) -> Result<CompleteTaskOutcome, DomainViolation> {
+    let trimmed_sha = req.commit_sha.trim();
+    if trimmed_sha.is_empty() || trimmed_sha.chars().all(|c| c == '0') {
+        return Err(DomainViolation::TddLifecycleViolation {
+            task_id: req.task_id.clone(),
+            reason: format!(
+                "Cannot complete task '{}': invalid or missing Git commit SHA '{}' (RN-003)",
+                req.task_id, req.commit_sha
+            ),
+        });
+    }
+
     let mut task = repo
         .find_atomic_task(&req.cycle_id, &req.task_id)?
         .ok_or_else(|| DomainViolation::TddLifecycleViolation {

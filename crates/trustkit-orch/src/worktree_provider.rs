@@ -155,7 +155,16 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
         }
 
         let status_out = self.run_git_cmd(wt_path, &["status", "--porcelain"])?;
-        let is_clean = status_out.trim().is_empty();
+        let is_clean = status_out
+            .lines()
+            .map(|l| l.trim())
+            .filter(|l| !l.is_empty())
+            .filter(|l| {
+                let p = l.split_whitespace().last().unwrap_or("");
+                p != "target" && p != "node_modules"
+            })
+            .count()
+            == 0;
 
         let branch_name = self.run_git_cmd(wt_path, &["rev-parse", "--abbrev-ref", "HEAD"])?;
         let head_commit_sha = self.run_git_cmd(wt_path, &["rev-parse", "HEAD"])?;
@@ -176,6 +185,16 @@ impl WorktreeIsolationPort for WorktreeIsolationProvider {
     ) -> Result<String, DomainViolation> {
         let wt_path = Path::new(worktree_path);
         let mut worktree_head = if wt_path.exists() {
+            let status = self.check_worktree_status(worktree_path)?;
+            if !status.is_clean {
+                return Err(DomainViolation::InfrastructureBoundaryFault {
+                    subsystem: "worktree_provider".to_string(),
+                    details: format!(
+                        "Cannot merge worktree for task '{}': worktree has uncommitted changes (RN-002)",
+                        task_id
+                    ),
+                });
+            }
             self.run_git_cmd(wt_path, &["rev-parse", "HEAD"])?
         } else {
             return Err(DomainViolation::InfrastructureBoundaryFault {
