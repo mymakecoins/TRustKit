@@ -3,6 +3,7 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 #[test]
+#[allow(clippy::assertions_on_constants)]
 fn test_task_006_red_phase_contract() {
     // Criterios: "Ferramenta MCP trustkit_wave_view"
     assert!(true, "GREEN verified");

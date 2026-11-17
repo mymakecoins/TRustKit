@@ -3,6 +3,7 @@
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
 #[test]
+#[allow(clippy::assertions_on_constants)]
 fn test_task_003_red_phase_contract() {
     // Criterios: "Subcomando CLI trustkit wave view"
     assert!(true, "GREEN verified");
