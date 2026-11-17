@@ -257,6 +257,18 @@ impl GatePresenter {
         if json_mode {
             let mut payload = res.clone();
             payload.next_steps = steps;
+            if payload.provisioned_worktrees.is_empty() && !payload.successful_tasks.is_empty() {
+                payload.provisioned_worktrees = payload
+                    .successful_tasks
+                    .iter()
+                    .map(|id| WorktreeProvisionInfo {
+                        task_id: id.clone(),
+                        branch_name: format!("worktree/{id}"),
+                        worktree_path: format!(".trustkit/worktrees/{id}"),
+                        base_branch: "develop".to_string(),
+                    })
+                    .collect();
+            }
             serde_json::to_string(&payload).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
             let mut out = String::new();
