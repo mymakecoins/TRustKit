@@ -1,7 +1,7 @@
 ---
 name: trustkit-sdd
 description: Governanca deterministica de Spec-Driven Development (SDD), isolamento de Git Worktrees e Gauntlet V2 em Rust nativo.
-compatibility: Requer o binario estatico trustkit disponivel no PATH ou workspace.
+compatibility: Requer o binario estatico trustkit (ou seu alias `tk`) disponivel no PATH ou workspace.
 metadata:
   version: 4.2.0
   architecture: Hybrid Rust Core + Thin Skill
@@ -9,7 +9,7 @@ metadata:
 
 # Thin Skill Declarativa: TRustKit SDD (v4.2)
 
-Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD, resolucao contextual de proximos passos e transicoes de Gates ao binario nativo `trustkit`.
+Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD, resolucao contextual de proximos passos e transicoes de Gates ao binario nativo `trustkit` (ou pelo alias `tk` oficial e equivalente). Todos os comandos documentados abaixo podem ser invocados indistintamente via `trustkit` ou `tk` (ex: `tk status`, `tk wave run`, `tk task test`, `tk doctor`).
 
 ## Invariantes Obrigatorios
 
