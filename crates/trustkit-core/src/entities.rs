@@ -175,10 +175,10 @@ impl AtomicTask {
         branch_name: impl Into<String>,
         base_branch: impl Into<String>,
     ) -> Result<(), DomainViolation> {
-        self.worktree_allocation = self
-            .worktree_allocation
-            .clone()
-            .provision(worktree_path, branch_name, base_branch)?;
+        self.worktree_allocation =
+            self.worktree_allocation
+                .clone()
+                .provision(worktree_path, branch_name, base_branch)?;
         Ok(())
     }
 

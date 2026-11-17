@@ -262,10 +262,7 @@ pub fn execute_with_db(
             if !json_mode && !args.json {
                 let latest_tasks = repo.list_atomic_tasks(&active_cycle.cycle_id)?;
                 for task in &latest_tasks {
-                    let branch_name = task
-                        .worktree_allocation
-                        .branch_name()
-                        .unwrap_or("worktree");
+                    let branch_name = task.worktree_allocation.branch_name().unwrap_or("worktree");
                     let worktree_path = task
                         .worktree_allocation
                         .worktree_path()

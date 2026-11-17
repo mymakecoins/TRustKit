@@ -150,7 +150,9 @@ impl ExecutionEvidence {
             gauntlet_attempt: 0,
             actor_role: format!("ORCH:WORKTREE_{task_id}"),
             evidence_kind: EvidenceKind::CmdExec,
-            executed_command: format!("git worktree add -B {branch_name} {worktree_path} {base_branch}"),
+            executed_command: format!(
+                "git worktree add -B {branch_name} {worktree_path} {base_branch}"
+            ),
             exit_code: 0,
             duration_ms: 10,
             sanitized_stdout_tail: stdout,

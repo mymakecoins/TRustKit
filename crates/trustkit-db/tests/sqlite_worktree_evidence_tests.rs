@@ -12,11 +12,7 @@ use trustkit_core::ports::CycleEvidenceRepositoryPort;
 use trustkit_core::special_cases::{IssueLinkage, WorktreeAllocation};
 use trustkit_db::SqliteWalRepositoryAdapter;
 
-fn setup_test_cycle_and_task(
-    repo: &SqliteWalRepositoryAdapter,
-    cycle_id: &str,
-    task_id: &str,
-) {
+fn setup_test_cycle_and_task(repo: &SqliteWalRepositoryAdapter, cycle_id: &str, task_id: &str) {
     let cycle = SddCycle {
         cycle_id: cycle_id.to_string(),
         issue_linkage: IssueLinkage::UnlinkedLocalCycle {
@@ -103,17 +99,36 @@ fn test_sqlite_worktree_evidence_persistence() {
     assert_eq!(found.actor_role, "ORCH:WORKTREE_TASK-002");
     assert_eq!(found.verdict, GateVerdict::Pass);
     assert_eq!(found.exit_code, 0);
-    assert!(found.executed_command.contains("git worktree add -B worktree/TASK-002 .trustkit/worktrees/TASK-002 develop"));
-    assert!(found.sanitized_stdout_tail.contains("[INFO] Branch 'worktree/TASK-002' criada com sucesso."));
-    assert!(found.sanitized_stdout_tail.contains("[INFO] Checkout realizado no diretorio isolado: .trustkit/worktrees/TASK-002"));
-    assert!(found.sanitized_stdout_tail.contains("[INFO] Branch ativa do repositorio raiz preservada: 'develop'"));
+    assert!(
+        found
+            .executed_command
+            .contains("git worktree add -B worktree/TASK-002 .trustkit/worktrees/TASK-002 develop")
+    );
+    assert!(
+        found
+            .sanitized_stdout_tail
+            .contains("[INFO] Branch 'worktree/TASK-002' criada com sucesso.")
+    );
+    assert!(
+        found.sanitized_stdout_tail.contains(
+            "[INFO] Checkout realizado no diretorio isolado: .trustkit/worktrees/TASK-002"
+        )
+    );
+    assert!(
+        found
+            .sanitized_stdout_tail
+            .contains("[INFO] Branch ativa do repositorio raiz preservada: 'develop'")
+    );
 
     // 4. Verify task state in SQLite
     let task = repo
         .find_atomic_task(cycle_id, task_id)
         .expect("find task")
         .expect("task exists");
-    assert_eq!(task.worktree_allocation.branch_name(), Some("worktree/TASK-002"));
+    assert_eq!(
+        task.worktree_allocation.branch_name(),
+        Some("worktree/TASK-002")
+    );
     assert_eq!(
         task.worktree_allocation.worktree_path(),
         Some(".trustkit/worktrees/TASK-002")

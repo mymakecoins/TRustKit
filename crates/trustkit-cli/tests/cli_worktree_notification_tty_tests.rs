@@ -27,12 +27,19 @@ fn test_cli_worktree_notification_tty_rendering() {
     let rendered = GatePresenter::render_wave_run(&response, false);
 
     assert!(rendered.contains("[INFO] Branch 'worktree/TASK-003' criada com sucesso."));
-    assert!(rendered.contains("[INFO] Checkout realizado no diretorio isolado: .trustkit/worktrees/TASK-003"));
+    assert!(
+        rendered.contains(
+            "[INFO] Checkout realizado no diretorio isolado: .trustkit/worktrees/TASK-003"
+        )
+    );
     assert!(rendered.contains("[INFO] Branch ativa do repositorio raiz preservada: 'develop'"));
     assert!(rendered.contains("[PASS] Wave 3 executed: 1/1 tasks passed in 120ms"));
 
     // Verify pure ASCII (no emojis or non-ASCII characters)
-    assert!(rendered.is_ascii(), "Rendered output must be pure ASCII without emojis");
+    assert!(
+        rendered.is_ascii(),
+        "Rendered output must be pure ASCII without emojis"
+    );
 }
 
 #[test]
@@ -51,7 +58,11 @@ fn test_cli_worktree_notification_tty_fallback_from_successful_tasks() {
 
     let rendered = GatePresenter::render_wave_run(&response, false);
     assert!(rendered.contains("[INFO] Branch 'worktree/TASK-003' criada com sucesso."));
-    assert!(rendered.contains("[INFO] Checkout realizado no diretorio isolado: .trustkit/worktrees/TASK-003"));
+    assert!(
+        rendered.contains(
+            "[INFO] Checkout realizado no diretorio isolado: .trustkit/worktrees/TASK-003"
+        )
+    );
     assert!(rendered.contains("[INFO] Branch ativa do repositorio raiz preservada: 'develop'"));
     assert!(rendered.is_ascii());
 }
