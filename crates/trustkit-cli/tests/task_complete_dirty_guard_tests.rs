@@ -118,8 +118,11 @@ fn test_task_complete_rejected_when_working_tree_has_dirty_files() {
     let dir = tempdir().expect("tempdir");
     let (db_path, repo) = setup_git_repo_with_task(dir.path(), "TASK-001");
 
-    fs::write(dir.path().join("dirty_uncommitted_file.txt"), "uncommitted work\n")
-        .expect("write uncommitted file");
+    fs::write(
+        dir.path().join("dirty_uncommitted_file.txt"),
+        "uncommitted work\n",
+    )
+    .expect("write uncommitted file");
 
     let args = TaskCompleteArgs {
         task_id: "TASK-001".to_string(),
@@ -138,7 +141,9 @@ fn test_task_complete_rejected_when_working_tree_has_dirty_files() {
         DomainViolation::TddLifecycleViolation { task_id, reason } => {
             assert_eq!(task_id, "TASK-001");
             assert!(
-                reason.contains("uncommitted") || reason.contains("RN-001") || reason.contains("dirty"),
+                reason.contains("uncommitted")
+                    || reason.contains("RN-001")
+                    || reason.contains("dirty"),
                 "Expected reason to mention uncommitted/RN-001, got: {reason}"
             );
         }

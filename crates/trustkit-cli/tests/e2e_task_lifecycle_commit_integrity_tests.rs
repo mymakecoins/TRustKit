@@ -170,5 +170,8 @@ fn test_e2e_task_lifecycle_commit_integrity_full_cycle() {
         status_str.trim().is_empty(),
         "Working tree must be clean without orphan files"
     );
-    assert!(!expected_sha.is_empty(), "Valid commit SHA must be recorded");
+    assert!(
+        !expected_sha.is_empty(),
+        "Valid commit SHA must be recorded"
+    );
 }

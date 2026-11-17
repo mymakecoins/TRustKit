@@ -240,14 +240,14 @@ impl AutonomousWaveOrchestrator {
                     .output();
                 if let Ok(out) = status_out {
                     let s = String::from_utf8_lossy(&out.stdout);
-                    let has_changes = s
-                        .lines()
-                        .map(|l| l.trim())
-                        .filter(|l| !l.is_empty())
-                        .any(|l| {
-                            let p = l.split_whitespace().last().unwrap_or("");
-                            p != "target" && p != "node_modules"
-                        });
+                    let has_changes =
+                        s.lines()
+                            .map(|l| l.trim())
+                            .filter(|l| !l.is_empty())
+                            .any(|l| {
+                                let p = l.split_whitespace().last().unwrap_or("");
+                                p != "target" && p != "node_modules"
+                            });
                     if has_changes {
                         let _ = std::process::Command::new("git")
                             .args(["add", "."])

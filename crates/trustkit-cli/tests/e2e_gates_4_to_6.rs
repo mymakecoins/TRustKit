@@ -196,7 +196,11 @@ fn test_e2e_gate4_tdd_lifecycle() {
         .current_dir(base_dir)
         .output();
     let _ = std::process::Command::new("git")
-        .args(["commit", "-m", "feat: #45 implement TASK-001 production logic"])
+        .args([
+            "commit",
+            "-m",
+            "feat: #45 implement TASK-001 production logic",
+        ])
         .current_dir(base_dir)
         .output();
 

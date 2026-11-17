@@ -151,7 +151,10 @@ fn test_task_complete_success_with_clean_working_tree_and_valid_commit() {
     };
 
     let result = task_cmd::execute_complete_with_db(&args, true, &db_path);
-    assert!(result.is_ok(), "Expected task completion to succeed on clean repo");
+    assert!(
+        result.is_ok(),
+        "Expected task completion to succeed on clean repo"
+    );
 
     let task = repo
         .find_atomic_task("cycle-task-003", "TASK-003")
