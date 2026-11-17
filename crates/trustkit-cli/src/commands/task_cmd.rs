@@ -65,6 +65,49 @@ fn resolve_head_commit_sha(working_dir: &str) -> String {
     "0000000000000000000000000000000000000000".to_string()
 }
 
+fn check_working_tree_clean(working_dir: &str, task_id: &str) -> Result<(), DomainViolation> {
+    let dir = if Path::new(working_dir).exists() {
+        working_dir
+    } else {
+        "."
+    };
+
+    let output = StdCommand::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(dir)
+        .output()
+        .map_err(|e| DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "task_complete".to_string(),
+            details: format!("Failed to inspect git status in '{dir}': {e}"),
+        })?;
+
+    if !output.status.success() {
+        return Err(DomainViolation::InfrastructureBoundaryFault {
+            subsystem: "task_complete".to_string(),
+            details: format!("Git status failed in '{dir}'"),
+        });
+    }
+
+    let status_str = String::from_utf8_lossy(&output.stdout);
+    let dirty_entries: Vec<&str> = status_str
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect();
+
+    if !dirty_entries.is_empty() {
+        return Err(DomainViolation::TddLifecycleViolation {
+            task_id: task_id.to_string(),
+            reason: format!(
+                "Cannot complete task '{task_id}': working tree has {} uncommitted changes (RN-001)",
+                dirty_entries.len()
+            ),
+        });
+    }
+
+    Ok(())
+}
+
 pub fn execute(args: &TaskArgs, json_mode: bool) -> Result<DomainOutcome, DomainViolation> {
     let db_path = Path::new(".trustkit").join("state.db");
     execute_with_db(args, json_mode, &db_path)
@@ -327,8 +370,27 @@ pub fn execute_complete_with_db(
         }
     };
 
+    let task = repo
+        .find_atomic_task(&active_cycle.cycle_id, &args.task_id)?
+        .ok_or_else(|| DomainViolation::TddLifecycleViolation {
+            task_id: args.task_id.clone(),
+            reason: format!(
+                "Atomic task '{}' not found in cycle '{}'",
+                args.task_id, active_cycle.cycle_id
+            ),
+        })?;
+
+    let working_dir = match &task.worktree_allocation {
+        trustkit_core::special_cases::WorktreeAllocation::Provisioned { worktree_path, .. } => {
+            worktree_path.clone()
+        }
+        _ => active_cycle.spec_dir.clone(),
+    };
+
+    check_working_tree_clean(&working_dir, &args.task_id)?;
+
     let now_iso = current_timestamp_iso();
-    let commit_sha = resolve_head_commit_sha(&active_cycle.spec_dir);
+    let commit_sha = resolve_head_commit_sha(&working_dir);
 
     if let Some(effort_arg) = args.code_review {
         let reviewer = DefaultSemanticCodeReviewer;
