@@ -56,6 +56,11 @@ impl WaveBoardLifecycleManager {
     pub fn graceful_shutdown<P: AsRef<Path>>(metadata_path: P) -> io::Result<bool> {
         let p = metadata_path.as_ref();
         if p.exists() {
+            if let Ok(meta) = WaveBoardMetadata::load_from_file(p) {
+                let _ = std::process::Command::new("kill")
+                    .args(["-TERM", &meta.pid.to_string()])
+                    .output();
+            }
             fs::remove_file(p)?;
             Ok(true)
         } else {

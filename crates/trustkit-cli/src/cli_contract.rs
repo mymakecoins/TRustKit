@@ -43,9 +43,21 @@ impl Cli {
                 SpecSubcommand::Init(args) => args.json,
                 SpecSubcommand::Lock(args) => args.json,
             },
+            Command::Board(args) => match &args.action {
+                BoardSubcommand::Up(a) => a.json,
+                BoardSubcommand::Down(a) => a.json,
+                BoardSubcommand::Status(a) => a.json,
+                BoardSubcommand::Serve(_) => false,
+            },
             Command::Wave(WaveArgs { action }) => match action {
                 WaveSubcommand::Plan(args) => args.json,
                 WaveSubcommand::Run(args) => args.json,
+                WaveSubcommand::Board(args) => match &args.action {
+                    BoardSubcommand::Up(a) => a.json,
+                    BoardSubcommand::Down(a) => a.json,
+                    BoardSubcommand::Status(a) => a.json,
+                    BoardSubcommand::Serve(_) => false,
+                },
             },
             Command::Gauntlet(GauntletArgs { action }) => match action {
                 GauntletSubcommand::AstAudit(args) => args.json,
@@ -117,6 +129,9 @@ pub enum Command {
 
     #[command(about = "Plan and organize execution waves from atomic tasks (Gate 3)")]
     Wave(WaveArgs),
+
+    #[command(about = "Manage real-time wave kanban board background daemon")]
+    Board(BoardArgs),
 
     #[command(about = "Execute atomic tasks under strict TDD phase verification (Gate 4)")]
     Task(TaskArgs),
@@ -252,6 +267,74 @@ pub enum WaveSubcommand {
         about = "Execute tasks in topological wave within isolated worktrees"
     )]
     Run(WaveRunArgs),
+    #[command(
+        name = "board",
+        about = "Manage real-time wave kanban board background daemon"
+    )]
+    Board(WaveBoardArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct BoardArgs {
+    #[command(subcommand)]
+    pub action: BoardSubcommand,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct WaveBoardArgs {
+    #[command(subcommand)]
+    pub action: BoardSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq, Clone)]
+pub enum BoardSubcommand {
+    #[command(
+        name = "up",
+        about = "Start the real-time wave kanban board daemon"
+    )]
+    Up(BoardUpArgs),
+    #[command(
+        name = "down",
+        about = "Stop the real-time wave kanban board daemon"
+    )]
+    Down(BoardDownArgs),
+    #[command(
+        name = "status",
+        about = "Inspect status of the wave kanban board daemon"
+    )]
+    Status(BoardStatusArgs),
+    #[command(
+        name = "serve",
+        about = "Run local HTTP/SSE board server",
+        hide = true
+    )]
+    Serve(BoardServeArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct BoardUpArgs {
+    #[arg(long, help = "Automatically open the board URL in the default browser")]
+    pub open: bool,
+    #[arg(long, help = "Emit deterministic null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct BoardDownArgs {
+    #[arg(long, help = "Emit deterministic null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct BoardStatusArgs {
+    #[arg(long, help = "Emit deterministic null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Clone)]
+pub struct BoardServeArgs {
+    #[arg(long, help = "Port to listen on")]
+    pub port: u16,
 }
 
 #[derive(Args, Debug, PartialEq, Eq)]
