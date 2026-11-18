@@ -172,7 +172,10 @@ pub enum Command {
     #[command(about = "Decoupled pre-release homologation and repository security audits")]
     Audit(AuditArgs),
 
-    #[command(about = "Plan, list and inspect project milestones")]
+    #[command(
+        visible_alias = "milestone",
+        about = "Plan, list and inspect project milestones"
+    )]
     Milestones(MilestonesArgs),
 
     #[command(

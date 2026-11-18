@@ -75,3 +75,61 @@ fn test_task_004_skills_document_tk_alias() {
         );
     }
 }
+
+#[test]
+fn test_skills_and_slash_command_fast_path_and_milestone_sync() {
+    let root = workspace_root();
+    let skills_path = root.join("skills/trustkit-sdd/SKILL.md");
+    let agents_skills_path = root.join(".agents/skills/trustkit-sdd/SKILL.md");
+
+    let skills_content = fs::read_to_string(&skills_path)
+        .unwrap_or_else(|e| panic!("Failed reading skill at {:?}: {e}", skills_path));
+    let agents_skills_content = fs::read_to_string(&agents_skills_path)
+        .unwrap_or_else(|e| panic!("Failed reading skill at {:?}: {e}", agents_skills_path));
+
+    assert_eq!(
+        skills_content, agents_skills_content,
+        "skills/trustkit-sdd/SKILL.md and .agents/skills/trustkit-sdd/SKILL.md must be identical"
+    );
+
+    for (path, content) in [
+        ("skills/trustkit-sdd/SKILL.md", &skills_content),
+        (
+            ".agents/skills/trustkit-sdd/SKILL.md",
+            &agents_skills_content,
+        ),
+    ] {
+        assert_zero_emojis(path, content);
+        assert_zero_ai_trailers(path, content);
+        assert!(
+            content.contains("FAST-PATH"),
+            "{path} must contain FAST-PATH directive in frontmatter/body"
+        );
+        assert!(
+            content.contains("tk milestone plan"),
+            "{path} must document 'tk milestone plan'"
+        );
+        assert!(
+            content.contains("trustkit milestones plan"),
+            "{path} must document 'trustkit milestones plan'"
+        );
+    }
+
+    let slash_cmd_path = root.join(".claude/commands/tk.md");
+    assert!(
+        slash_cmd_path.exists(),
+        "Slash command file must exist at .claude/commands/tk.md"
+    );
+    let slash_content = fs::read_to_string(&slash_cmd_path)
+        .unwrap_or_else(|e| panic!("Failed reading {:?}: {e}", slash_cmd_path));
+    assert_zero_emojis(".claude/commands/tk.md", &slash_content);
+    assert_zero_ai_trailers(".claude/commands/tk.md", &slash_content);
+    assert!(
+        slash_content.contains("$ARGUMENTS"),
+        ".claude/commands/tk.md must reference $ARGUMENTS"
+    );
+    assert!(
+        slash_content.contains("--json"),
+        ".claude/commands/tk.md must enforce --json"
+    );
+}
