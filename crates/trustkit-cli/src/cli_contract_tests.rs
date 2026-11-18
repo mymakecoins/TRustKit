@@ -325,3 +325,53 @@ fn test_parse_milestones_plan_list_inspect() {
         _ => panic!("Expected milestones inspect"),
     }
 }
+
+#[test]
+fn test_parse_milestone_singular_alias() {
+    let plan_args = [
+        "trustkit",
+        "milestone",
+        "plan",
+        "--prd",
+        "docs/PRD.md",
+        "--adr",
+        "docs/ADR.md",
+        "--json",
+    ];
+    let cli_plan = Cli::try_parse_from(plan_args).expect("parse milestone singular alias plan");
+    assert!(cli_plan.is_json_mode());
+    match cli_plan.command {
+        Command::Milestones(MilestonesArgs {
+            action: MilestonesSubcommand::Plan(args),
+        }) => {
+            assert_eq!(args.prd, "docs/PRD.md");
+            assert_eq!(args.adr, "docs/ADR.md");
+            assert!(args.json);
+        }
+        _ => panic!("Expected milestone plan via singular alias"),
+    }
+
+    let list_args = ["trustkit", "milestone", "list", "--json"];
+    let cli_list = Cli::try_parse_from(list_args).expect("parse milestone singular alias list");
+    assert!(cli_list.is_json_mode());
+    match cli_list.command {
+        Command::Milestones(MilestonesArgs {
+            action: MilestonesSubcommand::List(args),
+        }) => assert!(args.json),
+        _ => panic!("Expected milestone list via singular alias"),
+    }
+
+    let inspect_args = ["trustkit", "milestone", "inspect", "M01", "--json"];
+    let cli_inspect =
+        Cli::try_parse_from(inspect_args).expect("parse milestone singular alias inspect");
+    assert!(cli_inspect.is_json_mode());
+    match cli_inspect.command {
+        Command::Milestones(MilestonesArgs {
+            action: MilestonesSubcommand::Inspect(args),
+        }) => {
+            assert_eq!(args.milestone_id, "M01");
+            assert!(args.json);
+        }
+        _ => panic!("Expected milestone inspect via singular alias"),
+    }
+}

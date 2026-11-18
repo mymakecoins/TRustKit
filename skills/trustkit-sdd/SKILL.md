@@ -1,6 +1,6 @@
 ---
 name: trustkit-sdd
-description: Governanca deterministica de Spec-Driven Development (SDD), isolamento de Git Worktrees e Gauntlet V2 em Rust nativo.
+description: "Governanca deterministica de Spec-Driven Development (SDD), isolamento de Git Worktrees e Gauntlet V2 em Rust nativo. FAST-PATH: Quando a mensagem do usuario for um comando CLI direto iniciado por `tk `, `/tk `, `trustkit ` ou `/trustkit `, NAO leia este SKILL.md, NAO execute `--help` e NAO abra os arquivos passados nas flags (`--prd`, `--adr`, `--spec`, `--file`, `--milestone`); execute o comando IMEDIATAMENTE no terminal adicionando `--json` e apresente o bloco `NEXT STEP` retornado."
 compatibility: Requer o binario estatico trustkit (ou seu alias `tk`) disponivel no PATH ou workspace.
 metadata:
   version: 4.2.0
@@ -10,6 +10,14 @@ metadata:
 # Thin Skill Declarativa: TRustKit SDD (v4.2)
 
 Esta skill orquestra o ciclo de vida do SDD delegando todas as validacoes deterministicas, scaffolding de prompt com fatiamento de contexto, linter de especificacao, isolamento de Worktrees, fiscalizacao de TDD, resolucao contextual de proximos passos e transicoes de Gates ao binario nativo `trustkit` (ou pelo alias `tk` oficial e equivalente). Todos os comandos documentados abaixo podem ser invocados indistintamente via `trustkit` ou `tk` (ex: `tk status`, `tk wave run`, `tk task test`, `tk doctor`).
+
+## Fast-Path de Execucao Direta (Economia Maxima de Tokens)
+
+Quando o usuario digitar um comando iniciado por `tk `, `/tk `, `trustkit ` ou `/trustkit ` no chat:
+1. Execute o comando **imediatamente** via terminal adicionando `--json` (caso ainda nao esteja presente).
+2. **NAO** leia previamente os arquivos referenciados em flags (`--prd`, `--adr`, `--spec`, `--file`, `--milestone`, `--from-prd`), pois o proprio binario Rust faz a leitura e validacao deterministica.
+3. **NAO** execute `--help`, `ls -la` ou `git status` exploratorios antes do comando.
+4. Ao receber o JSON do binario, apresente diretamente o resumo e o bloco `PROXIMO PASSO RECOMENDADO` extraido de `next_steps`.
 
 ## Invariantes Obrigatorios
 
@@ -53,6 +61,15 @@ trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] 
 
 # Execucao autonoma a partir de especificacao local
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] --json
+```
+
+### Pre-Gate 0: Planejamento de Milestones (PRD + ADR)
+Extraia e planeje o DAG de milestones a partir do PRD e ADR (aceita `milestones` ou o alias singular `milestone`):
+```bash
+tk milestone plan --prd <CAMINHO_PRD> --adr <CAMINHO_ADR> [--output-dir docs/milestones] --json
+trustkit milestones plan --prd <CAMINHO_PRD> --adr <CAMINHO_ADR> [--output-dir docs/milestones] --json
+tk milestone list --json
+tk milestone inspect <MILESTONE_ID> --json
 ```
 
 ### Gate 0: Inicializacao do Ciclo
