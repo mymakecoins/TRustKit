@@ -689,6 +689,27 @@
       background: #334155;
       color: #fff;
     }
+
+    .kanban-card {
+      view-transition-name: match-element;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation: none;
+      }
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -746,10 +767,14 @@
     </div>
 
     <div class="board-controls">
+      <div class="invariant-tag active" id="sseStatusBadge">
+        <span class="tag-dot"></span> <span id="sseStatusText">STREAM: CONECTANDO</span>
+      </div>
       <input type="text" class="search-box" id="searchBox" placeholder="Filtrar por ID ou tag..." onkeyup="searchCards()">
       <button class="btn" style="padding: 4px 10px;" onclick="alert('Modo de visualizacao alternado')">Visualizacao Compacta</button>
     </div>
   </div>
+  <p id="boardStatusAnnouncer" role="status" class="visually-hidden"></p>
 
   <!-- Kanban 7-Gates Columns -->
   <main class="kanban-board" id="kanbanBoard">
@@ -1099,7 +1124,233 @@
     function filterBoard(type) {
       document.getElementById('searchBox').value = '';
       searchCards();
+      fetchSnapshotAndRender();
     }
+
+    function setStreamStatus(online) {
+      const badge = document.getElementById('sseStatusBadge');
+      const text = document.getElementById('sseStatusText');
+      if (!badge || !text) return;
+      if (online) {
+        badge.classList.add('active');
+        text.textContent = 'STREAM: ONLINE';
+      } else {
+        badge.classList.remove('active');
+        text.textContent = 'STREAM: DESCONECTADO';
+      }
+    }
+
+    function resolveColumnIndex(columnOrGate) {
+      if (typeof columnOrGate === 'number') {
+        return Math.max(0, Math.min(6, columnOrGate));
+      }
+      const str = String(columnOrGate || '').toUpperCase();
+      for (let i = 0; i <= 6; i++) {
+        if (str.includes('GATE ' + i) || str.includes('GATE_' + i) || str === String(i)) {
+          return i;
+        }
+      }
+      return 4;
+    }
+
+    function updateColumnCounts() {
+      for (let i = 0; i <= 6; i++) {
+        const col = document.querySelector('.kanban-column.col-' + i);
+        if (!col) continue;
+        const body = col.querySelector('.column-body');
+        const countEl = col.querySelector('.column-count');
+        if (body && countEl) {
+          countEl.textContent = String(body.querySelectorAll('.kanban-card').length);
+        }
+      }
+    }
+
+    function buildCardElement(card) {
+      const el = document.createElement('div');
+      el.className = 'kanban-card';
+      el.dataset.taskId = card.task_id || card.card_id || '';
+      const shortBlake = card.blake3_seal && card.blake3_seal !== 'UNSEALED_DRAFT'
+        ? card.blake3_seal.slice(0, 12)
+        : 'none';
+      el.onclick = function () {
+        openDrawer(
+          card.task_id || card.card_id || '000',
+          card.title || '',
+          card.gate_label || 'GATE 4: TASKS IMPLEMENTED',
+          card.status_label || 'Em Desenvolvimento (TDD)',
+          card.priority || 'PRIMARY',
+          card.tdd_phase || 'AWAITING_RED',
+          shortBlake,
+          card.next_step_command || 'tk status --json'
+        );
+      };
+
+      const top = document.createElement('div');
+      top.className = 'card-top';
+      const idSpan = document.createElement('span');
+      idSpan.className = 'card-id';
+      idSpan.textContent = card.task_id || card.card_id || '';
+      const prioSpan = document.createElement('span');
+      prioSpan.className = 'card-priority priority-primary';
+      prioSpan.textContent = card.priority || 'PRIMARY';
+      top.append(idSpan, prioSpan);
+
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'card-title';
+      titleDiv.textContent = card.title || '';
+
+      const detailsDiv = document.createElement('div');
+      detailsDiv.className = 'card-details';
+      detailsDiv.textContent = 'Ciclo: ' + (card.cycle_id || '') + ' | Branch: ' + (card.worktree_branch || '');
+
+      const badgesDiv = document.createElement('div');
+      badgesDiv.className = 'card-badges';
+      const phaseBadge = document.createElement('span');
+      const phaseUpper = String(card.tdd_phase || '').toUpperCase();
+      phaseBadge.className = 'card-badge tdd-badge ' + (phaseUpper === 'RED' ? 'badge-tdd-red' : 'badge-tdd-green');
+      phaseBadge.textContent = 'TDD: ' + phaseUpper;
+      badgesDiv.append(phaseBadge);
+
+      if (shortBlake !== 'none') {
+        const hashBadge = document.createElement('span');
+        hashBadge.className = 'card-badge badge-hash';
+        hashBadge.textContent = 'BLAKE3: ' + shortBlake;
+        badgesDiv.append(hashBadge);
+      }
+
+      if (card.wave_label) {
+        const waveBadge = document.createElement('span');
+        waveBadge.className = 'card-badge';
+        waveBadge.textContent = card.wave_label;
+        badgesDiv.append(waveBadge);
+      }
+
+      const nextDiv = document.createElement('div');
+      nextDiv.className = 'card-next-step';
+      const nextLabel = document.createElement('span');
+      nextLabel.className = 'next-step-label';
+      nextLabel.textContent = 'NEXT STEP:';
+      const nextCmd = document.createElement('span');
+      nextCmd.className = 'next-step-cmd';
+      nextCmd.textContent = card.next_step_command || 'tk status --json';
+      nextDiv.append(nextLabel, nextCmd);
+
+      el.append(top, titleDiv, detailsDiv, badgesDiv, nextDiv);
+      return el;
+    }
+
+    function renderSnapshot(snapshot) {
+      if (!snapshot || !Array.isArray(snapshot.cards)) return;
+      for (let i = 0; i <= 6; i++) {
+        const body = document.querySelector('.kanban-column.col-' + i + ' .column-body');
+        if (body) {
+          body.replaceChildren();
+        }
+      }
+      snapshot.cards.forEach(function (card) {
+        const colIdx = resolveColumnIndex(card.column_index !== undefined ? card.column_index : card.gate);
+        const body = document.querySelector('.kanban-column.col-' + colIdx + ' .column-body');
+        if (body) {
+          body.append(buildCardElement(card));
+        }
+      });
+      updateColumnCounts();
+      const announcer = document.getElementById('boardStatusAnnouncer');
+      if (announcer) {
+        announcer.textContent = 'Quadro sincronizado com ' + snapshot.cards.length + ' itens';
+      }
+    }
+
+    function moveNodeToContainer(container, node) {
+      if (Object.hasOwn(Element.prototype, 'moveBefore')) {
+        container.moveBefore(node, null);
+      } else {
+        container.append(node);
+      }
+    }
+
+    function applyCardMutation(mutation) {
+      if (!mutation || !mutation.task_id) return;
+      const targetColIdx = resolveColumnIndex(mutation.new_column);
+      const targetBody = document.querySelector('.kanban-column.col-' + targetColIdx + ' .column-body');
+      if (!targetBody) return;
+
+      const updateDom = function () {
+        let existing = document.querySelector('.kanban-card[data-task-id="' + mutation.task_id + '"]');
+        if (!existing) {
+          existing = buildCardElement({
+            task_id: mutation.task_id,
+            title: mutation.task_id,
+            cycle_id: 'active',
+            gate_label: mutation.new_column,
+            priority: 'PRIMARY',
+            tdd_phase: mutation.tdd_phase || 'RED',
+            blake3_seal: 'UNSEALED_DRAFT',
+            worktree_branch: 'worktree',
+            next_step_command: 'tk status --json'
+          });
+          targetBody.append(existing);
+        } else {
+          const badge = existing.querySelector('.tdd-badge');
+          if (badge && mutation.tdd_phase) {
+            const phaseUpper = String(mutation.tdd_phase).toUpperCase();
+            badge.className = 'card-badge tdd-badge ' + (phaseUpper === 'RED' ? 'badge-tdd-red' : 'badge-tdd-green');
+            badge.textContent = 'TDD: ' + phaseUpper;
+          }
+          if (existing.parentElement !== targetBody) {
+            moveNodeToContainer(targetBody, existing);
+          }
+        }
+        updateColumnCounts();
+      };
+
+      if (document.startViewTransition) {
+        document.startViewTransition(updateDom);
+      } else {
+        updateDom();
+      }
+      const announcer = document.getElementById('boardStatusAnnouncer');
+      if (announcer) {
+        announcer.textContent = 'Tarefa ' + mutation.task_id + ' atualizada para ' + (mutation.tdd_phase || mutation.new_column);
+      }
+    }
+
+    function fetchSnapshotAndRender() {
+      fetch('/api/snapshot')
+        .then(function (resp) { return resp.ok ? resp.json() : null; })
+        .then(function (snap) {
+          if (snap) renderSnapshot(snap);
+        })
+        .catch(function () {});
+    }
+
+    function initWaveBoardStream() {
+      fetchSnapshotAndRender();
+      if (typeof EventSource === 'undefined') return;
+      const source = new EventSource('/events');
+      source.onopen = function () {
+        setStreamStatus(true);
+      };
+      source.addEventListener('connected', function () {
+        setStreamStatus(true);
+      });
+      source.addEventListener('snapshot', function (ev) {
+        setStreamStatus(true);
+        try {
+          renderSnapshot(JSON.parse(ev.data));
+        } catch (_) {}
+      });
+      source.addEventListener('mutation', function (ev) {
+        try {
+          applyCardMutation(JSON.parse(ev.data));
+        } catch (_) {}
+      });
+      source.onerror = function () {
+        setStreamStatus(false);
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', initWaveBoardStream);
   </script>
 </body>
 </html>

@@ -16,3 +16,4 @@ regex = "1.10"
 
 [dev-dependencies]
 tempfile = "3.13"
+trustkit-db = { path = "../trustkit-db" }

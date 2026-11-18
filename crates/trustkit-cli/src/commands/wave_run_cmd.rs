@@ -18,6 +18,7 @@ use trustkit_core::special_cases::ActiveCycleLookup;
 use trustkit_core::use_cases::run_execution_wave::{self, RunExecutionWaveRequest};
 use trustkit_core::use_cases::run_interactive_wave::{self, RunInteractiveWaveRequest};
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
+use trustkit_orch::wave_board_event_publisher::WaveBoardEventPublisher;
 use trustkit_orch::{SupervisorRuntimeSelector, WorktreeIsolationProvider};
 
 fn current_timestamp_iso() -> String {
@@ -134,7 +135,21 @@ pub fn execute_with_db(
     );
 
     let mut provisioned_worktrees = Vec::new();
+    let workspace_root = db_path
+        .parent()
+        .and_then(|p| p.parent())
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let notify_ts = current_timestamp_iso();
     for task_id in &successful_tasks {
+        let _ = WaveBoardEventPublisher::notify_workspace_mutation(
+            workspace_root,
+            task_id,
+            "GATE 3: WAVE PLANNED",
+            "GATE 4: TASKS IMPLEMENTED",
+            "AWAITING_RED",
+            &notify_ts,
+        );
         if let Ok(Some(task)) = repo.find_atomic_task(&active_cycle.cycle_id, task_id) {
             let branch_name = task
                 .worktree_allocation
