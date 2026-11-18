@@ -118,6 +118,15 @@ impl Presenter {
         crate::gate_presenter::GatePresenter::render_close(res, json_mode)
     }
 
+    pub fn render_update(
+        report: &trustkit_core::entities::SelfUpdateReport,
+        check_only: bool,
+        forced: bool,
+        json_mode: bool,
+    ) -> String {
+        crate::update_presenter::UpdatePresenter::render(report, check_only, forced, json_mode)
+    }
+
     pub fn render_init(outcome: &InitializeCycleOutcome, json_mode: bool) -> String {
         let has_populated_spec = Self::has_populated_file(&outcome.cycle.spec_file_path)
             || matches!(

@@ -275,6 +275,40 @@ impl NextStepResolver {
 
         Self::for_all_waves_completed()
     }
+
+    pub fn for_update(check_only: bool, update_available: bool) -> Vec<NextStepRecommendation> {
+        if check_only && update_available {
+            vec![
+                NextStepRecommendation::new(
+                    NextStepPriority::Primary,
+                    "MAINTENANCE",
+                    "trustkit update",
+                    "Apply the available remote main branch update and rebuild binaries.",
+                ),
+                NextStepRecommendation::new(
+                    NextStepPriority::Secondary,
+                    "DIAGNOSTIC",
+                    "trustkit doctor",
+                    "Inspect active cycle and environment health before updating.",
+                ),
+            ]
+        } else {
+            vec![
+                NextStepRecommendation::new(
+                    NextStepPriority::Primary,
+                    "DIAGNOSTIC",
+                    "trustkit doctor",
+                    "Verify environment health and SQLite WAL integrity after update check or installation.",
+                ),
+                NextStepRecommendation::new(
+                    NextStepPriority::Secondary,
+                    "GRAPH",
+                    "trustkit graph build",
+                    "Refresh the structural AST graph cache with the current binary version.",
+                ),
+            ]
+        }
+    }
 }
 
 #[cfg(test)]

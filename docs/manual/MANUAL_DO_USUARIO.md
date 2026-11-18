@@ -170,6 +170,24 @@ trustkit --version
 tk --version
 ```
 
+#### Auto-Atualizacao Automatizada (`trustkit update` / `tk update`)
+
+Para verificar e promover atualizacoes diretamente a partir da branch `main` remota do repositorio oficial (`mymakecoins/TRustKit`):
+
+```bash
+# Apenas verificar se ha commits mais recentes na main remota
+tk update --check
+trustkit update --check --json
+
+# Aplicar a atualizacao (fast-forward + build release no repo fonte, ou cargo install --git no ambiente global)
+tk update
+
+# Forcar rebuild e reinstalacao mesmo quando ja estiver na versao mais recente
+tk update --force --json
+```
+
+Se a arvore de trabalho local contiver alteracoes pendentes ou se a compilacao falhar, o disjuntor semantico aborta a promocao e mantem os binarios atuais preservados sem corrupcao.
+
 ### 2.3 Modos de Operacao: Humano vs Agente
 
 O TRustKit suporta nativamente dois formatos de saida ergonomicos:
