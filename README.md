@@ -479,6 +479,24 @@ O executavel estatico gerado estara localizado em:
 target/release/trustkit
 ```
 
+### Auto-Atualizacao via CLI (`trustkit update` / `tk update`)
+
+Para manter os binarios locais `trustkit` e `tk` sincronizados com a branch `main` oficial (`mymakecoins/TRustKit`) sem etapas manuais:
+
+```bash
+# Inspecionar se existem novos commits na branch remota main sem alterar binarios
+tk update --check
+trustkit update --check --json
+
+# Atualizar e recompilar os binarios em modo release quando houver atualizacao
+tk update
+
+# Forcar reconstrucao e reinstalacao mesmo se o commit local coincidir com a main
+tk update --force --json
+```
+
+Se executado dentro do repositorio fonte com arvore limpa, realiza fetch, fast-forward da `main`, build release e instalacao atomica no PATH. Caso executado a partir de uma instalacao global gerenciada, utiliza `cargo install --git https://github.com/mymakecoins/TRustKit.git --branch main --force`. Em caso de falha de compilacao ou arvore suja, o disjuntor semantico preserva os binarios anteriores intactos.
+
 ---
 
 ## 15. Licenca
