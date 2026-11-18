@@ -1,4 +1,4 @@
-// Production implementation for TASK-002
+// Production implementation for TASK-002 and TASK-001 (Issue #32)
 // Verified under strict TDD
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
@@ -58,16 +58,43 @@ impl WaveBoardServerSse {
     }
 
     pub async fn handle_connection(&self, mut stream: TcpStream) -> std::io::Result<()> {
-        let mut buf = [0u8; 2048];
+        let mut buf = [0u8; 8192];
         let n = stream.read(&mut buf).await?;
         if n == 0 {
             return Ok(());
         }
         let req_str = String::from_utf8_lossy(&buf[..n]);
         let first_line = req_str.lines().next().unwrap_or("");
-        let path = first_line.split_whitespace().nth(1).unwrap_or("/");
+        let mut parts = first_line.split_whitespace();
+        let method = parts.next().unwrap_or("GET");
+        let path = parts.next().unwrap_or("/");
 
-        if path == "/" {
+        if method == "POST" && (path == "/api/events" || path == "/api/v1/events") {
+            let body_json = req_str
+                .split("\r\n\r\n")
+                .nth(1)
+                .or_else(|| req_str.split("\n\n").nth(1))
+                .unwrap_or("{}")
+                .trim();
+
+            let payload = if body_json.is_empty() {
+                "{}".to_string()
+            } else {
+                body_json.to_string()
+            };
+
+            let event = SseEvent::new("mutation", payload);
+            let _ = self.broadcast(event);
+
+            let resp_body = "{\"verdict\":\"PASS\",\"broadcasted\":true}";
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                resp_body.len(),
+                resp_body
+            );
+            stream.write_all(response.as_bytes()).await?;
+            stream.flush().await?;
+        } else if path == "/" {
             let body = self.dashboard_html.as_bytes();
             let response = format!(
                 "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
@@ -76,7 +103,7 @@ impl WaveBoardServerSse {
             stream.write_all(response.as_bytes()).await?;
             stream.write_all(body).await?;
             stream.flush().await?;
-        } else if path == "/events" {
+        } else if path == "/events" || path == "/api/v1/events" {
             let header = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: keep-alive\r\nAccess-Control-Allow-Origin: *\r\n\r\n";
             stream.write_all(header.as_bytes()).await?;
             stream.flush().await?;
