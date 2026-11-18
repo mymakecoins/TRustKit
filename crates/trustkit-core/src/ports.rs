@@ -379,3 +379,5 @@ pub trait BuilderAgentDispatcherPort: Send + Sync {
         expected_files: &[String],
     ) -> Result<SupervisedExecutionOutcome, DomainViolation>;
 }
+
+pub use crate::update_entities::SelfUpdatePort;

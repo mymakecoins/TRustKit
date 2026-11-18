@@ -31,4 +31,5 @@ pub mod spec_prompt_builder;
 pub mod spec_scaffold_entities;
 pub mod special_cases;
 pub mod terminal_multiplexer_entities;
+pub mod update_entities;
 pub mod use_cases;

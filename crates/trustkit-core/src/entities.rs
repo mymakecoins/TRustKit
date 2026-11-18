@@ -25,6 +25,9 @@ pub use crate::spec_scaffold_entities::*;
 pub use crate::special_cases::{CircuitBreakerState, SpecLockState, WorktreeAllocation};
 use crate::special_cases::{IssueLinkage, TddLifecycleState};
 pub use crate::terminal_multiplexer_entities::*;
+pub use crate::update_entities::{
+    SelfUpdateReport, SelfUpdateRequest, SelfUpdateStatus, UpdateInstallStrategy,
+};
 pub use crate::use_cases::run_autonomous_cycle::{AutonomousCycleOutcome, AutonomousCycleRequest};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

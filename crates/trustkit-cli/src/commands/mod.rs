@@ -22,6 +22,7 @@ pub mod spec_lock_cmd;
 pub mod spec_prompt_cmd;
 pub mod status_cmd;
 pub mod task_cmd;
+pub mod update_cmd;
 pub mod wave_board_cmd;
 pub mod wave_plan_cmd;
 pub mod wave_run_cmd;

@@ -101,6 +101,7 @@ impl Cli {
                 AuditSubcommand::Security(a) => a.json,
             },
             Command::Auto(args) => args.json,
+            Command::Update(args) => args.json,
             Command::Milestones(MilestonesArgs { action }) => match action {
                 MilestonesSubcommand::Plan(args) => args.json,
                 MilestonesSubcommand::List(args) => args.json,
@@ -173,6 +174,11 @@ pub enum Command {
 
     #[command(about = "Plan, list and inspect project milestones")]
     Milestones(MilestonesArgs),
+
+    #[command(
+        about = "Check, build and self-update trustkit and tk binaries from remote main branch"
+    )]
+    Update(UpdateArgs),
 }
 
 #[derive(Args, Debug, PartialEq, Eq, Default)]
@@ -472,6 +478,24 @@ pub struct MilestonesInspectArgs {
     pub milestone_id: String,
 
     #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default, Clone)]
+pub struct UpdateArgs {
+    #[arg(
+        long,
+        help = "Only check if newer commits exist on remote main without applying update"
+    )]
+    pub check: bool,
+
+    #[arg(
+        long,
+        help = "Force rebuild and reinstallation even if local commit matches remote main"
+    )]
+    pub force: bool,
+
+    #[arg(long, help = "Emit deterministic null-free JSON output")]
     pub json: bool,
 }
 

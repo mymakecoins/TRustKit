@@ -145,6 +145,17 @@ trustkit merge --target develop --json
 trustkit pr --target develop --json
 ```
 
+### Manutencao e Auto-Atualizacao (`trustkit update` / `tk update`)
+Agentes e desenvolvedores podem verificar e aplicar atualizacoes dos binarios `trustkit` e `tk` diretamente a partir da branch remota `main`:
+```bash
+# Apenas verifica se ha commits mais recentes na main remota sem mutacao local
+tk update --check --json
+
+# Compila e promove a atualizacao (ou reinstala via --force) mantendo disjuntor em caso de falha
+trustkit update --json
+tk update --force --json
+```
+
 ## Codigos de Saida Semanticos (POSIX Exit Codes)
 
 | Codigo | Categoria | Descricao |
