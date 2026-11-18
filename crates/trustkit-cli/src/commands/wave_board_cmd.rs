@@ -14,6 +14,7 @@ use crate::wave_board_cli_commands::{WaveBoardAction, WaveBoardCliResponse};
 use std::fs;
 use std::path::Path;
 use trustkit_core::errors::DomainViolation;
+use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 use trustkit_orch::wave_board_lifecycle_shutdown::WaveBoardLifecycleManager;
 use trustkit_orch::wave_board_port_allocator::{WaveBoardMetadata, WaveBoardPortAllocator};
 use trustkit_orch::wave_board_server_sse::WaveBoardServerSse;
@@ -239,7 +240,12 @@ pub fn execute_serve(args: &BoardServeArgs) -> Result<DomainOutcome, DomainViola
                 details: format!("Failed binding to port {}: {e}", args.port),
             })?;
 
-        let server = std::sync::Arc::new(WaveBoardServerSse::new(html));
+        let mut sse_server = WaveBoardServerSse::new(html);
+        let db_path = Path::new(".trustkit").join("state.db");
+        if let Ok(repo) = SqliteWalRepositoryAdapter::open(&db_path) {
+            sse_server = sse_server.with_repository(std::sync::Arc::new(repo));
+        }
+        let server = std::sync::Arc::new(sse_server);
         server
             .serve(listener)
             .await
