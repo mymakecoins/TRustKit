@@ -10,7 +10,7 @@ use crate::commands::{
     audit_security_cmd, auto_cmd, close_cmd, context_slice_cmd, doctor_cmd, done_cmd,
     gauntlet_ast_audit_cmd, gauntlet_run_cmd, graph_cmd, hook_cmd, init_cmd, mcp_cmd, memory_cmd,
     merge_cmd, milestones_cmd, pr_cmd, spec_init_cmd, spec_lint_cmd, spec_lock_cmd,
-    spec_prompt_cmd, status_cmd, task_cmd, wave_plan_cmd, wave_run_cmd,
+    spec_prompt_cmd, status_cmd, task_cmd, wave_board_cmd, wave_plan_cmd, wave_run_cmd,
 };
 use crate::error_handler::DomainOutcome;
 use std::path::Path;
@@ -39,7 +39,9 @@ impl FastSyncBootstrap {
             Command::Wave(WaveArgs { action }) => match action {
                 WaveSubcommand::Plan(args) => wave_plan_cmd::execute(args, json_mode),
                 WaveSubcommand::Run(args) => wave_run_cmd::execute(args, json_mode),
+                WaveSubcommand::Board(args) => wave_board_cmd::execute(&args.action, json_mode),
             },
+            Command::Board(args) => wave_board_cmd::execute(&args.action, json_mode),
             Command::Gauntlet(GauntletArgs { action }) => match action {
                 GauntletSubcommand::AstAudit(args) => {
                     gauntlet_ast_audit_cmd::execute(args, json_mode)
@@ -142,6 +144,7 @@ pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
     match &cli.command {
         Command::Hook(_)
         | Command::Status(_)
+        | Command::Board(_)
         | Command::Spec(_)
         | Command::Context(_)
         | Command::Memory(_)
@@ -151,6 +154,9 @@ pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
         | Command::Milestones(_)
         | Command::Wave(WaveArgs {
             action: WaveSubcommand::Plan(_),
+        })
+        | Command::Wave(WaveArgs {
+            action: WaveSubcommand::Board(_),
         })
         | Command::Gauntlet(GauntletArgs {
             action: GauntletSubcommand::AstAudit(_),

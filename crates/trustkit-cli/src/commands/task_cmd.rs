@@ -26,6 +26,15 @@ use trustkit_core::use_cases::record_tdd_phase::{self, RecordTddPhaseRequest};
 use trustkit_core::use_cases::review_task_code::{self, ReviewTaskCodeRequest};
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 use trustkit_orch::AsyncExecutionSupervisor;
+use trustkit_orch::wave_board_event_publisher::WaveBoardEventPublisher;
+
+fn resolve_workspace_root(db_path: &Path) -> &Path {
+    db_path
+        .parent()
+        .and_then(|p| p.parent())
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."))
+}
 
 struct DefaultSemanticCodeReviewer;
 
@@ -344,6 +353,18 @@ pub fn execute_test_with_deps(
         Err(e) => return Err(e),
     };
     let steps = NextStepResolver::for_task_test(&outcome.task_id, outcome.phase);
+    let phase_label = match outcome.phase {
+        TddPhase::Red => "RED",
+        TddPhase::Green => "GREEN",
+    };
+    let _ = WaveBoardEventPublisher::notify_workspace_mutation(
+        resolve_workspace_root(db_path),
+        &outcome.task_id,
+        "GATE 4: TASKS IMPLEMENTED",
+        "GATE 4: TASKS IMPLEMENTED",
+        phase_label,
+        &current_timestamp_iso(),
+    );
 
     let response = JsonTaskTestResponse {
         verdict: "PASS".to_string(),
@@ -438,6 +459,14 @@ pub fn execute_complete_with_db(
     };
 
     let outcome = complete_task::execute(request, &repo)?;
+    let _ = WaveBoardEventPublisher::notify_workspace_mutation(
+        resolve_workspace_root(db_path),
+        &outcome.task_id,
+        "GATE 4: TASKS IMPLEMENTED",
+        "GATE 4: TASKS IMPLEMENTED",
+        "COMMITTED",
+        &now_iso,
+    );
 
     let dual_axis_report = DualAxisReviewReport::new(args.task_id.clone(), vec![], vec![]);
     let _ = DualAxisGate4Reviewer::execute_and_record(

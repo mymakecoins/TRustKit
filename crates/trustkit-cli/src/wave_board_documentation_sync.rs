@@ -11,10 +11,26 @@ impl WaveBoardDocSyncValidator {
             && (lower.contains("tk") || lower.contains("trustkit"))
     }
 
+    pub fn verify_content_contains_board_and_tk(content: &str) -> bool {
+        let lower = content.to_lowercase();
+        (lower.contains("board") || lower.contains("wave board"))
+            && (lower.contains("tk") || lower.contains("trustkit"))
+    }
+
     pub fn audit_document_sources(sources: &[(&str, &str)]) -> Vec<String> {
         let mut missing = Vec::new();
         for (doc_name, content) in sources {
             if !Self::verify_content_contains_wave_board_and_tk(content) {
+                missing.push(doc_name.to_string());
+            }
+        }
+        missing
+    }
+
+    pub fn audit_board_sources(sources: &[(&str, &str)]) -> Vec<String> {
+        let mut missing = Vec::new();
+        for (doc_name, content) in sources {
+            if !Self::verify_content_contains_board_and_tk(content) {
                 missing.push(doc_name.to_string());
             }
         }
