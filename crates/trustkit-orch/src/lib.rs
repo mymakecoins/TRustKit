@@ -20,6 +20,7 @@ pub mod wave_board_lifecycle_daemon;
 pub mod wave_board_lifecycle_shutdown;
 pub mod wave_board_port_allocator;
 pub mod wave_board_server_sse;
+pub mod wave_board_snapshot_builder;
 pub mod worktree_provider;
 
 pub use async_supervisor::AsyncExecutionSupervisor;
