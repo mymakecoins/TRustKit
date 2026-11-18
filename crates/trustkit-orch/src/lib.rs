@@ -9,6 +9,8 @@ pub mod mcp_server;
 pub mod mcp_spec_dispatch;
 pub mod mcp_terminal_dispatch;
 pub mod pty_socket_adapter;
+pub mod self_update_orchestrator;
+pub mod self_update_runner;
 pub mod supervisor_runtime_selector;
 pub mod task_synthesizer;
 pub mod terminal_output_sanitizer;
@@ -32,6 +34,10 @@ pub use builder_agent_dispatcher::BuilderAgentDispatcher;
 pub use certification_reporter::CycleCertificationReporter;
 pub use mcp_server::McpServer;
 pub use pty_socket_adapter::PtySocketAdapter;
+pub use self_update_orchestrator::SelfUpdateOrchestrator;
+pub use self_update_runner::{
+    OFFICIAL_REPO_URL, ProcessUpdateCommandRunner, UpdateCommandRunnerPort,
+};
 pub use supervisor_runtime_selector::{ResolvedRuntimeBackend, SupervisorRuntimeSelector};
 pub use task_synthesizer::{SynthesisReport, TaskSynthesizer};
 pub use visual_evidence_guard::VisualEvidenceGuard;
