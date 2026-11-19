@@ -38,6 +38,8 @@ Todas as operacoes gerenciadas pelo TRustKit respeitam estritamente as regras co
 4. Os testes no Gate 4 devem cumprir o ciclo TDD mecanico: fase RED (falha comprovada) obrigatoriamente registrada antes da fase GREEN (sucesso comprovado).
 5. Abertura de Pull Request ocorre exclusivamente sob demanda explicita do desenvolvedor humano.
 6. Proibicao de pushes diretos a branches protegidas (`main`, `staging`, `develop`) por agentes autonomos (RN-006).
+7. Orientacao Contextual Mandatoria de Proximo Passo: leitura e apresentacao compulsoria do array `next_steps` (JSON) ou do rodape `NEXT STEP:` (ASCII) emitido pelo binario nativo (`NextStepResolver`).
+8. Paridade Documental Mandatoria em Releases: cada nova atualizacao, comando ou ciclo do TRustKit deve ser publicado com sua base documental integralmente sincronizada (`README.md`, `README.en.md`, manuais em Markdown `docs/manual/MANUAL_DO_USUARIO.md` e `docs/manuals/user-guide.md`, bem como suas versoes HTML standalone `docs/manual/manual.html` e `docs/manuals/user-guide.html`). E proibido promover ciclos ou releases com documentacao defasada.
 
 ---
 
@@ -93,7 +95,8 @@ O ciclo de vida de desenvolvimento e governado por 7 gates deterministas:
 ```
 
 ### Modo Autonomo de Ponta a Ponta (`trustkit auto` v2.2)
-Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue remota ou especificacao local. A versao 2.2 incorpora motor de atomizacao deterministica, protecao por Circuit Breaker contra ciclos vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
+Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue remota ou especificacao local. A versao 2.2 incorpora motor de atomizacao deterministica, reconciliacao de ciclos ativos concorrentes, protecao por Circuit Breaker contra ciclos vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
+- **Reconciliacao de Ciclos Ativos:** Detecta ciclos concorrentes no SQLite WAL, inspeciona se suas branches ja foram integradas no Git e permite reutilizar, fechar automaticamente ciclos mergeados ou iniciar um novo ciclo sem travar a automacao.
 - **Atomizacao Automatica (Gate 3):** Decompoe a Matriz de Rastreabilidade (`spec.md`) ou o corpo da issue remota (`IssueBodyAtomizer`) em tarefas `tasks/TASK-NNN.md` no disco e no SQLite WAL caso o diretorio nao exista previamente.
 - **Circuit Breaker de Backlog (`EmptyTaskBacklogFault`):** Aborta a transicao para o Gate 4 com exit code 1 caso a especificacao resulte em zero tarefas executaveis.
 - **Scaffolding de Teste RED (`RedTestScaffolder`):** Sintetiza esqueletos de teste compilaveis na worktree, rejeitando filtros vazios (`ZeroFilteredTestsFault`) e mascaramento de erros de compilacao (`CompilationFailureInRedPhaseFault`).
@@ -108,17 +111,21 @@ trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] 
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
-### Planejamento Previo de Marcos de Entregas: Decomposicao Aciclica de PRD e ADR (`trustkit milestones`)
-Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de Marcos de Entregas, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os Marcos de Entregas no SQLite WAL:
+### Planejamento Previo de Marcos de Entregas: Decomposicao Aciclica de PRD e ADR (`trustkit milestones` / `tk milestone`)
+Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de Marcos de Entregas, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os Marcos de Entregas no SQLite WAL (suporta tambem o alias singular `trustkit milestone` / `tk milestone`):
 ```bash
 # Analisa PRD e ADR, gera arquivos M01..MNN.md com citacoes de linha e persiste no banco
 trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
+# Ou via alias singular:
+tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
 
 # Lista todos os Marcos de Entregas cadastrados, ordem topologica, dependencias e status
 trustkit milestones list [--json]
+tk milestone list
 
 # Inspeciona detalhes completos, capacidades e citacoes de um marco especifico
 trustkit milestones inspect M01 [--json]
+tk milestone inspect M01
 ```
 
 ### Gate 0: Inicializacao do Ciclo
@@ -440,6 +447,7 @@ O TRustKit disponibiliza diagramas interativos independentes (HTML standalone co
   - Saida estrita em JSON deterministico e sem formatacoes superfluas.
   - Payloads 100% livres de campos `null` (arrays vazios `[]` e tipos Special Case explicitos).
   - Array estruturado `next_steps` presente em todos os retornos de comando e no `trustkit status --json` (contendo `priority`, `target_gate`, `command` e `description`), lido obrigatoriamente pela skill `trustkit-sdd` ao final de cada turno.
+  - Slash command nativo `/tk` (`.claude/commands/tk.md`) e diretiva `FAST-PATH` na skill `trustkit-sdd`: agentes sao orientados a despachar comandos diretamente via terminal com `--json`, sem ler o `SKILL.md`, sem chamar `--help` e sem abrir previamente arquivos passados em flags, economizando drasticamente o consumo de tokens de contexto.
   - Economia maxima de tokens e integracao segura com parsers agenticos.
 
 ---

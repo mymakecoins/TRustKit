@@ -38,6 +38,8 @@ All operations managed by TRustKit strictly adhere to project constitutional inv
 4. Gate 4 tests must strictly follow the mechanical TDD lifecycle: proven RED phase (verified failure) mandatory prior to GREEN phase (verified pass).
 5. Pull Request creation occurs exclusively upon explicit human developer request.
 6. Direct pushes to protected branches (`main`, `staging`, `develop`) by autonomous agents are strictly prohibited (RN-006).
+7. Mandatory Contextual Next-Step Guidance: compulsory reading and presentation of the `next_steps` array (JSON) or the `NEXT STEP:` footer (ASCII) emitted by the native binary (`NextStepResolver`).
+8. Mandatory Synchronized Documentation Parity: every release, feature, or CLI lifecycle update must be published with its complete documentation base updated concurrently (`README.md`, `README.en.md`, Markdown manuals `docs/manual/MANUAL_DO_USUARIO.md` and `docs/manuals/user-guide.md`, and standalone HTML versions `docs/manual/manual.html` and `docs/manuals/user-guide.html`). Promoting cycles or releases with outdated documentation is strictly forbidden.
 
 ---
 
@@ -91,7 +93,8 @@ The software development lifecycle is governed by 7 deterministic gates:
 ```
 
 ### End-to-End Autonomous Execution (`trustkit auto` v2.2)
-For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a remote GitHub issue or local specification. Version 2.2 incorporates automatic task atomization, Circuit Breaker protection against empty backlogs, compilable RED test scaffolding, and safe accumulative worktree merging:
+For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a remote GitHub issue or local specification. Version 2.2 incorporates automatic task atomization, concurrent active cycle reconciliation, Circuit Breaker protection against empty backlogs, compilable RED test scaffolding, and safe accumulative worktree merging:
+- **Active Cycles Reconciliation:** Detects concurrent active cycles in SQLite WAL, inspects whether branches are already merged in Git, and supports reusing existing cycles, auto-closing merged cycles, or starting fresh cycles without blocking autonomous stdin.
 - **Automatic Task Atomization (Gate 3):** Decomposes the Traceability Matrix (`spec.md`) or remote issue body (`IssueBodyAtomizer`) into atomic tasks `tasks/TASK-NNN.md` on disk and SQLite WAL when the directory is not present.
 - **Empty Task Backlog Circuit Breaker (`EmptyTaskBacklogFault`):** Halts Gate 4 transition immediately with POSIX exit code 1 if a specification yields zero actionable tasks.
 - **Compilable RED Test Scaffolding (`RedTestScaffolder`):** Synthesizes compilable RED test suites in worktrees, preventing zero-filtered runs (`ZeroFilteredTestsFault`) and distinguishing syntax/compilation faults from true domain assertion failures (`CompilationFailureInRedPhaseFault`).
@@ -106,10 +109,31 @@ trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] 
 trustkit auto --spec <SPEC_PATH> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
+### Prior Milestone Planning: Acyclic Decomposition of PRD and ADR (`trustkit milestones` / `tk milestone`)
+Prior to starting SDD cycles over large requirements documents, TRustKit can analyze the PRD and ADR simultaneously, map business capabilities and technical constraints, construct an acyclic Directed Acyclic Graph (DAG) of Milestones, generate individual milestone files in `docs/milestones/` with exact line citations (`#LXX-LYY`), and persist milestones into SQLite WAL (supports both `trustkit milestones` and singular alias `trustkit milestone` / `tk milestone`):
+```bash
+# Analyze PRD and ADR, synthesize M01..MNN.md files with line citations and persist to WAL
+trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
+# Or via singular alias:
+tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
+
+# List all planned milestones, topological order, dependencies, and lifecycle status
+trustkit milestones list [--json]
+tk milestone list
+
+# Inspect detailed capabilities, constraints, and citations of a specific milestone
+trustkit milestones inspect M01 [--json]
+tk milestone inspect M01
+```
+
 ### Gate 0: Cycle Initialization
 Validates GitHub profile identity, branches, working tree cleanliness, and initializes session state in SQLite:
 ```bash
+# Named initialization linked to remote or local issue
 trustkit init --issue <ISSUE_ID> [--from-prd <PRD_PATH>] [--json]
+
+# Initialization driven by a planned milestone
+trustkit init --milestone docs/milestones/M01-foundation.md [--target develop] [--json]
 ```
 
 ### Gate 1 & 2: Native Specification, Linting & Cryptographic Freezing (Spec Lock)
@@ -418,6 +442,7 @@ TRustKit provides explorable, self-contained interactive visual diagrams (standa
   - Strict deterministic JSON without superfluous whitespace.
   - Guaranteed 100% null-free payloads (empty arrays `[]` and typed Special Case models).
   - Structured `next_steps` array emitted in every command output and in `trustkit status --json` (containing `priority`, `target_gate`, `command`, and `description`), consumed by the `trustkit-sdd` skill at the end of every turn.
+  - Native slash command `/tk` (`.claude/commands/tk.md`) and `FAST-PATH` directive in `trustkit-sdd` skill: autonomous agents are instructed to execute commands immediately via the terminal using `--json`, without reading `SKILL.md`, without running `--help`, and without opening flag files in advance, achieving significant token savings.
   - Minimal token consumption and safe schema consumption for agentic parsers.
 
 ---
@@ -455,6 +480,22 @@ cargo build --workspace --release
 The optimized static binary will be generated at:
 ```
 target/release/trustkit
+```
+
+### Self-Update via CLI (`trustkit update` / `tk update`)
+TRustKit provides a native self-update command protected by an AST semantic circuit breaker:
+```bash
+# Check if new commits exist on remote main
+trustkit update --check
+tk update --check
+
+# Apply update (fast-forward and release build inside repo, or cargo install --git globally)
+trustkit update
+tk update
+
+# Force rebuild and reinstallation even when already on latest commit
+trustkit update --force
+tk update --force
 ```
 
 ---
