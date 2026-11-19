@@ -28,6 +28,7 @@ Quando o usuario digitar um comando iniciado por `tk `, `/tk `, `trustkit ` ou `
 5. Os testes do Gate 4 devem seguir estritamente o ciclo TDD: RED comprovado antes de GREEN.
 6. Abertura de Pull Request ocorre exclusivamente sob demanda humana explicita.
 7. Ao final de cada comando ou turno de interacao, o agente deve obrigatoriamente ler o array `next_steps` do JSON retornado pelo binario (ou o bloco `NEXT STEP:` da saida ASCII) e apresentar ao usuario a orientacao explicita do proximo passo.
+8. Paridade Documental Mandatoria: Toda atualizacao de comando, ciclo ou release do TRustKit deve ser publicada com sua base documental integralmente sincronizada (README.md, README.en.md, manuais em Markdown docs/manual/MANUAL_DO_USUARIO.md e docs/manuals/user-guide.md, bem como suas versoes HTML standalone docs/manual/manual.html e docs/manuals/user-guide.html). E proibido promover ciclos ou releases para develop/main com documentacao defasada.
 
 ## Protocolo Obrigatorio de Orientacao de Proximo Passo (Next-Step Guidance)
 

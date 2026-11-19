@@ -25,12 +25,14 @@ Diferente de abordagens puramente declarativas ou harnesses legados baseados em 
 4. Ciclo TDD Mecanico Estrito: Na fase de execucao de tarefas (Gate 4), o registro da fase RED (falha comprovada) e compulsorio antes de qualquer aceitacao da fase GREEN (sucesso comprovado).
 5. Abertura de Pull Request Sob Demanda: Abertura de PR ocorre unicamente mediante ordem explicita do desenvolvedor humano (`trustkit pr`).
 6. Protecao Estrita de Branches: Bloqueio absoluto de pushes diretos em branches protegidas (`main`, `master`, `staging`, `develop`).
+7. Orientacao Contextual de Proximo Passo: Apresentacao compulsoria do array `next_steps` (JSON) ou do rodape `NEXT STEP:` (ASCII) emitido pelo motor `NextStepResolver`.
+8. Paridade Documental Mandatoria em Releases: Toda promocao ou release do TRustKit deve ser publicada com sua base documental integralmente sincronizada (`README.md`, `README.en.md`, manuais em Markdown `docs/manual/MANUAL_DO_USUARIO.md` e `docs/manuals/user-guide.md`, bem como versoes HTML standalone `docs/manual/manual.html` e `docs/manuals/user-guide.html`). E proibido promover ciclos com documentacao defasada.
 
 ---
 
-## 2. Planejamento Previo de Marcos (`trustkit milestones`)
+## 2. Planejamento Previo de Marcos (`trustkit milestones` / `tk milestone`)
 
-Antes de iniciar o ciclo SDD contra documentos extensos de especificacao, o TRustKit disponibiliza o subsistema de planejamento de marcos para decompor o PRD e o ADR de forma aciclica.
+Antes de iniciar o ciclo SDD contra documentos extensos de especificacao, o TRustKit disponibiliza o subsistema de planejamento de marcos para decompor o PRD e o ADR de forma aciclica (suporta tanto `trustkit milestones` quanto o alias singular `trustkit milestone` ou `tk milestone`).
 
 ### Analise e Planejamento (`trustkit milestones plan`)
 
@@ -115,8 +117,9 @@ trustkit status --json
 
 ## 4. Modo Autonomo de Ponta a Ponta (`trustkit auto` v2.2)
 
-Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando unificado `trustkit auto`. A versao 2.2 incorpora motor de atomizacao deterministica, protecao por Circuit Breaker contra backlogs vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
+Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando unificado `trustkit auto`. A versao 2.2 incorpora motor de atomizacao deterministica, reconciliacao de ciclos ativos concorrentes, protecao por Circuit Breaker contra backlogs vazios, sintese de testes RED compilaveis e merge cumulativo seguro:
 
+- **Reconciliacao de Ciclos Ativos Concorrentes:** Detecta ciclos preexistentes no SQLite WAL, testa integracao de branches no Git e suporta resolucao declarativa (`--new`, `--close-merged`, `--reuse-cycle`) sem travar a automacao.
 - **Atomizacao Automatica (Gate 3):** Se o diretorio `tasks/` nao existir, o motor extrai da Matriz de Rastreabilidade (`spec.md`) ou da issue remota (`IssueBodyAtomizer`) as tarefas `tasks/TASK-NNN.md` no disco e no SQLite WAL.
 - **Circuit Breaker contra Ciclo Vazio (`EmptyTaskBacklogFault`):** Aborta a transicao para o Gate 4 com exit code 1 caso a especificacao resulte em zero tarefas executaveis.
 - **Scaffolding de Teste RED (`RedTestScaffolder`):** Sintetiza esqueletos de teste compilaveis na worktree, rejeitando filtros vazios (`ZeroFilteredTestsFault`) e mascaramento de erros de compilacao (`CompilationFailureInRedPhaseFault`).
@@ -312,4 +315,5 @@ trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db
 | `trustkit audit security` | Executa auditoria de seguranca pre-release em 6 fases. |
 | `trustkit memory` | Gerencia notas, links e busca semantica FTS5 na memoria perene. |
 | `trustkit graph` | Analisa grafo de dependencias AST, acoplamento e saude arquitetural. |
-| `trustkit hook` | Rota ultrarrapida (< 3ms) para interceptacao s悪ncrona de comandos de terminal. |
+| `trustkit hook` | Rota ultrarrapida (< 3ms) para interceptacao sincrona de comandos de terminal. |
+| `trustkit update` | Auto-atualizacao nativa com disjuntor semantico AST (`tk update [--check|--force]`). |
