@@ -122,6 +122,7 @@ As Thin Skills residem em `.agents/skills/` e guiam os assistentes agênticos at
 | `/sdd-resolve` | `sdd-resolve` | Gate 4 | Avaliacao comparativa do codigo construido contra os requisitos e convergencia de tarefas pendentes. |
 | `/sdd-validate` | `sdd-validate` | Gate 5 | Geracao de checklists de qualidade de requisitos e homologacao previa ao Gauntlet Loop. |
 | `/sdd-publish-issues` | `sdd-publish-issues` | Gate 6 | Sincronizacao idempotente de tarefas no GitHub Issues e boards de projetos. |
+| `/tk` | `trustkit-sdd` | Transversal | Execucao imperativa direta do binario nativo com `$ARGUMENTS --json` e fast-path de alta economia de tokens. |
 | N/A | `trustkit-sdd` | Transversal | Thin Skill mestre de governanca SDD, worktrees com CoW e consenso Gauntlet V2 em Rust nativo. |
 
 ### 1.5 Principios Constitucionais de Governanca
@@ -136,6 +137,8 @@ Todas as rotinas operadas pelo TRustKit sao regidas por regras fundamentais de q
 * **Invariante #7: Proibicao Absoluta de Emojis.** Toda comunicacao, log, arquivo de codigo e mensagem de commit deve empregar exclusivamente caracteres alfanumericos e marcadores textuais claros (ex: `[PASS]`, `[FAIL]`).
 * **Invariante #12: Pull Request Sob Demanda.** Pull Requests nunca sao abertos automaticamente; dependem de solicitacao expressa do desenvolvedor via `tk pr`.
 * **Invariante #13: Proibicao de Trailers de IA.** Vetado o uso de marcas como `Co-Authored-By: Claude` ou mensagens geradas automaticamente em commits e documentos.
+* **Invariante #14: Orientacao Contextual Mandatoria de Proximo Passo.** Todo retorno do binario nativo emite recomendacoes contextuais via array `next_steps` (JSON) e rodape `NEXT STEP:` (ASCII), de consumo obrigatorio por agentes e desenvolvedores ao final de cada turno.
+* **Invariante #15: Paridade Documental Mandatoria em Releases.** Toda atualizacao de comando, ciclo ou release do TRustKit deve ser publicada com sua base documental integralmente sincronizada (`README.md`, `README.en.md`, manuais em Markdown `docs/manual/MANUAL_DO_USUARIO.md` e `docs/manuals/user-guide.md`, bem como suas versoes HTML standalone `docs/manual/manual.html` e `docs/manuals/user-guide.html`). E terminantemente proibido promover ciclos ou releases para develop/main com documentacao defasada.
 
 ---
 
@@ -244,6 +247,24 @@ O comando `init` realiza automaticamente:
 ---
 
 ## 3. Guia Operacional Passo a Passo (A Jornada dos 7 Gates)
+
+### 3.0 Planejamento Previo de Marcos de Entregas (Pre-Gate 0: `tk milestone`)
+
+Antes de iniciar ciclos sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, gerar os marcos aciclicos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persisti-los no SQLite WAL (suporta `tk milestones` e o alias singular `tk milestone`):
+
+```bash
+# Analisa PRD e ADR, gera M01..MNN.md com citacoes de linha e persiste no banco
+tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
+
+# Lista marcos cadastrados, ordem topologica, dependencias e status
+tk milestone list
+
+# Inspeciona detalhes completos, capacidades e citacoes de um marco
+tk milestone inspect M01
+
+# Inicializa o Gate 0 direcionado por marco planejado
+tk init --milestone docs/milestones/M01-fundacao.md
+```
 
 ### 3.1 Tarefa 1: Iniciar um Ciclo de Desenvolvimento (Gate 0)
 
@@ -469,6 +490,7 @@ tk pr --target develop
 
 Para execucoes em que a especificacao formal ja existe ou os requisitos estao consolidados em uma issue do GitHub, o comando `tk auto` executa os 7 gates (0 ao 6) de forma autonoma com blindagens deterministicas:
 
+- **Reconciliacao de Ciclos Concorrentes:** Inspeciona o banco SQLite WAL em busca de ciclos anteriores em status ativo. Em modo interativo (TTY), pergunta ao usuario se deseja reutilizar, fechar ciclos cujas branches ja foram mergeadas no Git ou arquivar rascunhos orfaos vazios. Em modo autonomo (`--json`), suporta flags declarativas (`--new`, `--close-merged`, `--reuse-cycle <ID>`) e emite diagnostico estruturado, prevenindo bloqueios em `stdin` e impedindo a criacao de ciclos zumbis orfaos no Gate 0.
 - **Gate 0 (Setup & Init):** Inspeciona identidade Git, branches e baseline limpo, inicializando no SQLite WAL.
 - **Gate 1 (Spec Lint):** Valida o linter nativo AST em microssegundos (sem emojis, Gherkin e matriz fechada).
 - **Gate 2 (Spec Lock):** Sela a especificacao congelada com hash BLAKE3 criptografico.

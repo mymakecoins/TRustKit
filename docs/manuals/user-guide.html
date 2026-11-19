@@ -275,13 +275,15 @@
           <li><strong>TDD Estrito:</strong> No Gate 4, a comprovacao da fase RED (falha do teste) e compulsoria antes da fase GREEN.</li>
           <li><strong>Pull Request Sob Demanda:</strong> Abertura de PR somente mediante solicitacao humana explicita.</li>
           <li><strong>Protecao de Branches:</strong> Proibicao de pushes diretos a branches protegidas (main, staging, develop).</li>
+          <li><strong>Orientacao Contextual de Proximo Passo:</strong> Apresentacao compulsoria do array <code>next_steps</code> (JSON) ou rodape <code>NEXT STEP:</code> (ASCII) emitido pelo motor <code>NextStepResolver</code>.</li>
+          <li><strong>Paridade Documental Mandatoria:</strong> Toda atualizacao de comando, ciclo ou release do TRustKit deve ser publicada com sua base documental integralmente sincronizada (README.md, README.en.md, manuais em Markdown e versoes HTML standalone). E proibido promover ciclos com documentacao defasada.</li>
         </ul>
       </div>
     </section>
 
     <section id="milestones">
-      <h2>2. Planejamento Previo de Marcos (trustkit milestones)</h2>
-      <p>O modulo de planejamento de marcos analisa conjuntamente o PRD e o ADR, mapeia capacidades de negocio e restricoes tecnicas, calcula a ordenacao aciclica (DAG) e gera os arquivos individuais em <code>docs/milestones/</code> com citacoes exatas de linhas (<code>#LXX-LYY</code>).</p>
+      <h2>2. Planejamento Previo de Marcos (trustkit milestones / tk milestone)</h2>
+      <p>O modulo de planejamento de marcos analisa conjuntamente o PRD e o ADR, mapeia capacidades de negocio e restricoes tecnicas, calcula a ordenacao aciclica (DAG) e gera os arquivos individuais em <code>docs/milestones/</code> com citacoes exatas de linhas (<code>#LXX-LYY</code>). Suporta tanto <code>trustkit milestones</code> quanto o alias singular <code>tk milestone</code>.</p>
 
       <h3>Analise e Planejamento (trustkit milestones plan)</h3>
       <pre><code># Planeja marcos aciclicos com base em PRD e ADR
@@ -327,9 +329,12 @@ trustkit status --json</code></pre>
 
     <section id="auto">
       <h2>4. Modo Autonomo de Ponta a Ponta (trustkit auto v2.2)</h2>
-      <p>Executa de forma autonoma e desatendida todo o ciclo do Gate 0 ao Gate 6 com atomizacao de tarefas (Gate 3), protecao por Circuit Breaker (EmptyTaskBacklogFault), sintese de testes RED compilaveis e merge cumulativo seguro sem force reset:</p>
+      <p>Executa de forma autonoma e desatendida todo o ciclo do Gate 0 ao Gate 6 com reconciliacao de ciclos concorrentes, atomizacao de tarefas (Gate 3), protecao por Circuit Breaker (EmptyTaskBacklogFault), sintese de testes RED compilaveis e merge cumulativo seguro sem force reset:</p>
       <pre><code># Executa ciclo completo a partir de uma issue remota
 trustkit auto --issue 42 --target develop
+
+# Com resolucao declarativa de ciclos ativos no SQLite WAL
+trustkit auto --issue 42 --new --close-merged
 
 # Executa ciclo completo a partir de arquivo de especificacao local
 trustkit auto --spec docs/specs/042-feature/spec.md --target develop
@@ -538,6 +543,10 @@ trustkit graph path --source "src/lib.rs::SddCycle" --target "crates/trustkit-db
           <tr>
             <td><code>trustkit graph</code></td>
             <td>Analise de acoplamento, Deep Modules (Deletion Test), Seams (RealSeam vs HypotheticalSeam), Design It Twice e deteccao de God Nodes.</td>
+          </tr>
+          <tr>
+            <td><code>trustkit update</code></td>
+            <td>Auto-atualizacao nativa com disjuntor semantico AST (<code>tk update [--check|--force]</code>).</td>
           </tr>
         </tbody>
       </table>

@@ -804,6 +804,11 @@ tk close</code></pre>
               <td>Zero Emojis e Zero AI Trailers</td>
               <td>Proibicao absoluta de grafismos, icones de emoji e metadados de autoria gerados por IA em commits e codigos.</td>
             </tr>
+            <tr>
+              <td><strong>Principio VIII</strong></td>
+              <td>Paridade Documental Mandatoria</td>
+              <td>Toda atualizacao de comando, ciclo ou release do TRustKit deve ser publicada com sua base documental integralmente sincronizada (README.md, README.en.md, manuais Markdown e versoes HTML standalone). E proibido promover ciclos com documentacao defasada.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -830,6 +835,23 @@ sudo ln -sf "$(pwd)/target/release/tk" /usr/local/bin/tk
 # Checar versao instalada de ambos
 trustkit --version
 tk --version</code></pre>
+      </div>
+
+      <h3>2.2 Auto-Atualizacao Automatizada (<code>trustkit update</code> / <code>tk update</code>)</h3>
+      <p>O TRustKit disponibiliza rotina nativa de auto-atualizacao com disjuntor semantico AST:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Terminal (Bash)</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+        </div>
+        <pre><code># Apenas verificar se ha commits mais recentes na main remota
+tk update --check
+
+# Aplicar atualizacao (fast-forward e build de release no repositorio local)
+tk update
+
+# Forcar rebuild e reinstalacao mesmo quando ja estiver na versao mais recente
+tk update --force</code></pre>
       </div>
 
       <h3 id="modos-operacao">2.3 Modos de Operacao: Humano vs Agente</h3>
@@ -926,6 +948,30 @@ tk init</code></pre>
     <section id="guia-operacional">
       <h2>3. Guia Operacional Passo a Passo (Os 7 Gates do SDD)</h2>
       <p>Conheca o roteiro pratico e deterministico para conceber, implementar, auditar e homologar entregas com qualidade total.</p>
+
+      <!-- Pre-Gate 0: Milestones -->
+      <div id="pre-gate-0" style="margin-bottom: 32px;">
+        <h3>Pre-Gate 0: Planejamento Previo de Marcos de Entregas (<code>tk milestone</code>)</h3>
+        <p>Analisa conjuntamente o PRD e o ADR, mapeia capacidades e restricoes tecnicas, calcula a ordenacao aciclica (DAG) e gera os arquivos em <code>docs/milestones/</code> com citacoes exatas de linhas (suporta <code>trustkit milestones</code> e o alias singular <code>tk milestone</code>):</p>
+        
+        <div class="code-container">
+          <div class="code-header">
+            <span>Planejamento e Inspecao de Marcos</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code># Analisa PRD e ADR, gera M01..MNN.md e persiste no banco
+tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
+
+# Lista marcos cadastrados e dependencias
+tk milestone list
+
+# Inspeciona detalhes completos de um marco
+tk milestone inspect M01
+
+# Inicializa o Gate 0 direcionado por marco planejado
+tk init --milestone docs/milestones/M01-fundacao.md</code></pre>
+        </div>
+      </div>
 
       <!-- Gate 0 -->
       <div id="gate-0">
@@ -1327,6 +1373,7 @@ tk pr --target develop</code></pre>
         </p>
         
         <ul style="margin: 14px 0 24px 28px; color: var(--text-secondary); line-height: 1.8;">
+          <li><strong>Reconciliacao de Ciclos Concorrentes:</strong> Detecta ciclos ativos no SQLite WAL, inspeciona se suas branches ja foram integradas no Git e permite reutilizar, fechar automaticamente ciclos mergeados ou iniciar novo ciclo sem travar a automacao com <code>--new</code> ou <code>--close-merged</code>.</li>
           <li><strong>Gate 0 (Setup &amp; Init):</strong> Inspeciona identidade Git, branches e baseline limpo, inicializando no SQLite WAL.</li>
           <li><strong>Gate 1 (Spec Lint):</strong> Valida o linter nativo AST em microssegundos (sem emojis, Gherkin e matriz fechada).</li>
           <li><strong>Gate 2 (Spec Lock):</strong> Sela a especificacao congelada com hash BLAKE3 criptografico.</li>
