@@ -6,6 +6,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use trustkit_core::entities::ToolCachingPolicy;
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::{WorktreeIsolationPort, WorktreeStatus};
 use trustkit_core::special_cases::WorktreeAllocation;
@@ -13,13 +14,53 @@ use trustkit_core::special_cases::WorktreeAllocation;
 #[derive(Debug, Clone)]
 pub struct WorktreeIsolationProvider {
     repo_root: PathBuf,
+    caching_policy: ToolCachingPolicy,
 }
 
 impl WorktreeIsolationProvider {
     pub fn new(repo_root: impl Into<PathBuf>) -> Self {
         Self {
             repo_root: repo_root.into(),
+            caching_policy: ToolCachingPolicy::default(),
         }
+    }
+
+    pub fn with_caching_policy(mut self, policy: ToolCachingPolicy) -> Self {
+        self.caching_policy = policy;
+        self
+    }
+
+    pub fn caching_policy(&self) -> &ToolCachingPolicy {
+        &self.caching_policy
+    }
+
+    pub fn detect_sccache_available() -> bool {
+        Command::new("sccache")
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+    }
+
+    pub fn resolve_compilation_cache_env(&self, sccache_available: bool) -> Vec<(String, String)> {
+        let mut envs = Vec::new();
+        if !self.caching_policy.is_compilation_cache_enabled() {
+            return envs;
+        }
+        if let Some(wrapper) = self
+            .caching_policy
+            .resolve_rustc_wrapper(sccache_available)
+        {
+            envs.push(("RUSTC_WRAPPER".to_string(), wrapper.to_string()));
+        }
+        if let Some(rel_dir) = self.caching_policy.resolve_cargo_target_dir() {
+            let shared_path = self.repo_root.join(rel_dir);
+            envs.push((
+                "CARGO_TARGET_DIR".to_string(),
+                shared_path.to_string_lossy().to_string(),
+            ));
+        }
+        envs
     }
 
     pub fn detect() -> Result<Self, DomainViolation> {
@@ -75,6 +116,25 @@ impl WorktreeIsolationProvider {
     }
 
     fn link_dependencies(&self, target_dir: &Path) {
+        if self.caching_policy.is_compilation_cache_enabled() {
+            if let Some(rel_dir) = self.caching_policy.resolve_cargo_target_dir() {
+                let shared_cache_dir = self.repo_root.join(rel_dir);
+                let _ = fs::create_dir_all(&shared_cache_dir);
+                #[cfg(unix)]
+                {
+                    let wt_target = target_dir.join("target");
+                    if !wt_target.exists() {
+                        let source = if self.repo_root.join("target").exists() {
+                            self.repo_root.join("target")
+                        } else {
+                            shared_cache_dir
+                        };
+                        let canonical = std::fs::canonicalize(&source).unwrap_or(source);
+                        let _ = std::os::unix::fs::symlink(&canonical, &wt_target);
+                    }
+                }
+            }
+        }
         #[cfg(unix)]
         {
             let candidates = ["node_modules", "target"];
