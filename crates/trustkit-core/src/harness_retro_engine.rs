@@ -54,17 +54,14 @@ impl HarnessRetroEngine {
             }
         }
 
-        let cache_reuse_rate_pct = if total_cmd_executions > 0 {
-            ((optimized_executions * 100) / total_cmd_executions).min(100) as u8
-        } else {
-            0
-        };
+        let cache_reuse_rate_pct = (optimized_executions * 100)
+            .checked_div(total_cmd_executions)
+            .unwrap_or(0)
+            .min(100) as u8;
 
-        let average_cycle_time_ms = if total_cmd_executions > 0 {
-            total_duration_ms / (total_cmd_executions as u64)
-        } else {
-            0
-        };
+        let average_cycle_time_ms = total_duration_ms
+            .checked_div(total_cmd_executions as u64)
+            .unwrap_or(0);
 
         ToolEconomyMetrics {
             total_cmd_executions,

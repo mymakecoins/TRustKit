@@ -71,10 +71,10 @@ impl BuilderAgentDispatcher {
     }
 
     pub fn resolve_target_dir(&self, task_id: &str) -> String {
-        if !self.custom_prefix_set {
-            if let Some(shared) = self.caching_policy.resolve_cargo_target_dir() {
-                return shared.to_string();
-            }
+        if !self.custom_prefix_set
+            && let Some(shared) = self.caching_policy.resolve_cargo_target_dir()
+        {
+            return shared.to_string();
         }
         format!(
             "{}_{}",

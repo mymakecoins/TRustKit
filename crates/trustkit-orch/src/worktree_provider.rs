@@ -113,22 +113,22 @@ impl WorktreeIsolationProvider {
     }
 
     fn link_dependencies(&self, target_dir: &Path) {
-        if self.caching_policy.is_compilation_cache_enabled() {
-            if let Some(rel_dir) = self.caching_policy.resolve_cargo_target_dir() {
-                let shared_cache_dir = self.repo_root.join(rel_dir);
-                let _ = fs::create_dir_all(&shared_cache_dir);
-                #[cfg(unix)]
-                {
-                    let wt_target = target_dir.join("target");
-                    if !wt_target.exists() {
-                        let source = if self.repo_root.join("target").exists() {
-                            self.repo_root.join("target")
-                        } else {
-                            shared_cache_dir
-                        };
-                        let canonical = std::fs::canonicalize(&source).unwrap_or(source);
-                        let _ = std::os::unix::fs::symlink(&canonical, &wt_target);
-                    }
+        if self.caching_policy.is_compilation_cache_enabled()
+            && let Some(rel_dir) = self.caching_policy.resolve_cargo_target_dir()
+        {
+            let shared_cache_dir = self.repo_root.join(rel_dir);
+            let _ = fs::create_dir_all(&shared_cache_dir);
+            #[cfg(unix)]
+            {
+                let wt_target = target_dir.join("target");
+                if !wt_target.exists() {
+                    let source = if self.repo_root.join("target").exists() {
+                        self.repo_root.join("target")
+                    } else {
+                        shared_cache_dir
+                    };
+                    let canonical = std::fs::canonicalize(&source).unwrap_or(source);
+                    let _ = std::os::unix::fs::symlink(&canonical, &wt_target);
                 }
             }
         }

@@ -112,15 +112,15 @@ impl WaveBatchCommandPlanner {
             if idx > 0 {
                 let mut iter = spec.request.args.iter();
                 while let Some(arg) = iter.next() {
-                    if arg == "--test" || arg == "-p" {
-                        if let Some(val) = iter.next() {
-                            let pair_exists = combined_args
-                                .windows(2)
-                                .any(|w| &w[0] == arg && &w[1] == val);
-                            if !pair_exists {
-                                combined_args.push(arg.clone());
-                                combined_args.push(val.clone());
-                            }
+                    if (arg == "--test" || arg == "-p")
+                        && let Some(val) = iter.next()
+                    {
+                        let pair_exists = combined_args
+                            .windows(2)
+                            .any(|w| &w[0] == arg && &w[1] == val);
+                        if !pair_exists {
+                            combined_args.push(arg.clone());
+                            combined_args.push(val.clone());
                         }
                     }
                 }
@@ -185,11 +185,13 @@ impl WaveBatchCommandPlanner {
     }
 }
 
+pub type StructuralCouplingGraph = (Vec<StructuralNode>, Vec<StructuralEdge>);
+
 #[derive(Debug, Clone)]
 pub struct AstWaveAnalysisCache {
     policy: ToolCachingPolicy,
     ast_entries: HashMap<String, (String, AstAuditVerdict)>,
-    coupling_entries: HashMap<String, (String, (Vec<StructuralNode>, Vec<StructuralEdge>))>,
+    coupling_entries: HashMap<String, (String, StructuralCouplingGraph)>,
     hits: usize,
     misses: usize,
 }
@@ -276,11 +278,9 @@ impl AstWaveAnalysisCache {
     }
 
     pub const fn reuse_rate_pct(&self) -> u8 {
-        let total = self.hits + self.misses;
-        if total == 0 {
-            0
-        } else {
-            ((self.hits * 100) / total) as u8
+        match (self.hits * 100).checked_div(self.hits + self.misses) {
+            Some(rate) => rate as u8,
+            None => 0,
         }
     }
 
