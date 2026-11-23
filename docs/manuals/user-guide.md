@@ -210,7 +210,7 @@ trustkit gauntlet run
 # Execucao forçando revisao de seguranca da aplicacao no diff
 trustkit gauntlet run --security-review
 
-# Diagnostico de falhas ou inspecao do disjuntor (Circuit Breaker)
+# Diagnostico de falhas, verificacao de cache local (sccache / ToolCachingPolicy / BatchExecutionConfig / compilation_cache / batch_grouping_mode) ou inspecao do disjuntor (Circuit Breaker)
 trustkit doctor
 ```
 

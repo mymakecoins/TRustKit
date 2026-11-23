@@ -119,6 +119,12 @@ pub struct JsonDoctorResponse {
     pub verdict: String,
     pub circuit_breaker_tripped: bool,
     pub consecutive_failures: u8,
+    #[serde(default)]
+    pub sccache_detected: bool,
+    #[serde(default)]
+    pub compilation_cache_status: String,
+    #[serde(default)]
+    pub batch_execution_enabled: bool,
     pub diagnostics: Vec<String>,
     pub remediation: String,
     #[serde(default)]
@@ -342,9 +348,20 @@ impl GatePresenter {
             payload.next_steps = steps;
             serde_json::to_string(&payload).unwrap_or_else(|_| "{\"verdict\":\"FAIL\"}".to_string())
         } else {
+            let cache_status = if res.compilation_cache_status.is_empty() {
+                "AUTO"
+            } else {
+                res.compilation_cache_status.as_str()
+            };
             let mut out = format!(
-                "[{}] Doctor Diagnostics: Circuit Breaker Tripped: {}, Consecutive Failures: {}\nRemediation: {}",
-                res.verdict, res.circuit_breaker_tripped, res.consecutive_failures, res.remediation
+                "[{}] Doctor Diagnostics: Circuit Breaker Tripped: {}, Consecutive Failures: {}\nCompilation Cache: {} (sccache_detected: {}, batching_enabled: {})\nRemediation: {}",
+                res.verdict,
+                res.circuit_breaker_tripped,
+                res.consecutive_failures,
+                cache_status,
+                res.sccache_detected,
+                res.batch_execution_enabled,
+                res.remediation
             );
             out.push_str(&NextStepPresenter::render_json_steps_ascii_block(&steps));
             out

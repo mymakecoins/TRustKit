@@ -1789,7 +1789,7 @@ tk context slice --file crates/trustkit-core/src/entities.rs --hops 2 --strategy
         <div class="code-header"><span>Executar Diagnostico Global</span><button class="btn-copy" onclick="copyCode(this)">Copiar</button></div>
         <pre><code>tk doctor</code></pre>
       </div>
-      <p>O comando inspeciona a conexao com <code>state.db</code>, a saude dos worktrees ativos, conflitos potenciais na branch alvo e fornece o roteiro de desbloqueio.</p>
+      <p>O comando inspeciona a conexao com <code>state.db</code>, a saude dos worktrees ativos, conflitos potenciais na branch alvo, a presenca do cache local de compilacao <code>sccache</code> (<code>RUSTC_WRAPPER=sccache</code> ou fallback para <code>shared_target_dir</code> regido por <code>ToolCachingPolicy</code> e <code>BatchExecutionConfig</code> com <code>compilation_cache</code> e <code>batch_grouping_mode</code> em <code>[harness.execution]</code> do <code>trustkit.toml</code>) e fornece o roteiro de desbloqueio.</p>
     </section>
 
     <!-- 7. Glossario -->

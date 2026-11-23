@@ -690,7 +690,7 @@ Caso o ciclo seja interrompido, o banco apresente anomalias ou o disjuntor de se
 tk doctor
 ```
 
-O comando inspeciona a conexao com `state.db`, a saude dos worktrees ativos, conflitos potenciais na branch alvo (Merge Danger Door) e fornece o roteiro de desbloqueio.
+O comando inspeciona a conexao com `state.db`, a saude dos worktrees ativos, conflitos potenciais na branch alvo (Merge Danger Door), o status do cache local de compilacao (`sccache` via `RUSTC_WRAPPER=sccache` ou fallback para `shared_target_dir` em `.trustkit/cache/target` segundo `ToolCachingPolicy` e `BatchExecutionConfig` na secao `[harness.execution]` do `trustkit.toml`, com `compilation_cache` e `batch_grouping_mode`) e fornece o roteiro de desbloqueio e instalacao (`cargo install sccache`).
 
 ---
 

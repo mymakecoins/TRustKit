@@ -29,5 +29,6 @@ crates/trustkit-cli/trustkit.toml
 # TRustKit runtime transacional e worktrees efemeras
 .trustkit/state.db*
 .trustkit/worktrees/
+.trustkit/cache/
 .trustkit/audits/
 !.trustkit/wiki/

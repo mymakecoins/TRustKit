@@ -47,10 +47,7 @@ impl WorktreeIsolationProvider {
         if !self.caching_policy.is_compilation_cache_enabled() {
             return envs;
         }
-        if let Some(wrapper) = self
-            .caching_policy
-            .resolve_rustc_wrapper(sccache_available)
-        {
+        if let Some(wrapper) = self.caching_policy.resolve_rustc_wrapper(sccache_available) {
             envs.push(("RUSTC_WRAPPER".to_string(), wrapper.to_string()));
         }
         if let Some(rel_dir) = self.caching_policy.resolve_cargo_target_dir() {

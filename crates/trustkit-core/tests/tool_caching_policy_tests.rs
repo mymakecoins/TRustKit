@@ -54,7 +54,8 @@ fn test_tool_caching_policy_resolution_and_validation() {
         "Enabled compilation cache must expose shared cargo target dir"
     );
 
-    let invalid = ToolCachingPolicy::new(CompilationCacheBackend::SharedTargetDir, "   ", true, true);
+    let invalid =
+        ToolCachingPolicy::new(CompilationCacheBackend::SharedTargetDir, "   ", true, true);
     assert!(
         invalid.is_err(),
         "Empty shared_target_dir must be rejected when compilation cache is enabled"
