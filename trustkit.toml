@@ -2,3 +2,14 @@
 # Modos: "prompt", "always", "disabled"
 security_review_mode = "prompt"
 min_confidence_threshold = 8
+
+[harness.execution]
+# Backends de cache: "auto", "sccache", "shared-target", "disabled"
+compilation_cache = "auto"
+shared_target_dir = ".trustkit/cache/target"
+ast_cache_enabled = true
+coupling_cache_enabled = true
+batch_execution_enabled = true
+# Modos de agrupamento: "per-crate", "per-wave", "disabled"
+batch_grouping_mode = "per-crate"
+max_batch_size = 8

@@ -14,6 +14,7 @@ pub mod self_update_runner;
 pub mod supervisor_runtime_selector;
 pub mod task_synthesizer;
 pub mod terminal_output_sanitizer;
+pub mod tool_cache_batch_executor;
 pub mod visual_evidence_guard;
 pub mod wave_board_dashboard_sse_client;
 pub mod wave_board_event_publisher;
@@ -40,5 +41,8 @@ pub use self_update_runner::{
 };
 pub use supervisor_runtime_selector::{ResolvedRuntimeBackend, SupervisorRuntimeSelector};
 pub use task_synthesizer::{SynthesisReport, TaskSynthesizer};
+pub use tool_cache_batch_executor::{
+    AstWaveAnalysisCache, PlannedCommandBatch, TaskCommandSpec, WaveBatchCommandPlanner,
+};
 pub use visual_evidence_guard::VisualEvidenceGuard;
 pub use worktree_provider::WorktreeIsolationProvider;

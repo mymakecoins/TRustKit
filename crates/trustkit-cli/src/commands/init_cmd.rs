@@ -17,6 +17,7 @@ use trustkit_gh::git_inspector::GitInspector;
 const DEFAULT_GITIGNORE_ENTRIES: &str = r#"# TRustKit runtime transacional e worktrees efemeras
 .trustkit/state.db*
 .trustkit/worktrees/
+.trustkit/cache/
 .trustkit/audits/
 !.trustkit/wiki/
 "#;
@@ -25,6 +26,17 @@ const DEFAULT_TRUSTKIT_TOML: &str = r#"[governance.gauntlet]
 # Modos: "prompt", "always", "disabled"
 security_review_mode = "prompt"
 min_confidence_threshold = 8
+
+[harness.execution]
+# Backends de cache: "auto", "sccache", "shared-target", "disabled"
+compilation_cache = "auto"
+shared_target_dir = ".trustkit/cache/target"
+ast_cache_enabled = true
+coupling_cache_enabled = true
+batch_execution_enabled = true
+# Modos de agrupamento: "per-crate", "per-wave", "disabled"
+batch_grouping_mode = "per-crate"
+max_batch_size = 8
 "#;
 
 pub fn scaffold_gitignore(repo_dir: &Path) -> Result<(), DomainViolation> {
