@@ -56,11 +56,24 @@ pub fn redact_secrets(input: &str) -> String {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct AsyncExecutionSupervisor;
+pub struct AsyncExecutionSupervisor {
+    env_vars: Vec<(String, String)>,
+}
 
 impl AsyncExecutionSupervisor {
     pub fn new() -> Self {
-        Self
+        Self {
+            env_vars: Vec::new(),
+        }
+    }
+
+    pub fn with_env_vars(mut self, env_vars: Vec<(String, String)>) -> Self {
+        self.env_vars = env_vars;
+        self
+    }
+
+    pub fn env_vars(&self) -> &[(String, String)] {
+        &self.env_vars
     }
 
     pub async fn execute_supervised_async(
@@ -76,6 +89,9 @@ impl AsyncExecutionSupervisor {
 
         let mut cmd = Command::new(&request.command);
         cmd.args(&request.args);
+        for (k, v) in &self.env_vars {
+            cmd.env(k, v);
+        }
         if !request.working_dir.is_empty() {
             cmd.current_dir(Path::new(&request.working_dir));
         }

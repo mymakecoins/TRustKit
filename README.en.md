@@ -210,7 +210,20 @@ Optional declarative configuration in `trustkit.toml`:
 # Modes: "prompt" (interactive terminal prompt), "always" (always run), "disabled" (never prompt)
 security_review_mode = "prompt"
 min_confidence_threshold = 8
+
+[harness.execution]
+# Tool economy: compilation caching (ToolCachingPolicy) and batching (BatchExecutionConfig)
+# Cache backends: "auto", "sccache", "shared-target", "disabled"
+compilation_cache = "auto"
+shared_target_dir = ".trustkit/cache/target"
+ast_cache_enabled = true
+coupling_cache_enabled = true
+batch_execution_enabled = true
+# Grouping modes: "per-crate", "per-wave", "disabled"
+batch_grouping_mode = "per-crate"
+max_batch_size = 8
 ```
+The `trustkit doctor` (`tk doctor`) command detects local `sccache` availability (`RUSTC_WRAPPER=sccache` or `shared_target_dir` fallback), guides installation via `cargo install sccache` if absent, and `HarnessRetroEngine` quantifies cache reuse rate and average cycle time in the Gate 6 retrospective.
 
 ### Gate 6: Certification, Merge, and Pull Request
 Consolidates verification evidence into `gauntlet-report.md` (recording the security review status or allowing on-demand execution if skipped at Gate 5), performs a deterministic merge into the target branch, and opens a Pull Request upon explicit command:

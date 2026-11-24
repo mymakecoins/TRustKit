@@ -237,10 +237,17 @@ pub fn execute_with_db(
             .iter()
             .any(|t| !t.tdd_lifecycle_state.is_committed());
         if pending_tasks {
-            let worktree_port = WorktreeIsolationProvider::new(repo_dir);
-            let supervisor = trustkit_orch::AsyncExecutionSupervisor::new();
+            let exec_policy = crate::commands::doctor_cmd::load_project_execution_policy(repo_dir);
+            let sccache_available = WorktreeIsolationProvider::detect_sccache_available();
+            let worktree_port = WorktreeIsolationProvider::new(repo_dir)
+                .with_caching_policy(exec_policy.caching.clone());
+            let cache_envs = worktree_port.resolve_compilation_cache_env(sccache_available);
+            let supervisor =
+                trustkit_orch::AsyncExecutionSupervisor::new().with_env_vars(cache_envs);
             let reviewer = DefaultSemanticCodeReviewer::new();
-            let mut dispatcher = trustkit_orch::BuilderAgentDispatcher::new();
+            let mut dispatcher = trustkit_orch::BuilderAgentDispatcher::new()
+                .with_caching_policy(exec_policy.caching)
+                .with_batch_config(exec_policy.batching);
             if !args.agent_cmd.is_empty() {
                 dispatcher = dispatcher.with_agent_command(&args.agent_cmd);
             }

@@ -212,7 +212,20 @@ Configuração declarativa opcional em `trustkit.toml`:
 # Modos: "prompt" (pergunta no terminal), "always" (sempre executa), "disabled" (nunca pergunta)
 security_review_mode = "prompt"
 min_confidence_threshold = 8
+
+[harness.execution]
+# Economia de ferramentas: cache de compilacao (ToolCachingPolicy) e agrupamento (BatchExecutionConfig)
+# Backends de cache: "auto", "sccache", "shared-target", "disabled"
+compilation_cache = "auto"
+shared_target_dir = ".trustkit/cache/target"
+ast_cache_enabled = true
+coupling_cache_enabled = true
+batch_execution_enabled = true
+# Modos de agrupamento: "per-crate", "per-wave", "disabled"
+batch_grouping_mode = "per-crate"
+max_batch_size = 8
 ```
+O comando `trustkit doctor` (`tk doctor`) diagnostica a presenca do acelerador local `sccache` (`RUSTC_WRAPPER=sccache` ou fallback para `shared_target_dir`), orienta a instalacao via `cargo install sccache` quando ausente e o `HarnessRetroEngine` quantifica a taxa de reaproveitamento de cache e o tempo medio de ciclo na retrospectiva do Gate 6.
 
 ### Gate 6: Certificação, Merge e Pull Request
 Consolida as evidências em `gauntlet-report.md` (incluindo o status da revisão de segurança ou permitindo executá-la sob demanda caso tenha sido dispensada no Gate 5), executa o merge determinístico para a branch alvo e, sob demanda explícita, abre o Pull Request:
