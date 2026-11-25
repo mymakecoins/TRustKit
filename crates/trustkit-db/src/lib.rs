@@ -3,6 +3,7 @@
 pub mod blake3_adapter;
 pub mod cycle_ops;
 pub mod evidence_ops;
+pub mod feature_ops;
 pub mod graph_sqlite_repository;
 pub mod knowledge_ops;
 pub mod knowledge_wiki_fs;

@@ -5,6 +5,7 @@
 
 use crate::cycle_ops;
 use crate::evidence_ops;
+use crate::feature_ops;
 use crate::knowledge_ops;
 use crate::migrations::initialize_database;
 use crate::milestone_ops;
@@ -13,12 +14,14 @@ use rusqlite::Connection;
 use std::path::Path;
 use std::sync::Mutex;
 use trustkit_core::entities::{
-    ArtifactSeal, AtomicTask, CycleStatus, ExecutionEvidence, GateStage, KnowledgeDocument,
-    KnowledgeSearchOutcome, KnowledgeSearchQuery, Milestone, MilestoneStatus, SddCycle, TaskNode,
-    WaveSchedule, WikiLink,
+    ArtifactSeal, AtomicTask, CycleStatus, ExecutionEvidence, FeatureStatus, GateStage,
+    KnowledgeDocument, KnowledgeSearchOutcome, KnowledgeSearchQuery, Milestone, MilestoneStatus,
+    PlannedFeature, SddCycle, TaskNode, WaveSchedule, WikiLink,
 };
 use trustkit_core::errors::DomainViolation;
-use trustkit_core::ports::{CycleEvidenceRepositoryPort, MilestoneRepositoryPort};
+use trustkit_core::ports::{
+    CycleEvidenceRepositoryPort, FeatureRepositoryPort, MilestoneRepositoryPort,
+};
 use trustkit_core::special_cases::{ActiveCycleLookup, TddLifecycleState, WorktreeAllocation};
 
 pub struct SqliteWalRepositoryAdapter {
@@ -258,6 +261,40 @@ impl MilestoneRepositoryPort for SqliteWalRepositoryAdapter {
     ) -> Result<(), DomainViolation> {
         let conn = self.lock_conn()?;
         milestone_ops::update_milestone_status(&conn, milestone_id, status, updated_at)
+    }
+}
+
+impl FeatureRepositoryPort for SqliteWalRepositoryAdapter {
+    fn save_feature(&self, feature: &PlannedFeature) -> Result<(), DomainViolation> {
+        let conn = self.lock_conn()?;
+        feature_ops::save_feature(&conn, feature)
+    }
+
+    fn find_feature_by_id(
+        &self,
+        feature_id: &str,
+    ) -> Result<Option<PlannedFeature>, DomainViolation> {
+        let conn = self.lock_conn()?;
+        feature_ops::find_feature_by_id(&conn, feature_id)
+    }
+
+    fn list_features(
+        &self,
+        milestone_id: Option<&str>,
+    ) -> Result<Vec<PlannedFeature>, DomainViolation> {
+        let conn = self.lock_conn()?;
+        feature_ops::list_features(&conn, milestone_id)
+    }
+
+    fn update_feature_status(
+        &self,
+        feature_id: &str,
+        status: FeatureStatus,
+        linked_cycle_id: &str,
+        updated_at: &str,
+    ) -> Result<(), DomainViolation> {
+        let conn = self.lock_conn()?;
+        feature_ops::update_feature_status(&conn, feature_id, status, linked_cycle_id, updated_at)
     }
 }
 

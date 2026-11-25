@@ -62,6 +62,8 @@ fn test_task_001_validate_auto_without_issue_or_spec_fails() {
         target_ref: None,
         issue: None,
         spec: None,
+        feature: None,
+        milestone: None,
         target: "develop".to_string(),
         runtime: "auto".to_string(),
         agent_cmd: "".to_string(),

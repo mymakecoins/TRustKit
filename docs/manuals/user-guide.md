@@ -73,6 +73,42 @@ trustkit milestones inspect M01
 trustkit milestones inspect M01 --json
 ```
 
+### Desmembramento do Marco em Features Executaveis (`trustkit features` / `tk feature`)
+
+Apos definir os marcos evolutivos (`M01`, `M02`), o subsistema `tk features` (ou alias singular `tk feature`) le um Milestone e o desmembra em **Features** funcionais coesas (`M01-F01: Caminho Feliz`, `M01-F02: Validacoes`), sintetizando para cada Feature um arquivo `spec.md` (Specification V2) completo estruturado nas 4 camadas arquiteturais canonicas (`Schema & Contrato`, `Core & Dominio`, `API, UI & Adaptadores`, `Telemetria, Auditoria & E2E`):
+
+```text
+[ PRD.md (O Que & Por Que) ]  +  [ ADR.md (Como & Restricoes) ]
+                         |
+        +----------------+----------------+  (1. tk milestone plan)
+        v                                 v
++-------------------------------+ +-------------------------------+
+|   MILESTONE M01 (Fundacao)    | |   MILESTONE M02 (Expansao)    |
++-------------------------------+ +-------------------------------+
+        |
+        +--> [ FEATURE M01-F01: Caminho Feliz ]  (2. tk features plan --milestone M01)
+        |      +-- TASK-001: Schema & Contrato   (3. tk auto --feature M01-F01)
+        |      +-- TASK-002: Core & Dominio
+        |      +-- TASK-003: API, UI & Adaptadores
+        |      +-- TASK-004: Telemetria, Auditoria & E2E
+        |
+        +--> [ FEATURE M01-F02: Validacoes e Limites ]
+```
+
+```bash
+# 1. Extrai e sintetiza as Features e seus spec.md V2 a partir do Milestone M01
+tk features plan --milestone M01
+trustkit features plan --milestone M01 --output-dir docs/features --json
+
+# 2. Lista as Features planejadas do Milestone M01
+tk features list --milestone M01
+trustkit features list --milestone M01 --json
+
+# 3. Inspeciona detalhes e blueprints de tarefas em 4 camadas da Feature M01-F01
+tk features inspect M01-F01
+trustkit features inspect M01-F01 --json
+```
+
 ---
 
 ## 3. Inicializacao do Ciclo SDD (Gate 0)
@@ -127,11 +163,19 @@ Para execucoes completamente desatendidas, o TRustKit disponibiliza o comando un
 - **Merge Acumulativo Seguro (`SafeWorktreeMerge`):** Integra tarefas concorrentes da mesma onda sem executar `git branch -f` destrutivo, preservando todo o historico de commits.
 
 ```bash
-# Execucao autonoma a partir de issue remota
+# Execucao autonoma sobre uma Feature planejada (cria tasks e executa as waves da feature)
+tk auto --feature M01-F01 --target develop
+trustkit auto --feature M01-F01 --target develop
+
+# Execucao autonoma sequencial de todas as Features pendentes de um Milestone
+tk auto --milestone M01 --target develop
+
+# Execucao autonoma a partir de issue remota (alto fluxo e multiplos colaboradores)
 trustkit auto --issue 42 --target develop
 
-# Execucao autonoma a partir de arquivo de especificacao local
+# Execucao autonoma a partir de arquivo de especificacao local (--spec ou alias --specs)
 trustkit auto --spec docs/specs/042-feature/spec.md --target develop
+tk auto --specs docs/specs/042-feature/spec.md --target develop
 
 # Com selecao explicita de runtime de terminal (auto, pty, native)
 trustkit auto --issue 42 --runtime pty

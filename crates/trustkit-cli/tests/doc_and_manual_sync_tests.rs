@@ -249,6 +249,14 @@ fn test_all_docs_and_manuals_document_auto_v2_capabilities() {
             content.contains("EmptyTaskBacklogFault"),
             "{rel_path} must document EmptyTaskBacklogFault circuit breaker"
         );
+        assert!(
+            content.contains("features plan"),
+            "{rel_path} must document 'tk features plan' / 'trustkit features plan'"
+        );
+        assert!(
+            content.contains("--feature") && content.contains("--specs"),
+            "{rel_path} must document 'tk auto --feature' and '--specs' options"
+        );
         assert_zero_emojis(rel_path, &content);
         assert_zero_ai_trailers(rel_path, &content);
     }
