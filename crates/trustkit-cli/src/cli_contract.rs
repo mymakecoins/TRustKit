@@ -107,6 +107,11 @@ impl Cli {
                 MilestonesSubcommand::List(args) => args.json,
                 MilestonesSubcommand::Inspect(args) => args.json,
             },
+            Command::Features(FeaturesArgs { action }) => match action {
+                FeaturesSubcommand::Plan(args) => args.json,
+                FeaturesSubcommand::List(args) => args.json,
+                FeaturesSubcommand::Inspect(args) => args.json,
+            },
         }
     }
 }
@@ -177,6 +182,12 @@ pub enum Command {
         about = "Plan, list and inspect project milestones"
     )]
     Milestones(MilestonesArgs),
+
+    #[command(
+        visible_alias = "feature",
+        about = "Plan, list and inspect executable features decomposed from milestones"
+    )]
+    Features(FeaturesArgs),
 
     #[command(
         about = "Check, build and self-update trustkit and tk binaries from remote main branch"
@@ -365,8 +376,25 @@ pub struct AutoArgs {
     #[arg(long, help = "GitHub issue number, link or ID")]
     pub issue: Option<String>,
 
-    #[arg(long, help = "Path to local specification markdown file")]
+    #[arg(
+        long,
+        visible_alias = "specs",
+        help = "Path to local specification markdown file"
+    )]
     pub spec: Option<String>,
+
+    #[arg(
+        long,
+        visible_alias = "features",
+        help = "Planned feature ID (e.g. M01-F01) to execute through SDD cycle"
+    )]
+    pub feature: Option<String>,
+
+    #[arg(
+        long,
+        help = "Planned milestone ID (e.g. M01) to execute all pending features sequentially"
+    )]
+    pub milestone: Option<String>,
 
     #[arg(
         long,
@@ -394,14 +422,44 @@ pub struct AutoArgs {
 }
 
 impl AutoArgs {
-    pub fn resolved_issue(&self) -> Option<String> {
-        if let Some(ref iss) = self.issue {
-            return Some(iss.clone());
+    fn is_feature_identifier(token: &str) -> bool {
+        let upper = token.trim().to_ascii_uppercase();
+        if let Some((m_part, f_part)) = upper.split_once("-F") {
+            return m_part.starts_with('M')
+                && m_part.len() >= 2
+                && m_part[1..].chars().all(|c| c.is_ascii_digit())
+                && !f_part.is_empty()
+                && f_part.chars().all(|c| c.is_ascii_digit());
         }
-        if let Some(ref t) = self.target_ref {
-            if !t.ends_with(".md") && !std::path::Path::new(t).is_file() {
-                return Some(t.clone());
-            }
+        upper.starts_with('F') && upper.len() >= 2 && upper[1..].chars().all(|c| c.is_ascii_digit())
+    }
+
+    fn is_milestone_identifier(token: &str) -> bool {
+        let upper = token.trim().to_ascii_uppercase();
+        upper.starts_with('M') && upper.len() >= 2 && upper[1..].chars().all(|c| c.is_ascii_digit())
+    }
+
+    pub fn resolved_feature(&self) -> Option<String> {
+        if let Some(ref f) = self.feature {
+            return Some(f.clone());
+        }
+        if let Some(ref t) = self.target_ref
+            && Self::is_feature_identifier(t)
+        {
+            return Some(t.clone());
+        }
+        None
+    }
+
+    pub fn resolved_milestone(&self) -> Option<String> {
+        if let Some(ref m) = self.milestone {
+            return Some(m.clone());
+        }
+        if let Some(ref t) = self.target_ref
+            && !Self::is_feature_identifier(t)
+            && Self::is_milestone_identifier(t)
+        {
+            return Some(t.clone());
         }
         None
     }
@@ -410,19 +468,40 @@ impl AutoArgs {
         if let Some(ref s) = self.spec {
             return Some(s.clone());
         }
-        if let Some(ref t) = self.target_ref {
-            if t.ends_with(".md") || std::path::Path::new(t).is_file() {
-                return Some(t.clone());
-            }
+        if let Some(ref t) = self.target_ref
+            && !Self::is_feature_identifier(t)
+            && !Self::is_milestone_identifier(t)
+            && (t.ends_with(".md") || std::path::Path::new(t).is_file())
+        {
+            return Some(t.clone());
+        }
+        None
+    }
+
+    pub fn resolved_issue(&self) -> Option<String> {
+        if let Some(ref iss) = self.issue {
+            return Some(iss.clone());
+        }
+        if let Some(ref t) = self.target_ref
+            && !Self::is_feature_identifier(t)
+            && !Self::is_milestone_identifier(t)
+            && !t.ends_with(".md")
+            && !std::path::Path::new(t).is_file()
+        {
+            return Some(t.clone());
         }
         None
     }
 
     pub fn validate(&self) -> Result<(), DomainViolation> {
-        if self.resolved_issue().is_none() && self.resolved_spec().is_none() {
+        if self.resolved_issue().is_none()
+            && self.resolved_spec().is_none()
+            && self.resolved_feature().is_none()
+            && self.resolved_milestone().is_none()
+        {
             return Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "auto_cli".to_string(),
-                details: "Either --issue or --spec must be provided for trustkit auto".to_string(),
+                details: "One of --feature, --milestone, --issue, or --spec (--specs) must be provided for trustkit auto".to_string(),
             });
         }
         Ok(())
@@ -479,6 +558,67 @@ pub struct MilestonesListArgs {
 pub struct MilestonesInspectArgs {
     #[arg(help = "Milestone identifier (e.g. M01)")]
     pub milestone_id: String,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq)]
+pub struct FeaturesArgs {
+    #[command(subcommand)]
+    pub action: FeaturesSubcommand,
+}
+
+#[derive(Subcommand, Debug, PartialEq, Eq)]
+pub enum FeaturesSubcommand {
+    #[command(
+        name = "plan",
+        about = "Decompose a milestone into executable features and layered V2 specifications"
+    )]
+    Plan(FeaturesPlanArgs),
+
+    #[command(name = "list", about = "List planned features")]
+    List(FeaturesListArgs),
+
+    #[command(
+        name = "inspect",
+        about = "Inspect feature specification and layered task blueprints"
+    )]
+    Inspect(FeaturesInspectArgs),
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default)]
+pub struct FeaturesPlanArgs {
+    #[arg(
+        long,
+        help = "Milestone ID (e.g. M01) or path to milestone markdown file"
+    )]
+    pub milestone: String,
+
+    #[arg(
+        long,
+        default_value = "docs/features",
+        help = "Output directory for feature specification files"
+    )]
+    pub output_dir: String,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default)]
+pub struct FeaturesListArgs {
+    #[arg(long, help = "Optional milestone ID to filter features (e.g. M01)")]
+    pub milestone: Option<String>,
+
+    #[arg(long, help = "Emit null-free JSON output")]
+    pub json: bool,
+}
+
+#[derive(Args, Debug, PartialEq, Eq, Default)]
+pub struct FeaturesInspectArgs {
+    #[arg(help = "Feature identifier (e.g. M01-F01)")]
+    pub feature_id: String,
 
     #[arg(long, help = "Emit null-free JSON output")]
     pub json: bool,

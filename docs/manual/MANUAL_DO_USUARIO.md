@@ -500,11 +500,22 @@ Para execucoes em que a especificacao formal ja existe ou os requisitos estao co
 - **Gate 6 (Certify & Close):** Emite `gauntlet-report.md`, atualiza o card para `ReadyForTest` e realiza o fechamento formal via `close`.
 
 ```bash
-# A partir de uma issue remota do GitHub:
+# Fluxo em 3 Niveis (PRD + ADR -> Milestone -> Features -> Auto Waves):
+tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
+tk features plan --milestone M01
+tk features list --milestone M01
+tk features inspect M01-F01
+tk auto --feature M01-F01 --target develop
+
+# Execucao em lote de todas as Features pendentes de um Milestone:
+tk auto --milestone M01 --target develop
+
+# A partir de uma issue remota do GitHub (alto fluxo e multiplos colaboradores):
 tk auto --issue 45 --target develop
 
-# A partir de um arquivo local de especificacao:
+# A partir de um arquivo local de especificacao (--spec ou alias --specs):
 tk auto --spec docs/specs/minha-feature/spec.md --target develop
+tk auto --specs docs/specs/minha-feature/spec.md --target develop
 
 # Modo Agente com saida JSON determinista (livre de nulos):
 tk auto --spec docs/specs/minha-feature/spec.md --target develop --runtime native --json

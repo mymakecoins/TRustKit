@@ -6,6 +6,7 @@ pub use crate::ast_entities::*;
 pub use crate::dual_axis_entities::*;
 pub use crate::dual_axis_scope_creep::*;
 use crate::errors::DomainViolation;
+pub use crate::feature_entities::*;
 pub use crate::gate_entities::*;
 pub use crate::gauntlet_entities::*;
 pub use crate::glossary_entities::*;

@@ -104,28 +104,47 @@ Para execucao 100% autonoma de todo o fluxo (Gates 0 a 6) a partir de uma issue 
 - **Merge Acumulativo Seguro (`SafeWorktreeMerge`):** Integra tarefas concorrentes da mesma onda sem executar `git branch -f` destrutivo, preservando todo o historico de commits.
 
 ```bash
-# Executa ciclo completo a partir de uma issue remota do GitHub
+# Executa ciclo SDD completo sobre uma Feature extraida de um Milestone
+tk auto --feature M01-F01 [--target develop] [--runtime auto|pty|native] [--json]
+trustkit auto --feature M01-F01 [--target develop] [--runtime auto|pty|native] [--json]
+
+# Executa sequencialmente todas as Features pendentes de um Milestone
+tk auto --milestone M01 [--target develop] [--runtime auto|pty|native] [--json]
+
+# Executa ciclo completo a partir de uma issue remota do GitHub (alto fluxo e multiplos colaboradores)
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
 
-# Executa ciclo completo a partir de uma especificacao local
+# Executa ciclo completo a partir de uma especificacao local (--spec ou alias --specs)
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
+tk auto --specs <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
-### Planejamento Previo de Marcos de Entregas: Decomposicao Aciclica de PRD e ADR (`trustkit milestones` / `tk milestone`)
-Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit permite analisar conjuntamente o PRD e o ADR, mapear capacidades de negocio e restricoes tecnicas, calcular o grafo direcionado aciclico (DAG) de Marcos de Entregas, gerar artefatos em `docs/milestones/` com citacao exata de intervalos de linhas (`#LXX-LYY`) e persistir os Marcos de Entregas no SQLite WAL (suporta tambem o alias singular `trustkit milestone` / `tk milestone`):
+### Planejamento em 3 Niveis: Decomposicao de PRD e ADR (`tk milestone` -> `tk features` -> `tk auto`)
+Antes de iniciar ciclos SDD sobre especificacoes extensas, o TRustKit opera um desmembramento deterministico em 3 niveis:
+1. **Nivel Macro (`trustkit milestones` / `tk milestone`):** Analisa `PRD.md` e `ADR.md`, mapeia capacidades de negocio e restricoes tecnicas com citacoes de linha (`#LXX-LYY`) e define os Marcos de Entregas (`M01`, `M02`, ...).
+2. **Nivel Meso (`trustkit features` / `tk feature`):** Le um Milestone (`M01`) e o desmembra em Features funcionais (`M01-F01`, `M01-F02`), gerando automaticamente um `spec.md` V2 completo estruturado nas 4 camadas arquiteturais (`Schema & Contrato`, `Core & Dominio`, `API, UI & Adaptadores`, `Telemetria, Auditoria & E2E`).
+3. **Nivel Micro (`trustkit auto` / `tk auto`):** Roda sobre a Feature (`--feature M01-F01`), atomiza as Tasks das 4 camadas, monta o DAG de Waves e executa o ciclo TDD em Git Worktrees.
+
 ```bash
-# Analisa PRD e ADR, gera arquivos M01..MNN.md com citacoes de linha e persiste no banco
+# 1. Analisa PRD e ADR, gera arquivos M01..MNN.md com citacoes de linha e persiste no banco
 trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
 # Ou via alias singular:
 tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
 
-# Lista todos os Marcos de Entregas cadastrados, ordem topologica, dependencias e status
+# Lista e inspeciona os Marcos de Entregas cadastrados
 trustkit milestones list [--json]
 tk milestone list
-
-# Inspeciona detalhes completos, capacidades e citacoes de um marco especifico
 trustkit milestones inspect M01 [--json]
 tk milestone inspect M01
+
+# 2. Desmembra o Milestone M01 em Features com spec.md V2 completo nas 4 camadas
+tk features plan --milestone M01 [--output-dir docs/features] [--json]
+trustkit features plan --milestone M01 [--output-dir docs/features] [--json]
+tk features list --milestone M01 [--json]
+tk features inspect M01-F01 [--json]
+
+# 3. Executa o ciclo SDD sobre a Feature (criando tasks e executando as waves)
+tk auto --feature M01-F01 --target develop
 ```
 
 ### Gate 0: Inicializacao do Ciclo

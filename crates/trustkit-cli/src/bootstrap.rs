@@ -7,7 +7,7 @@ use crate::cli_contract::{
     HookSubcommand, SpecArgs, SpecSubcommand, WaveArgs, WaveSubcommand,
 };
 use crate::commands::{
-    audit_security_cmd, auto_cmd, close_cmd, context_slice_cmd, doctor_cmd, done_cmd,
+    audit_security_cmd, auto_cmd, close_cmd, context_slice_cmd, doctor_cmd, done_cmd, features_cmd,
     gauntlet_ast_audit_cmd, gauntlet_run_cmd, graph_cmd, hook_cmd, init_cmd, mcp_cmd, memory_cmd,
     merge_cmd, milestones_cmd, pr_cmd, spec_init_cmd, spec_lint_cmd, spec_lock_cmd,
     spec_prompt_cmd, status_cmd, task_cmd, update_cmd, wave_board_cmd, wave_plan_cmd, wave_run_cmd,
@@ -63,6 +63,7 @@ impl FastSyncBootstrap {
             Command::Audit(args) => audit_security_cmd::execute(args, json_mode),
             Command::Auto(args) => auto_cmd::execute(args, json_mode),
             Command::Milestones(args) => milestones_cmd::execute(args, json_mode),
+            Command::Features(args) => features_cmd::execute(args, json_mode),
             Command::Update(args) => update_cmd::execute(args, json_mode),
             Command::Init(_) => Err(DomainViolation::InfrastructureBoundaryFault {
                 subsystem: "bootstrap".to_string(),
@@ -153,6 +154,7 @@ pub fn dispatch_cli(cli: &Cli) -> Result<DomainOutcome, DomainViolation> {
         | Command::Audit(_)
         | Command::Auto(_)
         | Command::Milestones(_)
+        | Command::Features(_)
         | Command::Update(_)
         | Command::Wave(WaveArgs {
             action: WaveSubcommand::Plan(_),

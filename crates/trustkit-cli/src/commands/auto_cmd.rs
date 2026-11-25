@@ -10,13 +10,15 @@ use crate::commands::init_cmd::{self, current_timestamps};
 use crate::error_handler::DomainOutcome;
 use std::fs;
 use std::path::Path;
-use trustkit_ast::{SpecValidator, WaveExecutionPlanner};
+use trustkit_ast::{MilestoneFeatureExtractor, SpecValidator, WaveExecutionPlanner};
 use trustkit_core::entities::{
-    CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence, GateStage, GateVerdict,
-    SpecificationV2,
+    CriticKind, CycleStatus, EvidenceKind, ExecutionEvidence, FeatureStatus, GateStage,
+    GateVerdict, MilestoneStatus, SpecificationV2,
 };
 use trustkit_core::errors::DomainViolation;
-use trustkit_core::ports::CycleEvidenceRepositoryPort;
+use trustkit_core::ports::{
+    CycleEvidenceRepositoryPort, FeatureRepositoryPort, MilestoneRepositoryPort,
+};
 use trustkit_core::special_cases::ActiveCycleLookup;
 use trustkit_core::use_cases::audit_ast_layer0::{self, AuditAstLayer0Request};
 use trustkit_core::use_cases::certify_cycle_and_report::{self, CertifyCycleRequest};
@@ -24,6 +26,7 @@ use trustkit_core::use_cases::initialize_cycle::{self, InitializeCycleRequest};
 use trustkit_core::use_cases::lock_specification::{self, LockSpecificationRequest};
 use trustkit_core::use_cases::merge_cycle::{self, MergeCycleRequest};
 use trustkit_core::use_cases::plan_execution_waves::{self, PlanExecutionWavesRequest};
+use trustkit_core::use_cases::plan_features::{self, PlanFeaturesRequest};
 use trustkit_db::blake3_adapter::Blake3ParallelSealerAdapter;
 use trustkit_db::sqlite_adapter::SqliteWalRepositoryAdapter;
 use trustkit_gh::board_synchronizer::ProjectBoardSynchronizer;
@@ -57,8 +60,64 @@ pub fn execute_with_db(
 
     let repo = SqliteWalRepositoryAdapter::open(db_path)?;
     let (now_iso, timestamp_slug) = current_timestamps();
+
+    if let Some(ref m_ref) = args.resolved_milestone() {
+        let m_id =
+            crate::commands::features_cmd::resolve_or_ingest_milestone_id(&repo, m_ref, &now_iso)?;
+        let mut features = repo.list_features(Some(&m_id))?;
+        if features.is_empty() {
+            let extractor = MilestoneFeatureExtractor;
+            let plan_req = PlanFeaturesRequest {
+                milestone_ref: m_id.clone(),
+                output_dir: "docs/features".to_string(),
+                now_iso: now_iso.clone(),
+            };
+            let outcome = plan_features::execute(plan_req, &repo, &extractor, Some(&repo))?;
+            features = outcome.plan.features;
+        }
+        for feat in features
+            .iter()
+            .filter(|f| f.status != FeatureStatus::Completed)
+        {
+            let mut single_args = args.clone();
+            single_args.target_ref = None;
+            single_args.milestone = None;
+            single_args.feature = Some(feat.feature_id.clone());
+            if let Err(err) = execute_with_db(&single_args, json_mode, db_path) {
+                return Err(DomainViolation::InfrastructureBoundaryFault {
+                    subsystem: "auto_milestone_batch".to_string(),
+                    details: format!(
+                        "Batch execution aborted fail-fast at feature '{}' (milestone '{}'): {}",
+                        feat.feature_id, m_id, err
+                    ),
+                });
+            }
+        }
+        return Ok(DomainOutcome::Success);
+    }
+
     let resolved_issue = args.resolved_issue();
-    let resolved_spec = args.resolved_spec();
+    let mut resolved_spec = args.resolved_spec();
+    let mut active_feature = None;
+
+    if let Some(ref f_id) = args.resolved_feature() {
+        let feat = repo.find_feature_by_id(f_id)?.ok_or_else(|| {
+            DomainViolation::InfrastructureBoundaryFault {
+                subsystem: "auto_cmd".to_string(),
+                details: format!("Feature '{}' not found in SQLite WAL", f_id),
+            }
+        })?;
+        let _ = repo.update_feature_status(
+            &feat.feature_id,
+            FeatureStatus::InProgress,
+            &feat.linked_cycle_id,
+            &now_iso,
+        );
+        let _ =
+            repo.update_milestone_status(&feat.milestone_id, MilestoneStatus::InProgress, &now_iso);
+        resolved_spec = Some(feat.spec_file_path.clone());
+        active_feature = Some(feat);
+    }
 
     let active_cycle = match repo.find_active_cycle()? {
         ActiveCycleLookup::Found(cycle) => {
@@ -373,6 +432,27 @@ pub fn execute_with_db(
     };
     let _ = merge_cycle::execute(merge_req, &repo, &board)?;
     gates_cleared.push(6);
+
+    if let Some(ref feat) = active_feature {
+        let _ = repo.update_feature_status(
+            &feat.feature_id,
+            FeatureStatus::Completed,
+            &active_cycle.cycle_id,
+            &now_iso,
+        );
+        if let Ok(siblings) = repo.list_features(Some(&feat.milestone_id))
+            && !siblings.is_empty()
+            && siblings
+                .iter()
+                .all(|f| f.status == FeatureStatus::Completed)
+        {
+            let _ = repo.update_milestone_status(
+                &feat.milestone_id,
+                MilestoneStatus::Completed,
+                &now_iso,
+            );
+        }
+    }
 
     gates_cleared.sort_unstable();
     gates_cleared.dedup();

@@ -362,6 +362,46 @@ pub trait MilestoneRepositoryPort: Send + Sync {
     ) -> Result<(), DomainViolation>;
 }
 
+pub trait FeatureExtractorPort: Send + Sync {
+    fn extract_features_from_milestone(
+        &self,
+        milestone: &Milestone,
+        output_dir: &str,
+        now_iso: &str,
+    ) -> Result<crate::entities::FeaturePlan, DomainViolation>;
+}
+
+pub trait FeatureRepositoryPort: Send + Sync {
+    fn save_feature(
+        &self,
+        feature: &crate::entities::PlannedFeature,
+    ) -> Result<(), DomainViolation>;
+    fn save_feature_plan(
+        &self,
+        plan: &crate::entities::FeaturePlan,
+    ) -> Result<(), DomainViolation> {
+        for f in &plan.features {
+            self.save_feature(f)?;
+        }
+        Ok(())
+    }
+    fn find_feature_by_id(
+        &self,
+        feature_id: &str,
+    ) -> Result<Option<crate::entities::PlannedFeature>, DomainViolation>;
+    fn list_features(
+        &self,
+        milestone_id: Option<&str>,
+    ) -> Result<Vec<crate::entities::PlannedFeature>, DomainViolation>;
+    fn update_feature_status(
+        &self,
+        feature_id: &str,
+        status: crate::entities::FeatureStatus,
+        linked_cycle_id: &str,
+        updated_at: &str,
+    ) -> Result<(), DomainViolation>;
+}
+
 pub trait TaskAtomizerPort: Send + Sync {
     fn atomize_source(
         &self,

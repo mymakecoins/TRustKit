@@ -55,22 +55,39 @@ Caso o usuario retome uma sessao sem saber o estado atual, execute `trustkit sta
 ## Jornada dos Gates
 
 ### Modo Autonomo Unificado (Gates 0 ao 6 - v2.2)
-Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais. O motor v2.2 atomiza tarefas a partir da especificacao ou issue se `tasks/` nao existir, dispara disjuntor `EmptyTaskBacklogFault` para especificacoes vazias, sintetiza scaffolds RED compilaveis e realiza merge seguro:
+Para execucao 100% autonoma de ponta a ponta sem intervencoes manuais. O motor v2.2 atomiza tarefas a partir da especificacao ou issue se `tasks/` nao existir, dispara disjuntor `EmptyTaskBacklogFault` para especificacoes vazias, sintetiza scaffolds RED compilaveis e realiza merge seguro. Suporta execucao a partir de uma Feature planejada (`--feature`), de todas as Features de um Milestone (`--milestone`), ou diretamente via `--issue` e `--spec` / `--specs` para projetos de alto fluxo com multiplos colaboradores:
 ```bash
-# Execucao autonoma a partir de issue remota
+# Execucao autonoma sobre uma Feature extraida de um Milestone
+tk auto --feature <FEATURE_ID> [--target develop] [--runtime auto|pty|native] --json
+trustkit auto --feature <FEATURE_ID> [--target develop] [--runtime auto|pty|native] --json
+
+# Execucao autonoma sequencial de todas as Features de um Milestone
+tk auto --milestone <MILESTONE_ID> [--target develop] [--runtime auto|pty|native] --json
+
+# Execucao autonoma a partir de issue remota (alto fluxo e multiplos colaboradores)
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] --json
 
-# Execucao autonoma a partir de especificacao local
+# Execucao autonoma a partir de especificacao local (--spec ou alias --specs)
 trustkit auto --spec <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] --json
+tk auto --specs <CAMINHO_SPEC> [--target develop] [--runtime auto|pty|native] --json
 ```
 
-### Pre-Gate 0: Planejamento de Milestones (PRD + ADR)
+### Pre-Gate 0.1: Planejamento Macro de Milestones (PRD + ADR)
 Extraia e planeje o DAG de milestones a partir do PRD e ADR (aceita `milestones` ou o alias singular `milestone`):
 ```bash
 tk milestone plan --prd <CAMINHO_PRD> --adr <CAMINHO_ADR> [--output-dir docs/milestones] --json
 trustkit milestones plan --prd <CAMINHO_PRD> --adr <CAMINHO_ADR> [--output-dir docs/milestones] --json
 tk milestone list --json
 tk milestone inspect <MILESTONE_ID> --json
+```
+
+### Pre-Gate 0.2: Desmembramento Meso em Features e Especificacoes V2 em 4 Camadas (`tk features` / `tk feature`)
+Decomponha cada Milestone em Features funcionais coesas, sintetizando automaticamente um `spec.md` V2 completo estruturado nas 4 camadas arquiteturais (`Schema & Contrato`, `Core & Dominio`, `API, UI & Adaptadores`, `Telemetria, Auditoria & E2E`):
+```bash
+tk features plan --milestone <MILESTONE_ID_OU_CAMINHO> [--output-dir docs/features] --json
+trustkit features plan --milestone <MILESTONE_ID_OU_CAMINHO> [--output-dir docs/features] --json
+tk features list [--milestone <MILESTONE_ID>] --json
+tk features inspect <FEATURE_ID> --json
 ```
 
 ### Gate 0: Inicializacao do Ciclo
