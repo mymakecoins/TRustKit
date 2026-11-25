@@ -102,28 +102,47 @@ For 100% autonomous execution of the entire SDD lifecycle (Gates 0 to 6) from a 
 - **Safe Accumulative Merging (`SafeWorktreeMerge`):** Merges concurrent tasks in the wave cleanly without destructive `git branch -f`, preserving all commit histories.
 
 ```bash
-# Execute full deterministic cycle from a remote GitHub issue
+# Execute full deterministic cycle on a planned Feature decomposed from a Milestone
+tk auto --feature M01-F01 [--target develop] [--runtime auto|pty|native] [--json]
+trustkit auto --feature M01-F01 [--target develop] [--runtime auto|pty|native] [--json]
+
+# Execute all pending Features of a Milestone sequentially
+tk auto --milestone M01 [--target develop] [--runtime auto|pty|native] [--json]
+
+# Execute full deterministic cycle from a remote GitHub issue (high-throughput multi-collaborator teams)
 trustkit auto --issue <ISSUE_ID> [--target develop] [--runtime auto|pty|native] [--json]
 
-# Execute full deterministic cycle from a local specification file
+# Execute full deterministic cycle from a local specification file (--spec or --specs alias)
 trustkit auto --spec <SPEC_PATH> [--target develop] [--runtime auto|pty|native] [--json]
+tk auto --specs <SPEC_PATH> [--target develop] [--runtime auto|pty|native] [--json]
 ```
 
-### Prior Milestone Planning: Acyclic Decomposition of PRD and ADR (`trustkit milestones` / `tk milestone`)
-Prior to starting SDD cycles over large requirements documents, TRustKit can analyze the PRD and ADR simultaneously, map business capabilities and technical constraints, construct an acyclic Directed Acyclic Graph (DAG) of Milestones, generate individual milestone files in `docs/milestones/` with exact line citations (`#LXX-LYY`), and persist milestones into SQLite WAL (supports both `trustkit milestones` and singular alias `trustkit milestone` / `tk milestone`):
+### 3-Tier Decomposition Pipeline: PRD & ADR -> Milestones -> Features -> Auto Waves (`tk milestone` -> `tk features` -> `tk auto`)
+Prior to starting SDD cycles over large requirements documents, TRustKit provides a deterministic 3-tier decomposition hierarchy:
+1. **Macro Level (`trustkit milestones` / `tk milestone`):** Analyzes `PRD.md` and `ADR.md`, maps business capabilities and technical constraints with line citations (`#LXX-LYY`), and defines Milestones (`M01`, `M02`, ...).
+2. **Meso Level (`trustkit features` / `tk feature`):** Reads a Milestone (`M01`) and decomposes it into cohesive Features (`M01-F01`, `M01-F02`), synthesizing a complete V2 `spec.md` structured across 4 canonical architectural layers (`Schema & Contract`, `Core & Domain`, `API, UI & Adapters`, `Telemetry, Audit & E2E`).
+3. **Micro Level (`trustkit auto` / `tk auto`):** Runs over a Feature (`--feature M01-F01`), atomizes layered tasks, schedules execution waves, and executes strict TDD in isolated Git Worktrees.
+
 ```bash
-# Analyze PRD and ADR, synthesize M01..MNN.md files with line citations and persist to WAL
+# 1. Analyze PRD and ADR, synthesize M01..MNN.md files with line citations and persist to WAL
 trustkit milestones plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md [--output-dir docs/milestones] [--json]
 # Or via singular alias:
 tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
 
-# List all planned milestones, topological order, dependencies, and lifecycle status
+# List and inspect planned milestones
 trustkit milestones list [--json]
 tk milestone list
-
-# Inspect detailed capabilities, constraints, and citations of a specific milestone
 trustkit milestones inspect M01 [--json]
 tk milestone inspect M01
+
+# 2. Decompose Milestone M01 into executable Features with 4-layer V2 specifications
+tk features plan --milestone M01 [--output-dir docs/features] [--json]
+trustkit features plan --milestone M01 [--output-dir docs/features] [--json]
+tk features list --milestone M01 [--json]
+tk features inspect M01-F01 [--json]
+
+# 3. Execute the autonomous SDD cycle on the Feature (tasks and waves)
+tk auto --feature M01-F01 --target develop
 ```
 
 ### Gate 0: Cycle Initialization

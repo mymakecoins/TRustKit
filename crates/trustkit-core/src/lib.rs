@@ -9,6 +9,7 @@ pub mod dual_axis_entities;
 pub mod dual_axis_scope_creep;
 pub mod entities;
 pub mod errors;
+pub mod feature_entities;
 pub mod gate_entities;
 pub mod gates_fsm;
 pub mod gauntlet_entities;

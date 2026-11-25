@@ -9,6 +9,7 @@ pub mod dual_axis_presenter;
 pub mod e2e_dual_axis_review;
 pub mod e2e_gates_4_to_6;
 pub mod error_handler;
+pub mod features_presenter;
 pub mod gate_presenter;
 pub mod milestones_presenter;
 pub mod next_step_presenter;

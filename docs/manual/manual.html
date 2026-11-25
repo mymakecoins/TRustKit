@@ -1385,7 +1385,20 @@ tk pr --target develop</code></pre>
 
         <div class="code-container">
           <div class="code-header">
-            <span>A partir de uma issue remota do GitHub</span>
+            <span>Ciclo em 3 Niveis: Milestone -&gt; Features -&gt; Auto Waves</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><code>tk milestone plan --prd docs/PRD_TRustKit.md --adr docs/ADR_001_TRustKit_Architecture.md
+tk features plan --milestone M01
+tk features list --milestone M01
+tk features inspect M01-F01
+tk auto --feature M01-F01 --target develop
+tk auto --milestone M01 --target develop</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span>A partir de uma issue remota do GitHub (alto fluxo e multiplos colaboradores)</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
           <pre><code>tk auto --issue 45 --target develop</code></pre>
@@ -1393,10 +1406,11 @@ tk pr --target develop</code></pre>
 
         <div class="code-container">
           <div class="code-header">
-            <span>A partir de um arquivo local de especificacao</span>
+            <span>A partir de um arquivo local de especificacao (--spec ou --specs)</span>
             <button class="btn-copy" onclick="copyCode(this)">Copiar</button>
           </div>
-          <pre><code>tk auto --spec docs/specs/minha-feature/spec.md --target develop</code></pre>
+          <pre><code>tk auto --spec docs/specs/minha-feature/spec.md --target develop
+tk auto --specs docs/specs/minha-feature/spec.md --target develop</code></pre>
         </div>
 
         <div class="code-container">

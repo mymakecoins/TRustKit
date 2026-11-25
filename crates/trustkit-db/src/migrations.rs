@@ -163,7 +163,27 @@ pub fn initialize_database(conn: &Connection) -> Result<(), DomainViolation> {
          );
 
          CREATE INDEX IF NOT EXISTS idx_milestones_plan ON milestones(plan_id);
-         CREATE INDEX IF NOT EXISTS idx_milestones_status ON milestones(status);"
+         CREATE INDEX IF NOT EXISTS idx_milestones_status ON milestones(status);
+
+         CREATE TABLE IF NOT EXISTS milestone_features (
+             feature_id          TEXT PRIMARY KEY NOT NULL,
+             milestone_id        TEXT NOT NULL,
+             sequence_index      INTEGER NOT NULL,
+             title               TEXT NOT NULL,
+             slug                TEXT NOT NULL,
+             spec_dir            TEXT NOT NULL,
+             spec_file_path      TEXT NOT NULL,
+             goal                TEXT NOT NULL,
+             dependencies_json   TEXT NOT NULL DEFAULT '[]',
+             payload_json        TEXT NOT NULL DEFAULT '{}',
+             status              TEXT NOT NULL CHECK (status IN ('Planned', 'InProgress', 'Completed', 'Cancelled')),
+             linked_cycle_id     TEXT NOT NULL DEFAULT 'UNASSIGNED',
+             created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+             updated_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+         );
+
+         CREATE INDEX IF NOT EXISTS idx_features_milestone ON milestone_features(milestone_id);
+         CREATE INDEX IF NOT EXISTS idx_features_status ON milestone_features(status);"
     ).map_err(|e| DomainViolation::InfrastructureBoundaryFault {
         subsystem: "sqlite_migrations".into(),
         details: format!("Failed initializing database schema: {e}"),

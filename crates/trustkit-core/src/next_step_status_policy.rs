@@ -130,23 +130,82 @@ impl NextStepResolver {
     }
 
     pub fn for_milestones_plan(
-        first_milestone_file: Option<&str>,
+        _first_milestone_file: Option<&str>,
         first_milestone_id: Option<&str>,
     ) -> Vec<NextStepRecommendation> {
-        let file = first_milestone_file.unwrap_or("docs/milestones/M01.md");
         let id = first_milestone_id.unwrap_or("M01");
         vec![
             NextStepRecommendation::new(
                 NextStepPriority::Primary,
-                "GATE-0",
-                format!("trustkit init --milestone {file}"),
-                format!("Initialize an SDD cycle from milestone {id}."),
+                "PRE-GATE-0",
+                format!("trustkit features plan --milestone {id}"),
+                format!(
+                    "Decompose milestone {id} into executable feature specifications and layered tasks."
+                ),
             ),
             NextStepRecommendation::new(
                 NextStepPriority::Optional,
-                "GATE-0",
+                "PRE-GATE-0",
                 format!("trustkit milestones inspect {id}"),
                 format!("Inspect capabilities and technical constraints of milestone {id}."),
+            ),
+        ]
+    }
+
+    pub fn for_features_plan(
+        first_feature_id: Option<&str>,
+        milestone_id: &str,
+    ) -> Vec<NextStepRecommendation> {
+        let f_id = first_feature_id.unwrap_or("M01-F01");
+        let m_id = if milestone_id.trim().is_empty() {
+            "M01"
+        } else {
+            milestone_id
+        };
+        vec![
+            NextStepRecommendation::new(
+                NextStepPriority::Primary,
+                "GATE-0",
+                format!("trustkit auto --feature {f_id}"),
+                format!(
+                    "Execute autonomous SDD cycle (Gates 0 to 6, tasks and waves) for feature {f_id}."
+                ),
+            ),
+            NextStepRecommendation::new(
+                NextStepPriority::Secondary,
+                "GATE-0",
+                format!("trustkit auto --milestone {m_id}"),
+                format!(
+                    "Execute autonomous SDD cycles sequentially for all pending features in milestone {m_id}."
+                ),
+            ),
+            NextStepRecommendation::new(
+                NextStepPriority::Optional,
+                "PRE-GATE-0",
+                format!("trustkit features inspect {f_id}"),
+                format!(
+                    "Inspect layered task blueprints and specification path for feature {f_id}."
+                ),
+            ),
+        ]
+    }
+
+    pub fn for_feature_inspect(
+        feature_id: &str,
+        spec_file_path: &str,
+    ) -> Vec<NextStepRecommendation> {
+        vec![
+            NextStepRecommendation::new(
+                NextStepPriority::Primary,
+                "GATE-0",
+                format!("trustkit auto --feature {feature_id}"),
+                format!("Execute autonomous SDD cycle (tasks and waves) for feature {feature_id}."),
+            ),
+            NextStepRecommendation::new(
+                NextStepPriority::Secondary,
+                "GATE-1",
+                format!("trustkit spec lint --file {spec_file_path}"),
+                format!("Validate the synthesized Specification V2 for feature {feature_id}."),
             ),
         ]
     }

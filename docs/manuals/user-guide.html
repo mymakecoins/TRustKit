@@ -305,6 +305,16 @@ trustkit milestones inspect M01
 
 # Inspecao em formato JSON
 trustkit milestones inspect M01 --json</code></pre>
+
+      <h3>Desmembramento de Marco em Features em 4 Camadas (trustkit features / tk feature)</h3>
+      <p>Apos o planejamento dos marcos (<code>tk milestone plan</code>), o comando <code>tk features</code> (ou alias singular <code>tk feature</code>) le um Milestone e gera as Features executaveis (<code>M01-F01</code>, <code>M01-F02</code>) com seus respectivos <code>spec.md</code> V2 completos nas 4 camadas arquiteturais (Schema e Contrato, Core e Dominio, API/UI/Adaptadores, Telemetria e E2E):</p>
+      <pre><code># Desmembra o marco M01 em Features com spec.md V2 completo
+tk features plan --milestone M01
+trustkit features plan --milestone M01 --output-dir docs/features --json
+
+# Lista e inspeciona as Features geradas
+tk features list --milestone M01
+tk features inspect M01-F01 --json</code></pre>
     </section>
 
     <section id="gate0">
@@ -330,14 +340,21 @@ trustkit status --json</code></pre>
     <section id="auto">
       <h2>4. Modo Autonomo de Ponta a Ponta (trustkit auto v2.2)</h2>
       <p>Executa de forma autonoma e desatendida todo o ciclo do Gate 0 ao Gate 6 com reconciliacao de ciclos concorrentes, atomizacao de tarefas (Gate 3), protecao por Circuit Breaker (EmptyTaskBacklogFault), sintese de testes RED compilaveis e merge cumulativo seguro sem force reset:</p>
-      <pre><code># Executa ciclo completo a partir de uma issue remota
+      <pre><code># Executa ciclo SDD completo sobre uma Feature planejada (criando tasks e waves)
+tk auto --feature M01-F01 --target develop
+
+# Executa todas as Features pendentes do Milestone M01 em sequencia
+tk auto --milestone M01 --target develop
+
+# Executa ciclo completo a partir de uma issue remota (alto fluxo e multiplos colaboradores)
 trustkit auto --issue 42 --target develop
 
 # Com resolucao declarativa de ciclos ativos no SQLite WAL
 trustkit auto --issue 42 --new --close-merged
 
-# Executa ciclo completo a partir de arquivo de especificacao local
+# Executa ciclo completo a partir de arquivo de especificacao local (--spec ou --specs)
 trustkit auto --spec docs/specs/042-feature/spec.md --target develop
+tk auto --specs docs/specs/042-feature/spec.md --target develop
 
 # Execucao com selecao explicita de runtime de terminal (auto, pty, native)
 trustkit auto --issue 42 --runtime pty</code></pre>

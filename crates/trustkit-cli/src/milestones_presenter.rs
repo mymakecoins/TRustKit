@@ -94,12 +94,26 @@ impl MilestonesPresenter {
     }
 
     pub fn resolve_inspect_next_steps(m: &Milestone) -> Vec<NextStepRecommendation> {
-        vec![NextStepRecommendation::new(
-            NextStepPriority::Primary,
-            "GATE-0",
-            format!("trustkit init --milestone {}", m.file_path),
-            format!("Initialize an SDD cycle from milestone {}.", m.milestone_id),
-        )]
+        vec![
+            NextStepRecommendation::new(
+                NextStepPriority::Primary,
+                "PRE-GATE-0",
+                format!("trustkit features plan --milestone {}", m.milestone_id),
+                format!(
+                    "Decompose milestone {} into executable feature specifications and layered tasks.",
+                    m.milestone_id
+                ),
+            ),
+            NextStepRecommendation::new(
+                NextStepPriority::Secondary,
+                "GATE-0",
+                format!("trustkit init --milestone {}", m.file_path),
+                format!(
+                    "Initialize a direct SDD cycle from milestone {}.",
+                    m.milestone_id
+                ),
+            ),
+        ]
     }
 
     pub fn render_plan_text(outcome: &PlanMilestonesOutcome) -> String {
