@@ -63,10 +63,28 @@ pub fn execute(
             let sync = board.transition_issue_column(*issue_number, BoardColumn::InProgress)?;
             (format!("issue-{issue_number}-{}", req.timestamp_slug), sync)
         }
-        IssueLinkage::UnlinkedLocalCycle { .. } => (
-            format!("no-issue-{}", req.timestamp_slug),
-            BoardSyncOutcome::SkippedUnlinkedCycle,
-        ),
+        IssueLinkage::UnlinkedLocalCycle { .. } => {
+            let cid = if let Some(ref m_path) = req.milestone_path {
+                let stem = std::path::Path::new(m_path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("feature");
+                let parent_name = std::path::Path::new(m_path)
+                    .parent()
+                    .and_then(|p| p.file_name())
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("");
+                let slug = if stem.eq_ignore_ascii_case("spec") && !parent_name.is_empty() {
+                    parent_name.to_ascii_lowercase()
+                } else {
+                    stem.to_ascii_lowercase()
+                };
+                format!("{slug}-{}", req.timestamp_slug)
+            } else {
+                format!("no-issue-{}", req.timestamp_slug)
+            };
+            (cid, BoardSyncOutcome::SkippedUnlinkedCycle)
+        }
     };
 
     let spec_dir = format!("docs/specs/{cycle_id}");

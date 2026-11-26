@@ -189,6 +189,8 @@ impl BatchExecutionConfig {
 pub struct HarnessExecutionPolicyConfig {
     pub caching: ToolCachingPolicy,
     pub batching: BatchExecutionConfig,
+    pub test_command: String,
+    pub check_command: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -212,6 +214,8 @@ pub fn parse_harness_execution_policy(
     let mut grouping_mode = BatchGroupingMode::PerCrate;
     let mut max_batch_size: usize = 8;
     let mut preserve_traceability = true;
+    let mut test_command = String::new();
+    let mut check_command = String::new();
 
     for line in raw_content.lines() {
         let trimmed = line.trim();
@@ -258,6 +262,8 @@ pub fn parse_harness_execution_policy(
                     .map_err(|_| policy_err(&format!("Invalid max_batch_size '{val}'")))?;
             }
             "preserve_task_traceability" => preserve_traceability = parse_bool(val, &key)?,
+            "test_command" => test_command = val.to_string(),
+            "check_command" => check_command = val.to_string(),
             _ => {}
         }
     }
@@ -275,6 +281,8 @@ pub fn parse_harness_execution_policy(
             max_batch_size,
             preserve_traceability,
         )?,
+        test_command,
+        check_command,
     })
 }
 

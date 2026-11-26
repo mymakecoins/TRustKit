@@ -5,9 +5,11 @@
 // Constitutional Principle VI: Focused Modular Clean Code (< 250 LOC).
 // Constitutional Principle VII: Zero Emojis and Zero AI Trailers.
 
+use std::path::Path;
 use trustkit_core::entities::{
     ArchitecturalTaskLayer, FeaturePlan, FeatureStatus, FeatureTaskBlueprint, Milestone,
-    MilestoneCapability, MilestoneStatus, PlannedFeature, SourceCitation, TechnicalConstraint,
+    MilestoneCapability, MilestoneStatus, PlannedFeature, ProjectStack, SourceCitation,
+    TechnicalConstraint,
 };
 use trustkit_core::errors::DomainViolation;
 use trustkit_core::ports::FeatureExtractorPort;
@@ -38,7 +40,41 @@ impl MilestoneFeatureExtractor {
         }
     }
 
+    pub fn detect_project_stack(repo_root: &Path) -> ProjectStack {
+        if repo_root.join("Cargo.toml").exists() {
+            return ProjectStack::RustCargo;
+        }
+        if repo_root.join("package.json").exists() {
+            if repo_root.join("pnpm-lock.yaml").exists()
+                || repo_root.join("pnpm-workspace.yaml").exists()
+            {
+                return ProjectStack::TypeScriptPnpm;
+            }
+            return ProjectStack::TypeScriptNpm;
+        }
+        if repo_root.join("pyproject.toml").exists()
+            || repo_root.join("pytest.ini").exists()
+            || repo_root.join("requirements.txt").exists()
+        {
+            return ProjectStack::PythonPytest;
+        }
+        if repo_root.join("go.mod").exists() {
+            return ProjectStack::GoTest;
+        }
+        ProjectStack::RustCargo
+    }
+
     pub fn build_layered_blueprints(
+        feature_slug: &str,
+        caps: &[MilestoneCapability],
+        cons: &[TechnicalConstraint],
+    ) -> Vec<FeatureTaskBlueprint> {
+        let stack = Self::detect_project_stack(Path::new("."));
+        Self::build_layered_blueprints_for_stack(stack, feature_slug, caps, cons)
+    }
+
+    pub fn build_layered_blueprints_for_stack(
+        stack: ProjectStack,
         feature_slug: &str,
         caps: &[MilestoneCapability],
         cons: &[TechnicalConstraint],
@@ -57,6 +93,33 @@ impl MilestoneFeatureExtractor {
         let short_con: String = con_label.chars().take(48).collect();
         let safe_slug = feature_slug.replace('-', "_");
 
+        let (t1_file, t2_file, t3_file, t4_file) = match stack {
+            ProjectStack::RustCargo => (
+                format!("tests/{safe_slug}_schema_tests.rs"),
+                format!("tests/{safe_slug}_domain_tests.rs"),
+                format!("tests/{safe_slug}_adapter_tests.rs"),
+                format!("tests/{safe_slug}_e2e_tests.rs"),
+            ),
+            ProjectStack::TypeScriptPnpm | ProjectStack::TypeScriptNpm => (
+                format!("tests/{safe_slug}_schema.test.ts"),
+                format!("tests/{safe_slug}_domain.test.ts"),
+                format!("tests/{safe_slug}_adapter.test.ts"),
+                format!("tests/{safe_slug}_e2e.test.ts"),
+            ),
+            ProjectStack::PythonPytest => (
+                format!("tests/test_{safe_slug}_schema.py"),
+                format!("tests/test_{safe_slug}_domain.py"),
+                format!("tests/test_{safe_slug}_adapter.py"),
+                format!("tests/test_{safe_slug}_e2e.py"),
+            ),
+            ProjectStack::GoTest => (
+                format!("tests/{safe_slug}_schema_test.go"),
+                format!("tests/{safe_slug}_domain_test.go"),
+                format!("tests/{safe_slug}_adapter_test.go"),
+                format!("tests/{safe_slug}_e2e_test.go"),
+            ),
+        };
+
         vec![
             FeatureTaskBlueprint {
                 task_id: "TASK-001".to_string(),
@@ -65,7 +128,7 @@ impl MilestoneFeatureExtractor {
                 business_rule_id: "RN-001".to_string(),
                 functional_req_id: "RF-001".to_string(),
                 mermaid_node: "TASK_001".to_string(),
-                target_test_file: format!("crates/trustkit-core/tests/{safe_slug}_schema_tests.rs"),
+                target_test_file: t1_file,
                 evidence_artifact: format!("{safe_slug}_schema_verified"),
                 depends_on: vec![],
             },
@@ -76,7 +139,7 @@ impl MilestoneFeatureExtractor {
                 business_rule_id: "RN-002".to_string(),
                 functional_req_id: "RF-002".to_string(),
                 mermaid_node: "TASK_002".to_string(),
-                target_test_file: format!("crates/trustkit-core/tests/{safe_slug}_domain_tests.rs"),
+                target_test_file: t2_file,
                 evidence_artifact: format!("{safe_slug}_domain_verified"),
                 depends_on: vec!["TASK-001".to_string()],
             },
@@ -87,7 +150,7 @@ impl MilestoneFeatureExtractor {
                 business_rule_id: "RN-003".to_string(),
                 functional_req_id: "RF-003".to_string(),
                 mermaid_node: "TASK_003".to_string(),
-                target_test_file: format!("crates/trustkit-cli/tests/{safe_slug}_adapter_tests.rs"),
+                target_test_file: t3_file,
                 evidence_artifact: format!("{safe_slug}_adapter_verified"),
                 depends_on: vec!["TASK-001".to_string()],
             },
@@ -98,7 +161,7 @@ impl MilestoneFeatureExtractor {
                 business_rule_id: "RN-004".to_string(),
                 functional_req_id: "RF-004".to_string(),
                 mermaid_node: "TASK_004".to_string(),
-                target_test_file: format!("crates/trustkit-cli/tests/{safe_slug}_e2e_tests.rs"),
+                target_test_file: t4_file,
                 evidence_artifact: format!("{safe_slug}_e2e_verified"),
                 depends_on: vec!["TASK-002".to_string(), "TASK-003".to_string()],
             },

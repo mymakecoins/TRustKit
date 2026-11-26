@@ -119,6 +119,7 @@ pub fn execute_with_db(
         active_feature = Some(feat);
     }
 
+    let feature_spec_for_init = active_feature.as_ref().map(|f| f.spec_file_path.clone());
     let active_cycle = match repo.find_active_cycle()? {
         ActiveCycleLookup::Found(cycle) => {
             if cycle.lifecycle_status == CycleStatus::Merged {
@@ -127,7 +128,7 @@ pub fn execute_with_db(
                 let req = InitializeCycleRequest {
                     issue_param: resolved_issue.clone(),
                     from_prd: None,
-                    milestone_path: None,
+                    milestone_path: feature_spec_for_init.clone(),
                     work_branch: git_ctx.work_branch,
                     base_commit_sha: git_ctx.base_commit_sha,
                     pre_existing_dirty_files: git_ctx.pre_existing_dirty_files,
@@ -146,7 +147,7 @@ pub fn execute_with_db(
             let req = InitializeCycleRequest {
                 issue_param: resolved_issue.clone(),
                 from_prd: None,
-                milestone_path: None,
+                milestone_path: feature_spec_for_init,
                 work_branch: git_ctx.work_branch,
                 base_commit_sha: git_ctx.base_commit_sha,
                 pre_existing_dirty_files: git_ctx.pre_existing_dirty_files,
