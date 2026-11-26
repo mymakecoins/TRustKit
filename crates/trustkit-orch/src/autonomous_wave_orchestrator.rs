@@ -81,6 +81,104 @@ impl AutonomousWaveOrchestrator {
         Self
     }
 
+    fn resolve_test_invocation(
+        worktree_root: &Path,
+        target_test_file: &str,
+        task_id: &str,
+    ) -> (String, Vec<String>) {
+        if let Ok(raw) = std::fs::read_to_string(worktree_root.join("trustkit.toml"))
+            .or_else(|_| std::fs::read_to_string("trustkit.toml"))
+            && let Ok(cfg) = trustkit_core::entities::parse_harness_execution_policy(&raw)
+            && !cfg.test_command.trim().is_empty()
+        {
+            let mut parts: Vec<String> = cfg
+                .test_command
+                .split_whitespace()
+                .map(|s| s.to_string())
+                .collect();
+            if !parts.is_empty() {
+                let cmd = parts.remove(0);
+                if !target_test_file.is_empty() {
+                    parts.push(target_test_file.to_string());
+                }
+                return (cmd, parts);
+            }
+        }
+
+        let lower = target_test_file.to_ascii_lowercase();
+        if lower.ends_with(".ts")
+            || lower.ends_with(".tsx")
+            || lower.ends_with(".js")
+            || lower.ends_with(".mjs")
+            || (worktree_root.join("package.json").exists()
+                && !worktree_root.join("Cargo.toml").exists())
+        {
+            let pkg_raw =
+                std::fs::read_to_string(worktree_root.join("package.json")).unwrap_or_default();
+            let is_pnpm = worktree_root.join("pnpm-lock.yaml").exists()
+                || worktree_root.join("pnpm-workspace.yaml").exists();
+            if pkg_raw.contains("\"vitest\"") {
+                return if is_pnpm {
+                    (
+                        "pnpm".to_string(),
+                        vec![
+                            "exec".to_string(),
+                            "vitest".to_string(),
+                            "run".to_string(),
+                            target_test_file.to_string(),
+                        ],
+                    )
+                } else {
+                    (
+                        "npx".to_string(),
+                        vec![
+                            "vitest".to_string(),
+                            "run".to_string(),
+                            target_test_file.to_string(),
+                        ],
+                    )
+                };
+            }
+            if pkg_raw.contains("\"jest\"") {
+                return if is_pnpm {
+                    (
+                        "pnpm".to_string(),
+                        vec![
+                            "exec".to_string(),
+                            "jest".to_string(),
+                            target_test_file.to_string(),
+                        ],
+                    )
+                } else {
+                    (
+                        "npx".to_string(),
+                        vec!["jest".to_string(), target_test_file.to_string()],
+                    )
+                };
+            }
+            return (
+                "node".to_string(),
+                vec!["--test".to_string(), target_test_file.to_string()],
+            );
+        }
+
+        if lower.ends_with(".py") {
+            return ("pytest".to_string(), vec![target_test_file.to_string()]);
+        }
+
+        if lower.ends_with(".go") {
+            return (
+                "go".to_string(),
+                vec!["test".to_string(), "./...".to_string()],
+            );
+        }
+
+        (
+            "cargo".to_string(),
+            Self::resolve_test_args(target_test_file, task_id),
+        )
+    }
+
     fn resolve_test_args(target_test_file: &str, task_id: &str) -> Vec<String> {
         if !target_test_file.is_empty() {
             let path = Path::new(target_test_file);
@@ -167,7 +265,11 @@ impl AutonomousWaveOrchestrator {
                     _ => format!(".trustkit/worktrees/{}", task.task_id),
                 };
 
-                let test_args = Self::resolve_test_args(&task.target_test_file, &task.task_id);
+                let (test_command, test_args) = Self::resolve_test_invocation(
+                    Path::new(&worktree_path),
+                    &task.target_test_file,
+                    &task.task_id,
+                );
 
                 // Step 1: Ensure RED phase is verified
                 let current_task = deps
@@ -190,7 +292,7 @@ impl AutonomousWaveOrchestrator {
                         cycle_id: req.cycle_id.to_string(),
                         task_id: task.task_id.clone(),
                         phase: TddPhase::Red,
-                        test_command: "cargo".to_string(),
+                        test_command: test_command.clone(),
                         test_args: test_args.clone(),
                         working_dir: worktree_path.clone(),
                         timeout_ms: 60_000,
@@ -215,8 +317,8 @@ impl AutonomousWaveOrchestrator {
                     cycle_id: req.cycle_id.to_string(),
                     task_id: task.task_id.clone(),
                     phase: TddPhase::Green,
-                    test_command: "cargo".to_string(),
-                    test_args: test_args.clone(),
+                    test_command,
+                    test_args,
                     working_dir: worktree_path.clone(),
                     timeout_ms: 60_000,
                     now_iso: req.now_iso.to_string(),

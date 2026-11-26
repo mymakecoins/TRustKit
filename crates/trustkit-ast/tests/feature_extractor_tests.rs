@@ -129,3 +129,41 @@ fn test_parse_milestone_from_markdown_file_roundtrip() {
     assert_eq!(parsed.milestone_id, "M01");
     assert!(!parsed.capabilities.is_empty());
 }
+
+#[test]
+fn test_stack_detection_and_scaffolder_for_typescript_pnpm_repo() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"demo-app","devDependencies":{"vitest":"^2.0.0"}}"#,
+    )
+    .unwrap();
+    std::fs::write(root.join("pnpm-lock.yaml"), "lockfileVersion: '9.0'\n").unwrap();
+
+    let stack = MilestoneFeatureExtractor::detect_project_stack(root);
+    assert_eq!(stack, trustkit_core::entities::ProjectStack::TypeScriptPnpm);
+
+    let bps = MilestoneFeatureExtractor::build_layered_blueprints_for_stack(
+        stack,
+        "m01_caminho_feliz",
+        &[],
+        &[],
+    );
+    assert_eq!(bps.len(), 4);
+    assert!(bps[0].target_test_file.ends_with(".test.ts"));
+    assert!(!bps[0].target_test_file.contains("crates/trustkit-core"));
+
+    let scaffolded = trustkit_ast::RedTestScaffolder::scaffold(
+        root,
+        &trustkit_ast::ScaffoldingTarget {
+            task_id: "TASK-001".to_string(),
+            target_test_file: bps[0].target_test_file.clone(),
+            criteria_summary: "Schema contract".to_string(),
+        },
+    )
+    .expect("scaffold ts test");
+    let content = std::fs::read_to_string(scaffolded).unwrap();
+    assert!(content.contains("from 'vitest'"));
+    assert!(content.contains("TASK RED ASSERTION: TASK-001 not implemented yet"));
+}

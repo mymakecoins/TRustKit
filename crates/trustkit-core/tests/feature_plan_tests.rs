@@ -299,3 +299,38 @@ fn test_next_step_resolver_links_milestones_to_features_to_auto() {
     );
     assert_eq!(inspect_steps[0].command, "trustkit auto --feature M01-F01");
 }
+
+#[test]
+fn test_red_verifier_rejects_missing_manifest_and_parses_test_command() {
+    use trustkit_core::entities::parse_harness_execution_policy;
+    use trustkit_core::use_cases::record_tdd_phase::RedVerifier;
+
+    let res_cargo = RedVerifier::verify(
+        "TASK-001",
+        101,
+        "",
+        "error: could not find `Cargo.toml` in `/tmp/ts-repo`",
+    );
+    assert!(matches!(
+        res_cargo,
+        Err(DomainViolation::CompilationFailureInRedPhaseFault { .. })
+    ));
+
+    let res_pnpm = RedVerifier::verify(
+        "TASK-001",
+        1,
+        "",
+        "ERR_PNPM_NO_SCRIPT  Missing script: test",
+    );
+    assert!(matches!(
+        res_pnpm,
+        Err(DomainViolation::CompilationFailureInRedPhaseFault { .. })
+    ));
+
+    let cfg = parse_harness_execution_policy(
+        "test_command = \"pnpm test\"\ncheck_command = \"pnpm typecheck\"\n",
+    )
+    .expect("parse policy");
+    assert_eq!(cfg.test_command, "pnpm test");
+    assert_eq!(cfg.check_command, "pnpm typecheck");
+}

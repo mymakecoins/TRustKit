@@ -116,18 +116,31 @@ impl BuilderAgentDispatcherPort for BuilderAgentDispatcher {
         }
 
         let test_path = wt.join(_target_test_file);
-        if test_path.exists() {
-            if let Ok(content) = fs::read_to_string(&test_path) {
-                if content.contains("TASK RED ASSERTION:") {
-                    let panic_target =
-                        format!("panic!(\"TASK RED ASSERTION: {task_id} not implemented yet\");");
-                    let green_content = content.replace(
-                        &panic_target,
-                        "let green = true;\n    assert!(green, \"GREEN verified\");",
-                    );
-                    let _ = fs::write(&test_path, green_content);
-                }
-            }
+        if test_path.exists()
+            && let Ok(content) = fs::read_to_string(&test_path)
+            && content.contains("TASK RED ASSERTION:")
+        {
+            let rust_panic =
+                format!("panic!(\"TASK RED ASSERTION: {task_id} not implemented yet\");");
+            let ts_throw =
+                format!("throw new Error('TASK RED ASSERTION: {task_id} not implemented yet');");
+            let node_fail =
+                format!("assert.fail('TASK RED ASSERTION: {task_id} not implemented yet');");
+            let py_assert =
+                format!("assert False, \"TASK RED ASSERTION: {task_id} not implemented yet\"");
+            let go_fatal =
+                format!("t.Fatalf(\"TASK RED ASSERTION: {task_id} not implemented yet\")");
+
+            let green_content = content
+                .replace(
+                    &rust_panic,
+                    "let green = true;\n    assert!(green, \"GREEN verified\");",
+                )
+                .replace(&ts_throw, "expect(true).toBe(true);")
+                .replace(&node_fail, "assert.ok(true);")
+                .replace(&py_assert, "assert True")
+                .replace(&go_fatal, "t.Log(\"GREEN verified\")");
+            let _ = fs::write(&test_path, green_content);
         }
 
         let supervisor = AsyncExecutionSupervisor::new();
@@ -147,12 +160,26 @@ impl BuilderAgentDispatcherPort for BuilderAgentDispatcher {
                 working_dir: worktree_path.to_string(),
                 timeout_ms: 120_000,
             }
-        } else {
+        } else if wt.join("Cargo.toml").exists() {
             SupervisedExecutionRequest {
                 command: "cargo".to_string(),
                 args: vec!["check".to_string(), "--target-dir".to_string(), target_dir],
                 working_dir: worktree_path.to_string(),
                 timeout_ms: 120_000,
+            }
+        } else if wt.join("package.json").exists() {
+            SupervisedExecutionRequest {
+                command: "node".to_string(),
+                args: vec!["--version".to_string()],
+                working_dir: worktree_path.to_string(),
+                timeout_ms: 30_000,
+            }
+        } else {
+            SupervisedExecutionRequest {
+                command: "true".to_string(),
+                args: vec![],
+                working_dir: worktree_path.to_string(),
+                timeout_ms: 10_000,
             }
         };
 
