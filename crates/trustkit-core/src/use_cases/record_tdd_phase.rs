@@ -30,15 +30,30 @@ impl RedVerifier {
             || combined_lower.contains("could not compile")
             || combined_lower.contains("compilation failed")
             || combined_lower.contains("no test target named")
+            || combined_lower.contains("could not find `cargo.toml`")
+            || combined_lower.contains("command not found")
+            || combined_lower.contains("err_pnpm_no_script")
+            || combined_lower.contains("missing script:")
+            || combined_lower.contains("enoent")
         {
             let snippet = if !stderr.trim().is_empty() {
-                stderr.trim().lines().next().unwrap_or("could not compile")
+                stderr
+                    .trim()
+                    .lines()
+                    .next()
+                    .unwrap_or("test runner failure")
             } else {
-                stdout.trim().lines().next().unwrap_or("could not compile")
+                stdout
+                    .trim()
+                    .lines()
+                    .next()
+                    .unwrap_or("test runner failure")
             };
             return Err(DomainViolation::CompilationFailureInRedPhaseFault {
                 task_id: task_id.to_string(),
-                reason: format!("Rust test compilation failure detected in RED phase: {snippet}"),
+                reason: format!(
+                    "Test compilation or runner failure detected in RED phase: {snippet}"
+                ),
             });
         }
 

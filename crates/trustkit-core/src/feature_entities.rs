@@ -7,6 +7,28 @@
 use crate::errors::DomainViolation;
 use crate::milestone_entities::{MilestoneCapability, TechnicalConstraint};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ProjectStack {
+    #[default]
+    RustCargo,
+    TypeScriptPnpm,
+    TypeScriptNpm,
+    PythonPytest,
+    GoTest,
+}
+
+impl ProjectStack {
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::RustCargo => "rust-cargo",
+            Self::TypeScriptPnpm => "typescript-pnpm",
+            Self::TypeScriptNpm => "typescript-npm",
+            Self::PythonPytest => "python-pytest",
+            Self::GoTest => "go-test",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FeatureStatus {
     Planned,

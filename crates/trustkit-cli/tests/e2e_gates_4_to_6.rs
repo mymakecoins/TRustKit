@@ -154,7 +154,18 @@ fn test_e2e_gate4_tdd_lifecycle() {
     assert!(!fraud_out.contains(": null"));
     assert!(fraud_out.contains("TDD_LIFECYCLE_VIOLATION"));
 
-    // 2. Executar red com falha de teste -> RedVerified (Exit Code 0)
+    // 2. Preparar teste falhando em spec_dir e executar red -> RedVerified (Exit Code 0)
+    fs::write(
+        spec_dir.join("Cargo.toml"),
+        "[package]\nname = \"task_pkg\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[lib]\npath = \"lib.rs\"\n",
+    )
+    .expect("write cargo toml");
+    fs::write(
+        spec_dir.join("lib.rs"),
+        "#[test]\nfn task_001_check() { assert_eq!(2 + 2, 5); }\n",
+    )
+    .expect("write failing lib");
+
     let mut red_cmd = Command::cargo_bin("trustkit").expect("trustkit");
     let red_assert = red_cmd
         .current_dir(base_dir)
@@ -168,15 +179,10 @@ fn test_e2e_gate4_tdd_lifecycle() {
 
     // 3. Preparar teste passando em spec_dir para green
     fs::write(
-        spec_dir.join("Cargo.toml"),
-        "[package]\nname = \"task_pkg\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[lib]\npath = \"lib.rs\"\n",
-    )
-    .expect("write cargo toml");
-    fs::write(
         spec_dir.join("lib.rs"),
         "#[test]\nfn task_001_check() { assert_eq!(2 + 2, 4); }\n",
     )
-    .expect("write lib");
+    .expect("write passing lib");
 
     // 4. Executar green passando -> GreenVerified (Exit Code 0)
     let mut green_cmd = Command::cargo_bin("trustkit").expect("trustkit");
